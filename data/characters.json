@@ -1,0 +1,649 @@
+{
+  "version": "1.0",
+  "races_count": 8,
+  "characters_count": 16,
+  "characters": [
+    {
+      "id": "01_ren",
+      "num": 1,
+      "name_th": "เรน เวล",
+      "name_en": "Ren Vale",
+      "race_key": "human",
+      "race_th": "มนุษย์",
+      "subrace": "Human Explorer",
+      "role": "นักเดินทางและผู้บุกเบิกหุบเขา",
+      "romanceable": true,
+      "home": "farmhouse",
+      "stature_px": 49.5,
+      "story": "อดีตนักวาดแผนที่หนุ่มจากเมืองหลวงที่ทิ้งชีวิตวุ่นวายมาเริ่มต้นใหม่ในหุบเขาต้นไม้โลก สวมผ้าพันคอไหมทองของปู่และพร้อมรับงานช่วยเหลือชาวเมืองทุกเผ่าพันธุ์",
+      "signature_action": "กางแผนที่หนังสัตว์และวาดจดบันทึกด้วยปากกาขนนก",
+      "gifts": {
+        "loved": [
+          "แผนที่โบราณ",
+          "ครัวซองต์เนยน้ำผึ้ง",
+          "เข็มทิศทองเหลือง"
+        ],
+        "liked": [
+          "กาแฟคั่ว",
+          "ผลไม้ป่า",
+          "ขนนกวิหก"
+        ],
+        "disliked": [
+          "โคลน",
+          "เศษเหล็กขึ้นสนิม"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/01_ren_walk_9x4.png",
+        "walk_classic": "walk_9x4/01_ren_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/01_ren_idle_6x4.png",
+        "idle_classic": "idle_6x4/01_ren_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/01_ren_interact_8x4.png",
+        "interact_classic": "interact_8x4/01_ren_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "02_marcus",
+      "num": 2,
+      "name_th": "มาร์คัส รีด",
+      "name_en": "Marcus Reed",
+      "race_key": "human",
+      "race_th": "มนุษย์",
+      "subrace": "Human Scholar",
+      "role": "นักเขียนนวนิยาย & ผู้จัดการหอสมุดชุมชน",
+      "romanceable": true,
+      "home": "outdoor",
+      "stature_px": 50.0,
+      "story": "นักประพันธ์หนุ่มผู้หลงใหลในตำนานโบราณของ 8 เผ่าพันธุ์ ย้ายมาเขียนวรรณกรรมไตรภาคในหุบเขาและแวะช่วยเซร่าจัดบัญชีร้านขนมปังทุกเช้า",
+      "signature_action": "เปิดหนังสือปกแข็งและจดพล็อตนิยายด้วยปากกาขนนก",
+      "gifts": {
+        "loved": [
+          "หมึกสีคราม",
+          "ครัวซองต์เนยน้ำผึ้ง",
+          "แผ่นจารึกโบราณ"
+        ],
+        "liked": [
+          "ชาสมุนไพร",
+          "กระดาษหนังสัตว์"
+        ],
+        "disliked": [
+          "แร่ถ่านหิน",
+          "ปลาสด"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/02_marcus_walk_9x4.png",
+        "walk_classic": "walk_9x4/02_marcus_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/02_marcus_idle_6x4.png",
+        "idle_classic": "idle_6x4/02_marcus_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/02_marcus_interact_8x4.png",
+        "interact_classic": "interact_8x4/02_marcus_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "03_lilian",
+      "num": 3,
+      "name_th": "ลิเลียน ซิลเวน",
+      "name_en": "Lilian Sylvane",
+      "race_key": "elf",
+      "race_th": "เอลฟ์",
+      "subrace": "Wood Elf",
+      "role": "นักพฤกษศาสตร์ & หมอยาสมุนไพรรากไม้โลก",
+      "romanceable": true,
+      "home": "cottage",
+      "stature_px": 50.0,
+      "story": "เอลฟ์พฤกษาผู้สืบทอดศาสตร์การปรุงยาจากน้ำค้างใบไม้โลก ฟังเสียงชีพจรผืนป่าได้ และเปิดกระท่อมสมุนไพรรักษาชาวเมืองทุกคน",
+      "signature_action": "รินน้ำยาสมุนไพรเรืองแสงรดต้นกล้าจนผลิใบเป็นประกาย",
+      "gifts": {
+        "loved": [
+          "ดอกน้ำค้างรากไม้",
+          "น้ำผึ้งป่า",
+          "ชาเขียวมรกต"
+        ],
+        "liked": [
+          "สมุนไพรสด",
+          "เมล็ดพันธุ์หายาก"
+        ],
+        "disliked": [
+          "เศษเหล็กขึ้นสนิม",
+          "เนื้อย่าง"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/03_lilian_walk_9x4.png",
+        "walk_classic": "walk_9x4/03_lilian_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/03_lilian_idle_6x4.png",
+        "idle_classic": "idle_6x4/03_lilian_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/03_lilian_interact_8x4.png",
+        "interact_classic": "interact_8x4/03_lilian_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "04_eli",
+      "num": 4,
+      "name_th": "อีไล น็อกทิส",
+      "name_en": "Eli Noctis",
+      "race_key": "elf",
+      "race_th": "เอลฟ์",
+      "subrace": "Dark Elf",
+      "role": "นักดาราศาสตร์ราตรี & ผู้ดูแลสวนดอกไม้จันทร์",
+      "romanceable": true,
+      "home": "outdoor",
+      "stature_px": 51.0,
+      "story": "ดาร์กเอลฟ์หนุ่มผู้หลงรักท้องฟ้ายามค่ำคืน สร้างหอดูดาวเล็กๆ บนหน้าผารากไม้โลกเพื่อพยากรณ์ฤดูกาลและกระแสน้ำให้ชาวเมือง",
+      "signature_action": "ยก Astrolabe ทองเหลืองและส่องกล้องดูดาวด้วยความตื่นตา",
+      "gifts": {
+        "loved": [
+          "ผลึกดาวตก",
+          "ดอกไม้จันทร์เรืองแสง",
+          "เลนส์คริสตัล"
+        ],
+        "liked": [
+          "ชากุหลาบราตรี",
+          "แผนที่ดาว"
+        ],
+        "disliked": [
+          "พริกไฟ",
+          "กระเทียมอบ"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/04_eli_walk_9x4.png",
+        "walk_classic": "walk_9x4/04_eli_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/04_eli_idle_6x4.png",
+        "idle_classic": "idle_6x4/04_eli_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/04_eli_interact_8x4.png",
+        "interact_classic": "interact_8x4/04_eli_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "05_kyo",
+      "num": 5,
+      "name_th": "เคียว เฟเธอร์วินด์",
+      "name_en": "Kyo Featherwind",
+      "race_key": "avian",
+      "race_th": "เผ่าวิหก",
+      "subrace": "Owl Avian",
+      "role": "บุรุษไปรษณีย์เวหา & ผู้ดูแลบอร์ดข่าวสาร",
+      "romanceable": true,
+      "home": "outdoor",
+      "stature_px": 48.5,
+      "story": "วิหคสายพันธุ์นกฮูกสีน้ำตาลทองผู้มีสายตาคมกริบในความมืด บินส่งจดหมายและพัสดุข้ามหุบเขาไม่ว่าจะฝนตกหรือหิมะโปรย",
+      "signature_action": "ดึงซองจดหมายประทับครั่งแดงออกมายื่นส่งพร้อมกระพือปีก",
+      "gifts": {
+        "loved": [
+          "เมล็ดทานตะวันอบน้ำผึ้ง",
+          "กาแฟคั่ว",
+          "ขี้ผึ้งประทับตรา"
+        ],
+        "liked": [
+          "ขนมปังลูกเกด",
+          "ปลาตากแห้ง"
+        ],
+        "disliked": [
+          "โคลน",
+          "หินหนัก"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/05_kyo_walk_9x4.png",
+        "walk_classic": "walk_9x4/05_kyo_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/05_kyo_idle_6x4.png",
+        "idle_classic": "idle_6x4/05_kyo_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/05_kyo_interact_8x4.png",
+        "interact_classic": "interact_8x4/05_kyo_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "06_sora",
+      "num": 6,
+      "name_th": "โซระ ซันพลูม",
+      "name_en": "Sora Sunplume",
+      "race_key": "avian",
+      "race_th": "เผ่าวิหก",
+      "subrace": "Sun-Hawk Avian",
+      "role": "หน่วยลาดตระเวนเวหา & นักพยากรณ์ลมมรสุม",
+      "romanceable": true,
+      "home": "outdoor",
+      "stature_px": 51.0,
+      "story": "วิหคสายเลือดเหยี่ยวเพลิงสุริยันประจำยอดหอสังเกตการณ์ไม้โลก บินฝ่าพายุได้เร็วที่สุด คอยส่งสัญญาณเตือนภัยและนำทางนักเดินทาง",
+      "signature_action": "สยายปีกเหยี่ยวเพลิงและส่องกล้องลาดตระเวนขอบฟ้า",
+      "gifts": {
+        "loved": [
+          "เข็มทิศทองเหลือง",
+          "ผลไม้สุริยัน",
+          "พายแอปเปิ้ล"
+        ],
+        "liked": [
+          "น้ำผึ้งป่า",
+          "เนื้อย่าง"
+        ],
+        "disliked": [
+          "โคลน",
+          "สมุนไพรขม"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/06_sora_walk_9x4.png",
+        "walk_classic": "walk_9x4/06_sora_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/06_sora_idle_6x4.png",
+        "idle_classic": "idle_6x4/06_sora_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/06_sora_interact_8x4.png",
+        "interact_classic": "interact_8x4/06_sora_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "07_sera",
+      "num": 7,
+      "name_th": "เซร่า วิสเกอร์เบลล์",
+      "name_en": "Sera Whiskerbell",
+      "race_key": "beastkin",
+      "race_th": "เผ่าครึ่งสัตว์",
+      "subrace": "Cat Beastkin",
+      "role": "เชฟขนมปัง & เจ้าของร้าน Elderbark Bakery",
+      "romanceable": true,
+      "home": "bakery",
+      "stature_px": 49.0,
+      "story": "สาวครึ่งแมวส้มลายเสือผู้ตื่นตีห้าจุดเตาอบหิน กลิ่นขนมปังเนยน้ำผึ้งของเธอคือสัญลักษณ์ยามเช้าของหุบเขา",
+      "signature_action": "ยื่นขนมปังอบใหม่สีทองหอมกรุ่นพร้อมรอยยิ้มสดใส",
+      "gifts": {
+        "loved": [
+          "นมสดครีมข้น",
+          "น้ำผึ้งป่า",
+          "ปลาแซลมอนย่าง"
+        ],
+        "liked": [
+          "ข้าวสาลีทอง",
+          "ไข่ไก่สด",
+          "เบอร์รี่ป่า"
+        ],
+        "disliked": [
+          "แร่ถ่านหิน",
+          "โคลน"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/07_sera_walk_9x4.png",
+        "walk_classic": "walk_9x4/07_sera_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/07_sera_idle_6x4.png",
+        "idle_classic": "idle_6x4/07_sera_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/07_sera_interact_8x4.png",
+        "interact_classic": "interact_8x4/07_sera_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "08_roland",
+      "num": 8,
+      "name_th": "โรแลนด์ แฟงวูด",
+      "name_en": "Roland Fangwood",
+      "race_key": "beastkin",
+      "race_th": "เผ่าครึ่งสัตว์",
+      "subrace": "Wolf Beastkin",
+      "role": "หัวหน้าผู้พิทักษ์ป่า & ช่างไม้ประจำหุบเขา",
+      "romanceable": true,
+      "home": "outdoor",
+      "stature_px": 51.0,
+      "story": "อดีตอัศวินหมาป่าสีเงินผู้วางดาบมาถือขวานดูแลผืนป่าและซ่อมสะพานไม้ให้ชาวเมือง แม้ภายนอกดูดุดันแต่ใจดีกับเด็กๆ เสมอ",
+      "signature_action": "กวัดแกว่งขวานช่างไม้ผ่าฟืนและตรวจงานไม้อย่างมั่นคง",
+      "gifts": {
+        "loved": [
+          "สตูว์เนื้อหม้อไฟ",
+          "ไม้โอ๊กเนื้อแข็ง",
+          "เอลน้ำผึ้ง"
+        ],
+        "liked": [
+          "ขนมปังข้าวไรย์",
+          "หินลับมีด"
+        ],
+        "disliked": [
+          "ของหวานจัด",
+          "โคลน"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/08_roland_walk_9x4.png",
+        "walk_classic": "walk_9x4/08_roland_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/08_roland_idle_6x4.png",
+        "idle_classic": "idle_6x4/08_roland_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/08_roland_interact_8x4.png",
+        "interact_classic": "interact_8x4/08_roland_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "09_celeste",
+      "num": 9,
+      "name_th": "เซเลส น็อกเทิร์น",
+      "name_en": "Celeste Nocturne",
+      "race_key": "vampire",
+      "race_th": "แวมไพร์",
+      "subrace": "Noble Vampire",
+      "role": "จิตรกรสีน้ำมัน & นักไวโอลินประจำโรงเตี๊ยม",
+      "romanceable": true,
+      "home": "tavern",
+      "stature_px": 51.0,
+      "story": "แวมไพร์สาวชนชั้นสูงผู้บันทึกภาพความทรงจำของหุบเขาบนผืนผ้าใบและบรรเลงไวโอลินยามค่ำที่โรงเตี๊ยมตะเกียงมอส",
+      "signature_action": "บรรเลงไวโอลินไม้แดงอย่างสง่างามพร้อมตัวโน้ตลอยละล่อง",
+      "gifts": {
+        "loved": [
+          "กุหลาบแดงกำมะหยี่",
+          "น้ำอมฤตทับทิม",
+          "ไวน์องุ่นจันทร์"
+        ],
+        "liked": [
+          "ผ้าใบสีน้ำมัน",
+          "ชากุหลาบราตรี"
+        ],
+        "disliked": [
+          "กระเทียมอบ",
+          "ซุปหัวหอมกระเทียม"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/09_celeste_walk_9x4.png",
+        "walk_classic": "walk_9x4/09_celeste_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/09_celeste_idle_6x4.png",
+        "idle_classic": "idle_6x4/09_celeste_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/09_celeste_interact_8x4.png",
+        "interact_classic": "interact_8x4/09_celeste_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "10_lucian",
+      "num": 10,
+      "name_th": "ลูเซียน เวน",
+      "name_en": "Lucian Vane",
+      "race_key": "vampire",
+      "race_th": "แวมไพร์",
+      "subrace": "Alchemist Vampire",
+      "role": "นักแปรธาตุโลหิต & หมอปรุงยาเวทมนตร์โบราณ",
+      "romanceable": true,
+      "home": "outdoor",
+      "stature_px": 51.0,
+      "story": "แวมไพร์นักแปรธาตุผู้คิดค้นน้ำอมฤตทับทิมสังเคราะห์เพื่อให้เผ่าแวมไพร์อยู่ร่วมกับเผ่าอื่นอย่างสันติ เปิดห้องแล็บวิจัยผลึกมานาใต้รากไม้",
+      "signature_action": "แกว่งขวดน้ำยาแปรธาตุสีทับทิมเรืองแสงจนเกิดประกายเวท",
+      "gifts": {
+        "loved": [
+          "ผลึกมานาแดง",
+          "ขวดแก้วคริสตัล",
+          "ดอกไม้จันทร์เรืองแสง"
+        ],
+        "liked": [
+          "สมุนไพรหายาก",
+          "ชาดำ"
+        ],
+        "disliked": [
+          "กระเทียมอบ",
+          "โคลน"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/10_lucian_walk_9x4.png",
+        "walk_classic": "walk_9x4/10_lucian_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/10_lucian_idle_6x4.png",
+        "idle_classic": "idle_6x4/10_lucian_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/10_lucian_interact_8x4.png",
+        "interact_classic": "interact_8x4/10_lucian_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "11_pip",
+      "num": 11,
+      "name_th": "พิป โกลด์ลีฟ",
+      "name_en": "Pip Goldleaf",
+      "race_key": "goblin",
+      "race_th": "ก็อบลินเหลือง",
+      "subrace": "Yellow Goblin Merchant",
+      "role": "เฒ่าแก่ร้านชำ Goldleaf & นายหน้าบอร์ดภารกิจ",
+      "romanceable": false,
+      "home": "shop",
+      "stature_px": 45.0,
+      "story": "ก็อบลินเหลืองอารมณ์ดีเจ้าของร้านชำกลางจัตุรัส สายตาเฉียบแหลมในการประเมินมูลค่าของป่าและดูแลบอร์ดรับจ้างของเมือง",
+      "signature_action": "เขย่าถุงเงินพ่อค้าและโยนนับเหรียญทองอย่างอารมณ์ดี",
+      "gifts": {
+        "loved": [
+          "แร่ทองคำบริสุทธิ์",
+          "อัญมณีดิบ",
+          "ขนมปังเนยน้ำผึ้ง"
+        ],
+        "liked": [
+          "เหรียญโบราณ",
+          "ผลผลิตเกรดทอง"
+        ],
+        "disliked": [
+          "เศษไม้ผุ",
+          "โคลน"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/11_pip_walk_9x4.png",
+        "walk_classic": "walk_9x4/11_pip_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/11_pip_idle_6x4.png",
+        "idle_classic": "idle_6x4/11_pip_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/11_pip_interact_8x4.png",
+        "interact_classic": "interact_8x4/11_pip_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "12_trixie",
+      "num": 12,
+      "name_th": "ทริกซี่ สปาร์คเกียร์",
+      "name_en": "Trixie Sparkgear",
+      "race_key": "goblin",
+      "race_th": "ก็อบลินเหลือง",
+      "subrace": "Yellow Goblin Mechanic",
+      "role": "วิศวกรเครื่องจักรกลฟันเฟือง & ช่างประดิษฐ์",
+      "romanceable": true,
+      "home": "outdoor",
+      "stature_px": 45.0,
+      "story": "หลานสาวจอมซนของพิป ผู้ออกแบบรอกส่งของขึ้นยอดไม้โลก โคมไฟถนนอัตโนมัติ และกังหันน้ำประจำหุบเขา",
+      "signature_action": "ใช้ประแจขันซ่อมฟันเฟืองทองเหลืองอย่างคล่องแคล่ว",
+      "gifts": {
+        "loved": [
+          "ฟันเฟืองทองเหลือง",
+          "แบตเตอรี่มานา",
+          "กาแฟคั่ว"
+        ],
+        "liked": [
+          "แท่งทองแดง",
+          "น็อตเหล็ก"
+        ],
+        "disliked": [
+          "โคลน",
+          "สมุนไพรขม"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/12_trixie_walk_9x4.png",
+        "walk_classic": "walk_9x4/12_trixie_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/12_trixie_idle_6x4.png",
+        "idle_classic": "idle_6x4/12_trixie_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/12_trixie_interact_8x4.png",
+        "interact_classic": "interact_8x4/12_trixie_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "13_mirelle",
+      "num": 13,
+      "name_th": "มิเรลล์ เพิร์ลวอยซ์",
+      "name_en": "Mirelle Pearlvoice",
+      "race_key": "merfolk",
+      "race_th": "เผ่าเงือก",
+      "subrace": "Siren Songstress",
+      "role": "นักขับขานบทเพลงวารี & ผู้ดูแลสระน้ำศักดิ์สิทธิ์",
+      "romanceable": true,
+      "home": "outdoor",
+      "stature_px": 50.0,
+      "story": "เงือกไซเรนสาวผู้เปลี่ยนครีบหางเป็นเรียวขาเมื่อขึ้นบกด้วยพรแห่งมุกสมุทร เสียงเพลงของเธอช่วยฟื้นฟูพืชพรรณและทำให้ลำธารใสสะอาด",
+      "signature_action": "ประสานมือขับขานบทเพลงวารีพร้อมฟองน้ำและตัวโน้ตลอยขึ้น",
+      "gifts": {
+        "loved": [
+          "เปลือกหอยเรืองแสง",
+          "ไข่มุกสมุทร",
+          "ดอกบัววารี"
+        ],
+        "liked": [
+          "ปะการังสีชมพู",
+          "ชาสมุนไพร"
+        ],
+        "disliked": [
+          "แร่ถ่านหิน",
+          "ปลาทอด"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/13_mirelle_walk_9x4.png",
+        "walk_classic": "walk_9x4/13_mirelle_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/13_mirelle_idle_6x4.png",
+        "idle_classic": "idle_6x4/13_mirelle_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/13_mirelle_interact_8x4.png",
+        "interact_classic": "interact_8x4/13_mirelle_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "14_kael",
+      "num": 14,
+      "name_th": "คาเอล ไทด์คอลเลอร์",
+      "name_en": "Kael Tidecaller",
+      "race_key": "merfolk",
+      "race_th": "เผ่าเงือก",
+      "subrace": "Merfolk Diver",
+      "role": "นักประดาน้ำโบราณคดี & ผู้พิทักษ์ซากวิหารใต้น้ำ",
+      "romanceable": true,
+      "home": "outdoor",
+      "stature_px": 49.5,
+      "story": "นักสำรวจหนุ่มเผ่าเงือกผู้เชี่ยวชาญการดำน้ำลึกกู้โบราณวัตถุและผลึกวารีใต้อ่างเก็บน้ำรากไม้โลก",
+      "signature_action": "ถือไข่มุกสมุทรเรืองแสงสีฟ้าน้ำทะเลตรวจสอบพลังโบราณ",
+      "gifts": {
+        "loved": [
+          "แผ่นจารึกโบราณ",
+          "ไข่มุกสมุทร",
+          "ผลึกวารี"
+        ],
+        "liked": [
+          "ปะการังแดง",
+          "ผลไม้สด"
+        ],
+        "disliked": [
+          "เศษเหล็กขึ้นสนิม",
+          "แร่ถ่านหิน"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/14_kael_walk_9x4.png",
+        "walk_classic": "walk_9x4/14_kael_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/14_kael_idle_6x4.png",
+        "idle_classic": "idle_6x4/14_kael_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/14_kael_interact_8x4.png",
+        "interact_classic": "interact_8x4/14_kael_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "15_thorn",
+      "num": 15,
+      "name_th": "ทอร์น ไอรอนรูท",
+      "name_en": "Thorn Ironroot",
+      "race_key": "dwarf",
+      "race_th": "คนแคระ",
+      "subrace": "Blacksmith Dwarf",
+      "role": "ช่างตีเหล็กศิลาเพลิง & นักหลอมอาวุธ",
+      "romanceable": false,
+      "home": "smithy",
+      "stature_px": 45.5,
+      "story": "ช่างตีเหล็กคนแคระวัยฉกรรจ์ผู้ดูแลเตาหลอมศิลาเพลิงใต้รากไม้โลก ตีอุปกรณ์ทำฟาร์มและขุดแร่ที่แข็งแกร่งที่สุดด้วยไฟมานา",
+      "signature_action": "เงื้อค้อนช่างตีเหล็กทุบแท่งเหล็กร้อนแดงบนทั่งตีเหล็ก",
+      "gifts": {
+        "loved": [
+          "แร่ศิลาเพลิง",
+          "เอลน้ำผึ้ง",
+          "แท่งเหล็กกล้า"
+        ],
+        "liked": [
+          "แร่ถ่านหิน",
+          "สตูว์เนื้อหม้อไฟ"
+        ],
+        "disliked": [
+          "ดอกไม้",
+          "ของหวานจัด"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/15_thorn_walk_9x4.png",
+        "walk_classic": "walk_9x4/15_thorn_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/15_thorn_idle_6x4.png",
+        "idle_classic": "idle_6x4/15_thorn_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/15_thorn_interact_8x4.png",
+        "interact_classic": "interact_8x4/15_thorn_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    },
+    {
+      "id": "16_bram",
+      "num": 16,
+      "name_th": "คุณปู่บราม โอ๊กบาร์เรล",
+      "name_en": "Grandpa Bram",
+      "race_key": "dwarf",
+      "race_th": "คนแคระ",
+      "subrace": "Tavern Master Dwarf",
+      "role": "เจ้าของโรงเตี๊ยมตะเกียงมอส & เชฟสตูว์หม้อไฟ",
+      "romanceable": false,
+      "home": "tavern",
+      "stature_px": 45.0,
+      "story": "อดีตนักผจญภัยคนแคระระดับตำนานผู้เปิดโรงเตี๊ยมตะเกียงมอส ศูนย์รวมจิตใจชาวเมืองทั้ง 8 เผ่าพันธุ์ ซุปหัวหอมและเอลน้ำผึ้งอร่อยที่สุดในอาณาจักร",
+      "signature_action": "เช็ดแก้วไม้และยกแก้วเอลน้ำผึ้งฟองนุ่มขึ้นชนฉลองอย่างอารมณ์ดี",
+      "gifts": {
+        "loved": [
+          "น้ำผึ้งป่า",
+          "หัวหอมใหญ่เกรดทอง",
+          "ถังไม้โอ๊ก"
+        ],
+        "liked": [
+          "ขนมปังเนยน้ำผึ้ง",
+          "เห็ดป่า"
+        ],
+        "disliked": [
+          "โคลน",
+          "เศษเหล็กขึ้นสนิม"
+        ]
+      },
+      "assets": {
+        "walk_hd": "walk_9x4_hd_1152x512/16_bram_walk_9x4.png",
+        "walk_classic": "walk_9x4/16_bram_walk_9x4.png",
+        "idle_hd": "idle_6x4_hd_768x512/16_bram_idle_6x4.png",
+        "idle_classic": "idle_6x4/16_bram_idle_6x4.png",
+        "interact_hd": "interact_8x4_hd_1024x512/16_bram_interact_8x4.png",
+        "interact_classic": "interact_8x4/16_bram_interact_8x4.png",
+        "portrait_style2_ready": true,
+        "portrait_4expr_ready": true
+      }
+    }
+  ]
+}

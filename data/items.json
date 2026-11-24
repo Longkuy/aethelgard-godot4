@@ -1,0 +1,522 @@
+{
+  "version": "1.0",
+  "total_items": 39,
+  "items": [
+    {
+      "id": "item_ancient_map",
+      "name_th": "แผนที่โบราณ",
+      "category": "curio_relic",
+      "price": 140,
+      "sell_price": 84,
+      "energy_restore": 0,
+      "shop_id": "shop",
+      "loved_by": [
+        "01_ren"
+      ],
+      "description_th": "แผนที่หุบเขาเอเธลการ์ดยุคแรก วาดด้วยหมึกสีทองจางๆ"
+    },
+    {
+      "id": "item_honey_croissant",
+      "name_th": "ครัวซองต์เนยน้ำผึ้ง",
+      "category": "food_drink",
+      "price": 65,
+      "sell_price": 39,
+      "energy_restore": 30,
+      "shop_id": "bakery",
+      "loved_by": [
+        "01_ren",
+        "02_marcus"
+      ],
+      "description_th": "ครัวซองต์อบใหม่กรอบนอกนุ่มใน หอมเนยและน้ำผึ้งป่า"
+    },
+    {
+      "id": "item_brass_compass",
+      "name_th": "เข็มทิศทองเหลือง",
+      "category": "curio_relic",
+      "price": 130,
+      "sell_price": 78,
+      "energy_restore": 0,
+      "shop_id": "smithy",
+      "loved_by": [
+        "01_ren",
+        "06_sora"
+      ],
+      "description_th": "เข็มทิศทองเหลืองขัดเงาที่ชี้ตรงไปยังรากต้นไม้โลกเสมอ"
+    },
+    {
+      "id": "item_indigo_ink",
+      "name_th": "หมึกสีคราม",
+      "category": "gift_luxury",
+      "price": 80,
+      "sell_price": 48,
+      "energy_restore": 0,
+      "shop_id": "shop",
+      "loved_by": [
+        "02_marcus"
+      ],
+      "description_th": "หมึกเขียนหนังสือสีน้ำเงินเข้มสกัดจากดอกไม้ป่า"
+    },
+    {
+      "id": "item_ancient_tablet",
+      "name_th": "แผ่นจารึกโบราณ",
+      "category": "curio_relic",
+      "price": 160,
+      "sell_price": 96,
+      "energy_restore": 0,
+      "shop_id": "shop",
+      "loved_by": [
+        "02_marcus",
+        "14_kael"
+      ],
+      "description_th": "ชิ้นส่วนหินสลักอักษรโบราณของแปดเผ่า"
+    },
+    {
+      "id": "item_rootdew_flower",
+      "name_th": "ดอกน้ำค้างรากไม้",
+      "category": "craft_material",
+      "price": 85,
+      "sell_price": 51,
+      "energy_restore": 15,
+      "shop_id": "cottage",
+      "loved_by": [
+        "03_lilian"
+      ],
+      "description_th": "ดอกไม้สีฟ้าอ่อนที่บานเฉพาะใต้รากต้นไม้โลกยามเช้า"
+    },
+    {
+      "id": "item_wild_honey",
+      "name_th": "น้ำผึ้งป่า",
+      "category": "food_drink",
+      "price": 75,
+      "sell_price": 45,
+      "energy_restore": 25,
+      "shop_id": "cottage",
+      "loved_by": [
+        "03_lilian",
+        "07_sera",
+        "16_bram"
+      ],
+      "description_th": "น้ำผึ้งสีอำพันหวานละมุนเก็บจากโพรงไม้ใหญ่"
+    },
+    {
+      "id": "item_emerald_tea",
+      "name_th": "ชาเขียวมรกต",
+      "category": "food_drink",
+      "price": 70,
+      "sell_price": 42,
+      "energy_restore": 28,
+      "shop_id": "cottage",
+      "loved_by": [
+        "03_lilian"
+      ],
+      "description_th": "ใบชาหอมสดชื่น ชงแล้วมีประกายสีเขียวมรกตอ่อนๆ"
+    },
+    {
+      "id": "item_starfall_crystal",
+      "name_th": "ผลึกดาวตก",
+      "category": "curio_relic",
+      "price": 180,
+      "sell_price": 108,
+      "energy_restore": 0,
+      "shop_id": "smithy",
+      "loved_by": [
+        "04_eli"
+      ],
+      "description_th": "ผลึกใสที่เก็บแสงดาวไว้ภายใน เหมาะกับนักดาราศาสตร์"
+    },
+    {
+      "id": "item_moonbloom",
+      "name_th": "ดอกไม้จันทร์เรืองแสง",
+      "category": "craft_material",
+      "price": 110,
+      "sell_price": 66,
+      "energy_restore": 10,
+      "shop_id": "cottage",
+      "loved_by": [
+        "04_eli",
+        "10_lucian"
+      ],
+      "description_th": "ดอกไม้กลีบสีเงินที่เปล่งแสงนวลเฉพาะตอนกลางคืน"
+    },
+    {
+      "id": "item_crystal_lens",
+      "name_th": "เลนส์คริสตัล",
+      "category": "craft_material",
+      "price": 145,
+      "sell_price": 87,
+      "energy_restore": 0,
+      "shop_id": "smithy",
+      "loved_by": [
+        "04_eli"
+      ],
+      "description_th": "เลนส์เจียระไนละเอียดสำหรับกล้องดูดาวและแว่นขยาย"
+    },
+    {
+      "id": "item_sunflower_seeds",
+      "name_th": "เมล็ดทานตะวันอบน้ำผึ้ง",
+      "category": "food_drink",
+      "price": 50,
+      "sell_price": 30,
+      "energy_restore": 20,
+      "shop_id": "bakery",
+      "loved_by": [
+        "05_kyo"
+      ],
+      "description_th": "ของว่างเคี้ยวเพลินเคลือบน้ำผึ้งอุ่นๆ"
+    },
+    {
+      "id": "item_roasted_coffee",
+      "name_th": "กาแฟคั่ว",
+      "category": "food_drink",
+      "price": 60,
+      "sell_price": 36,
+      "energy_restore": 35,
+      "shop_id": "tavern",
+      "loved_by": [
+        "05_kyo",
+        "12_trixie"
+      ],
+      "description_th": "เมล็ดกาแฟคั่วหอมเข้ม ปลุกพลังพร้อมลุยงานทั้งวัน"
+    },
+    {
+      "id": "item_sealing_wax",
+      "name_th": "ขี้ผึ้งประทับตรา",
+      "category": "gift_luxury",
+      "price": 70,
+      "sell_price": 42,
+      "energy_restore": 0,
+      "shop_id": "shop",
+      "loved_by": [
+        "05_kyo"
+      ],
+      "description_th": "แท่งขี้ผึ้งสีแดงทับทิมสำหรับประทับตราจดหมายสำคัญ"
+    },
+    {
+      "id": "item_sunfruit",
+      "name_th": "ผลไม้สุริยัน",
+      "category": "food_drink",
+      "price": 80,
+      "sell_price": 48,
+      "energy_restore": 32,
+      "shop_id": "shop",
+      "loved_by": [
+        "06_sora"
+      ],
+      "description_th": "ผลไม้สีทองรสหวานอมเปรี้ยว ให้ความอบอุ่นทันทีที่กิน"
+    },
+    {
+      "id": "item_apple_pie",
+      "name_th": "พายแอปเปิ้ล",
+      "category": "food_drink",
+      "price": 75,
+      "sell_price": 45,
+      "energy_restore": 35,
+      "shop_id": "bakery",
+      "loved_by": [
+        "06_sora"
+      ],
+      "description_th": "พายแอปเปิ้ลอบร้อนโรยอบเชย สูตรพิเศษของร้าน Elderbark"
+    },
+    {
+      "id": "item_rich_milk",
+      "name_th": "นมสดครีมข้น",
+      "category": "food_drink",
+      "price": 55,
+      "sell_price": 33,
+      "energy_restore": 25,
+      "shop_id": "shop",
+      "loved_by": [
+        "07_sera"
+      ],
+      "description_th": "นมสดหอมมันจากทุ่งหญ้าหุบเขา"
+    },
+    {
+      "id": "item_grilled_salmon",
+      "name_th": "ปลาแซลมอนย่าง",
+      "category": "food_drink",
+      "price": 95,
+      "sell_price": 57,
+      "energy_restore": 45,
+      "shop_id": "tavern",
+      "loved_by": [
+        "07_sera"
+      ],
+      "description_th": "ปลาแซลมอนสดจากแม่น้ำหุบเขาย่างเกลือหอมกรุ่น"
+    },
+    {
+      "id": "item_hearty_stew",
+      "name_th": "สตูว์เนื้อหม้อไฟ",
+      "category": "food_drink",
+      "price": 110,
+      "sell_price": 66,
+      "energy_restore": 55,
+      "shop_id": "tavern",
+      "loved_by": [
+        "08_roland"
+      ],
+      "description_th": "สตูว์เคี่ยวจนนุ่มรสเข้มข้น เติมพลังหลังเดินลาดตระเวน"
+    },
+    {
+      "id": "item_hard_oak",
+      "name_th": "ไม้โอ๊กเนื้อแข็ง",
+      "category": "craft_material",
+      "price": 75,
+      "sell_price": 45,
+      "energy_restore": 0,
+      "shop_id": "shop",
+      "loved_by": [
+        "08_roland"
+      ],
+      "description_th": "ท่อนไม้โอ๊กเนื้อแน่นสำหรับงานช่างและแกะสลัก"
+    },
+    {
+      "id": "item_honey_ale",
+      "name_th": "เอลน้ำผึ้ง",
+      "category": "food_drink",
+      "price": 85,
+      "sell_price": 51,
+      "energy_restore": 30,
+      "shop_id": "tavern",
+      "loved_by": [
+        "08_roland",
+        "15_thorn"
+      ],
+      "description_th": "เครื่องดื่มขึ้นชื่อของโรงเตี๊ยมตะเกียงมอส หอมหวานชื่นใจ"
+    },
+    {
+      "id": "item_velvet_rose",
+      "name_th": "กุหลาบแดงกำมะหยี่",
+      "category": "gift_luxury",
+      "price": 120,
+      "sell_price": 72,
+      "energy_restore": 0,
+      "shop_id": "cottage",
+      "loved_by": [
+        "09_celeste"
+      ],
+      "description_th": "ดอกกุหลาบสีแดงเข้มดุจกำมะหยี่ สัญลักษณ์แห่งความโรแมนติก"
+    },
+    {
+      "id": "item_ruby_elixir",
+      "name_th": "น้ำอมฤตทับทิม",
+      "category": "food_drink",
+      "price": 150,
+      "sell_price": 90,
+      "energy_restore": 50,
+      "shop_id": "cottage",
+      "loved_by": [
+        "09_celeste"
+      ],
+      "description_th": "เครื่องดื่มทับทิมผสมสมุนไพรหายาก รสลุ่มลึก"
+    },
+    {
+      "id": "item_moon_wine",
+      "name_th": "ไวน์องุ่นจันทร์",
+      "category": "food_drink",
+      "price": 165,
+      "sell_price": 99,
+      "energy_restore": 35,
+      "shop_id": "tavern",
+      "loved_by": [
+        "09_celeste"
+      ],
+      "description_th": "ไวน์หมักจากองุ่นสีม่วงเงิน เหมาะสำหรับค่ำคืนพิเศษ"
+    },
+    {
+      "id": "item_crimson_mana",
+      "name_th": "ผลึกมานาแดง",
+      "category": "curio_relic",
+      "price": 170,
+      "sell_price": 102,
+      "energy_restore": 0,
+      "shop_id": "smithy",
+      "loved_by": [
+        "10_lucian"
+      ],
+      "description_th": "ผลึกเวทมนตร์สีแดงสดที่เปี่ยมด้วยพลังความร้อน"
+    },
+    {
+      "id": "item_crystal_vial",
+      "name_th": "ขวดแก้วคริสตัล",
+      "category": "craft_material",
+      "price": 90,
+      "sell_price": 54,
+      "energy_restore": 0,
+      "shop_id": "shop",
+      "loved_by": [
+        "10_lucian"
+      ],
+      "description_th": "ขวดแก้วใสเนื้อหนาสำหรับบรรจุยาปรุงชั้นสูง"
+    },
+    {
+      "id": "item_pure_gold_ore",
+      "name_th": "แร่ทองคำบริสุทธิ์",
+      "category": "curio_relic",
+      "price": 200,
+      "sell_price": 120,
+      "energy_restore": 0,
+      "shop_id": "smithy",
+      "loved_by": [
+        "11_pip"
+      ],
+      "description_th": "ก้อนแร่ทองคำแวววาวจากเหมืองลึกของหุบเขา"
+    },
+    {
+      "id": "item_raw_gem",
+      "name_th": "อัญมณีดิบ",
+      "category": "curio_relic",
+      "price": 175,
+      "sell_price": 105,
+      "energy_restore": 0,
+      "shop_id": "smithy",
+      "loved_by": [
+        "11_pip"
+      ],
+      "description_th": "อัญมณีธรรมชาติที่ยังไม่ได้เจียระไน ส่องประกายหลากสี"
+    },
+    {
+      "id": "item_honey_bread",
+      "name_th": "ขนมปังเนยน้ำผึ้ง",
+      "category": "food_drink",
+      "price": 55,
+      "sell_price": 33,
+      "energy_restore": 28,
+      "shop_id": "bakery",
+      "loved_by": [
+        "11_pip"
+      ],
+      "description_th": "ขนมปังก้อนนุ่มชุ่มเนยและน้ำผึ้ง"
+    },
+    {
+      "id": "item_brass_gear",
+      "name_th": "ฟันเฟืองทองเหลือง",
+      "category": "craft_material",
+      "price": 95,
+      "sell_price": 57,
+      "energy_restore": 0,
+      "shop_id": "smithy",
+      "loved_by": [
+        "12_trixie"
+      ],
+      "description_th": "เฟืองกลไกความแม่นยำสูงสำหรับสิ่งประดิษฐ์"
+    },
+    {
+      "id": "item_mana_battery",
+      "name_th": "แบตเตอรี่มานา",
+      "category": "craft_material",
+      "price": 155,
+      "sell_price": 93,
+      "energy_restore": 0,
+      "shop_id": "smithy",
+      "loved_by": [
+        "12_trixie"
+      ],
+      "description_th": "กระบอกกักเก็บพลังงานมานาแบบพกพา"
+    },
+    {
+      "id": "item_glowing_shell",
+      "name_th": "เปลือกหอยเรืองแสง",
+      "category": "curio_relic",
+      "price": 115,
+      "sell_price": 69,
+      "energy_restore": 0,
+      "shop_id": "shop",
+      "loved_by": [
+        "13_mirelle"
+      ],
+      "description_th": "เปลือกหอยจากริมธารที่ส่งเสียงคลื่นเบาๆ เมื่อแนบหู"
+    },
+    {
+      "id": "item_sea_pearl",
+      "name_th": "ไข่มุกสมุทร",
+      "category": "gift_luxury",
+      "price": 190,
+      "sell_price": 114,
+      "energy_restore": 0,
+      "shop_id": "shop",
+      "loved_by": [
+        "13_mirelle",
+        "14_kael"
+      ],
+      "description_th": "ไข่มุกเม็ดกลมเงางามสะท้อนแสงสีฟ้าคราม"
+    },
+    {
+      "id": "item_water_lily",
+      "name_th": "ดอกบัววารี",
+      "category": "gift_luxury",
+      "price": 90,
+      "sell_price": 54,
+      "energy_restore": 10,
+      "shop_id": "cottage",
+      "loved_by": [
+        "13_mirelle"
+      ],
+      "description_th": "ดอกบัวสีขาวอมฟ้าที่ลอยสงบบนผิวน้ำใส"
+    },
+    {
+      "id": "item_aqua_crystal",
+      "name_th": "ผลึกวารี",
+      "category": "curio_relic",
+      "price": 150,
+      "sell_price": 90,
+      "energy_restore": 0,
+      "shop_id": "smithy",
+      "loved_by": [
+        "14_kael"
+      ],
+      "description_th": "ผลึกสีฟ้าใสเย็นเฉียบราวกับหยดน้ำแข็งนิรันดร์"
+    },
+    {
+      "id": "item_ember_ore",
+      "name_th": "แร่ศิลาเพลิง",
+      "category": "craft_material",
+      "price": 140,
+      "sell_price": 84,
+      "energy_restore": 0,
+      "shop_id": "smithy",
+      "loved_by": [
+        "15_thorn"
+      ],
+      "description_th": "แร่หินร้อนระอุที่ใช้ตีอาวุธและเครื่องมือระดับสูง"
+    },
+    {
+      "id": "item_steel_ingot",
+      "name_th": "แท่งเหล็กกล้า",
+      "category": "craft_material",
+      "price": 125,
+      "sell_price": 75,
+      "energy_restore": 0,
+      "shop_id": "smithy",
+      "loved_by": [
+        "15_thorn"
+      ],
+      "description_th": "แท่งเหล็กกล้าหลอมบริสุทธิ์ แข็งแกร่งทนทาน"
+    },
+    {
+      "id": "item_golden_onion",
+      "name_th": "หัวหอมใหญ่เกรดทอง",
+      "category": "food_drink",
+      "price": 65,
+      "sell_price": 39,
+      "energy_restore": 20,
+      "shop_id": "shop",
+      "loved_by": [
+        "16_bram"
+      ],
+      "description_th": "หัวหอมใหญ่หวานกรอบ วัตถุดิบลับของซุปหม้อเด็ด"
+    },
+    {
+      "id": "item_oak_barrel",
+      "name_th": "ถังไม้โอ๊ก",
+      "category": "craft_material",
+      "price": 135,
+      "sell_price": 81,
+      "energy_restore": 0,
+      "shop_id": "shop",
+      "loved_by": [
+        "16_bram"
+      ],
+      "description_th": "ถังไม้โอ๊กประกอบมืออย่างประณีตสำหรับบ่มเครื่องดื่ม"
+    }
+  ]
+}

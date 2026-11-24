@@ -1,0 +1,149 @@
+{
+  "version": "1.0",
+  "landmarks": [
+    {
+      "id": "lm_observatory",
+      "name_th": "หอดูดาวรากไม้โลก",
+      "name_en": "Starlight Observatory",
+      "icon": "🔭",
+      "tx": 46,
+      "ty": 7,
+      "w": 5,
+      "h": 4,
+      "interactX": 48.5,
+      "interactY": 11.4,
+      "partners": ["04_eli", "12_trixie"],
+      "gold_cost": 280,
+      "materials": {
+        "item_crystal_lens": 1,
+        "item_brass_gear": 1
+      },
+      "summary_th": "บูรณะหอดูดาวร่วมกับอีไล & ทริกซี่ — ปลดล็อกส่องกล้องดูดาว (+10 💡 ปัญญา/วัน) และเรียกคืนฝนดาวตกให้เก็บผลึกดาวตกกลางเมือง!",
+      "ability_th": "🔭 ส่องกล้องดูดาว & เรียกฝนดาวตก",
+      "color": "#312e81",
+      "accent": "#fbbf24"
+    },
+    {
+      "id": "lm_hotspring",
+      "name_th": "บ่อน้ำพุร้อนรากไม้",
+      "name_en": "Moss-Glow Hot Spring",
+      "icon": "♨️",
+      "tx": 7,
+      "ty": 35,
+      "w": 5,
+      "h": 4,
+      "interactX": 9.5,
+      "interactY": 39.4,
+      "partners": ["03_lilian", "08_roland"],
+      "gold_cost": 250,
+      "materials": {
+        "item_hard_oak": 1,
+        "item_rootdew_flower": 1
+      },
+      "summary_th": "บูรณะบ่อน้ำพุร้อนร่วมกับลิเลียน & โรแลนด์ — แช่ฟื้นพลังงาน ⚡ เต็ม 100% ฟรีวันละครั้ง พร้อมพบชาวเมืองมาผ่อนคลาย!",
+      "ability_th": "♨️ แช่น้ำพุร้อนฟื้นพลังเต็ม 100%",
+      "color": "#0e7490",
+      "accent": "#67e8f9"
+    },
+    {
+      "id": "lm_museum",
+      "name_th": "พิพิธภัณฑ์ & หอสมุด 8 เผ่า",
+      "name_en": "Aethelgard Archive & Museum",
+      "icon": "📚",
+      "tx": 23,
+      "ty": 12,
+      "w": 6,
+      "h": 4,
+      "interactX": 26.0,
+      "interactY": 16.4,
+      "partners": ["02_marcus", "14_kael"],
+      "gold_cost": 300,
+      "materials": {
+        "item_ancient_tablet": 1,
+        "item_hard_oak": 1
+      },
+      "summary_th": "บูรณะพิพิธภัณฑ์ร่วมกับมาร์คัส & คาเอล — ปลดล็อกระบบบริจาคโบราณวัตถุ 12 ชิ้นสไตล์ Stardew รับรางวัลใหญ่ & โบนัสขายของ +20%!",
+      "ability_th": "📚 เปิดห้องแสดงพิพิธภัณฑ์ & บริจาค",
+      "color": "#0f766e",
+      "accent": "#fde68a"
+    },
+    {
+      "id": "lm_stage",
+      "name_th": "เวทีดนตรีกลางจัตุรัส",
+      "name_en": "World Tree Amphitheater",
+      "icon": "🎻",
+      "tx": 27,
+      "ty": 38,
+      "w": 6,
+      "h": 4,
+      "interactX": 30.0,
+      "interactY": 42.4,
+      "partners": ["09_celeste", "13_mirelle"],
+      "gold_cost": 260,
+      "materials": {
+        "item_hard_oak": 1,
+        "item_glowing_shell": 1
+      },
+      "summary_th": "สร้างเวทีดนตรีร่วมกับเซเลส & มิเรลล์ — จัดมินิคอนเสิร์ตวันละครั้ง แจก +12 ❤️ ให้ชาวเมืองทุกคน + ฟื้นพลัง +25 ⚡!",
+      "ability_th": "🎻 จัดมินิคอนเสิร์ตแห่งเอเธลการ์ด",
+      "color": "#9f1239",
+      "accent": "#fbcfe8"
+    },
+    {
+      "id": "lm_nightmarket",
+      "name_th": "ตลาดนัดกลางคืนรากไม้",
+      "name_en": "Moonlit Night Market",
+      "icon": "🏮",
+      "tx": 56,
+      "ty": 34,
+      "w": 7,
+      "h": 4,
+      "interactX": 59.5,
+      "interactY": 38.4,
+      "partners": ["11_pip", "07_sera", "15_thorn", "16_bram"],
+      "gold_cost": 320,
+      "materials": {
+        "item_mana_battery": 1,
+        "item_oak_barrel": 1
+      },
+      "summary_th": "เปิดตลาดนัดกลางคืนร่วมกับพิป เซร่า ทอร์น & ปู่บราม — ร้านลับเปิดยามค่ำ (18:00–24:00) ขายของหายากทุกเผ่า (ศ.–อา. ลด 25%!)",
+      "ability_th": "🏮 เดินช้อปตลาดนัดกลางคืน",
+      "color": "#b45309",
+      "accent": "#fde047"
+    }
+  ],
+  "museum_collection": [
+    { "item_id": "item_ancient_map", "lore_th": "แผนที่หนังสัตว์ยุคแรกของการตั้งถิ่นฐาน 8 เผ่าพันธุ์ในหุบเขาต้นไม้โลก" },
+    { "item_id": "item_ancient_tablet", "lore_th": "แผ่นจารึกรูนโบราณที่คาเอลกู้ขึ้นมาจากวิหารจมน้ำใต้ทะเลสาบศักดิ์สิทธิ์" },
+    { "item_id": "item_starfall_crystal", "lore_th": "ผลึกดาวตกเรืองแสงสีครามที่ตกจากฟ้าเฉพาะคืนท้องฟ้าเปิด" },
+    { "item_id": "item_crimson_mana", "lore_th": "ผลึกมานาแดงต้นกำเนิดน้ำอมฤตทับทิมแห่งสันติภาพของเผ่าแวมไพร์" },
+    { "item_id": "item_aqua_crystal", "lore_th": "คริสตัลกักเก็บพลังสายน้ำใสสะอาดที่คอยหล่อเลี้ยงรากไม้โลก" },
+    { "item_id": "item_glowing_shell", "lore_th": "เปลือกหอยเรืองแสงที่ส่งเสียงประสานกังวานเมื่อต้องสายลม" },
+    { "item_id": "item_sea_pearl", "lore_th": "ไข่มุกสมุทรศักดิ์สิทธิ์ มรดกแห่งเผ่าเงือกไซเรน" },
+    { "item_id": "item_pure_gold_ore", "lore_th": "แร่ทองคำบริสุทธิ์จากสายแร่ลึกใต้หุบเขา สัญลักษณ์ความมั่งคั่งของก็อบลินเหลือง" },
+    { "item_id": "item_raw_gem", "lore_th": "อัญมณีสีรุ้งธรรมชาติที่สะท้อนแสงตะวันได้ 8 เฉดสี" },
+    { "item_id": "item_ember_ore", "lore_th": "หินศิลาเพลิงที่ยังคงความอบอุ่นแม้ในคืนหิมะตกของเผ่าคนแคระ" },
+    { "item_id": "item_brass_compass", "lore_th": "เข็มทิศทองเหลืองโบราณของหน่วยลาดตระเวนเวหาเผ่าวิหก" },
+    { "item_id": "item_moonbloom", "lore_th": "ดอกไม้จันทร์เรืองแสงที่บานสะพรั่งเพียงปีละครั้งใต้เงาต้นไม้โลก" }
+  ],
+  "museum_milestones": [
+    { "count": 3, "title_th": "นักสะสมฝึกหัด (3/12)", "gold": 250, "stat": { "wisdom": 15 }, "item_id": "item_ruby_elixir", "desc_th": "+250G • +15 💡 ปัญญา • น้ำอมฤตทับทิม x1" },
+    { "count": 6, "title_th": "ผู้พิทักษ์หอสมุด (6/12)", "gold": 450, "stat": { "charm": 20 }, "hearts_all": 30, "desc_th": "+450G • +20 ✨ เสน่ห์ • ชาวเมืองทุกคน +30❤️" },
+    { "count": 9, "title_th": "ปราชญ์แห่งแปดเผ่า (9/12)", "gold": 750, "stat": { "wisdom": 25 }, "sell_bonus_pct": 20, "desc_th": "+750G • +25 💡 ปัญญา • ขายของได้ราคา +20% ถาวร!" },
+    { "count": 12, "title_th": "ตำนานพิพิธภัณฑ์เอเธลการ์ด (12/12)", "gold": 1500, "stat": { "wisdom": 30, "charm": 30 }, "hearts_all": 80, "desc_th": "+1,500G • ชาวเมืองทุกคน +80❤️ • ครบชุด 100%!" }
+  ],
+  "night_market_stock": [
+    "item_starfall_crystal",
+    "item_ancient_tablet",
+    "item_sea_pearl",
+    "item_crimson_mana",
+    "item_ruby_elixir",
+    "item_velvet_rose",
+    "item_moon_wine",
+    "item_ember_ore",
+    "item_pure_gold_ore",
+    "item_mana_battery",
+    "item_aqua_crystal",
+    "item_moonbloom"
+  ]
+}

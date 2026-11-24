@@ -1,0 +1,499 @@
+{
+  "project": "Aethelgard — 2.5D HD Sprite Sheets",
+  "version": "4.0-complete-all-sprites",
+  "art_style": "2.5D Outline-Preserving Chibi Pixel Art with Rim Light & Ground Contact Shadow",
+  "animation": "walk_9x4 + idle_6x4 + interact_8x4 + portrait_style2_2x2 + pets_4x4 + items_39 + world_sprites",
+  "grid": {
+    "columns": 9,
+    "rows": 4,
+    "total_frames": 36,
+    "row_order": [
+      "row0_walk_up",
+      "row1_walk_left",
+      "row2_walk_down",
+      "row3_walk_right"
+    ],
+    "hd_cell_px": 128,
+    "hd_sheet_px": [
+      1152,
+      512
+    ],
+    "classic_cell_px": 64,
+    "classic_sheet_px": [
+      576,
+      256
+    ],
+    "anchor": "head_x_centered_foot_y_91pct"
+  },
+  "races_count": 8,
+  "characters_count": 16,
+  "studio_html": "aethelgard_spritesheet_studio.html",
+  "characters": [
+    {
+      "id": "01_ren",
+      "name": "เรน เวล (Ren Vale)",
+      "race_key": "human",
+      "race_label": "มนุษย์ (Human)",
+      "role": "นักเดินทางและผู้บุกเบิกหุบเขา",
+      "hd_sheet": "walk_9x4_hd_1152x512/01_ren_walk_9x4.png",
+      "classic_sheet": "walk_9x4/01_ren_walk_9x4.png",
+      "signature_action": "กางแผนที่หนังสัตว์และวาดจดบันทึกด้วยปากกาขนนก",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/01_ren_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/01_ren_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/01_ren_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/01_ren_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/01_ren_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/01_ren_neutral_256.png",
+        "happy": "portraits_style2/01_ren_happy_256.png",
+        "blush": "portraits_style2/01_ren_blush_256.png",
+        "sad": "portraits_style2/01_ren_sad_256.png"
+      }
+    },
+    {
+      "id": "02_marcus",
+      "name": "มาร์คัส รีด (Marcus Reed)",
+      "race_key": "human",
+      "race_label": "มนุษย์ (Human)",
+      "role": "นักเขียนนวนิยาย & ผู้จัดการหอสมุดชุมชน",
+      "hd_sheet": "walk_9x4_hd_1152x512/02_marcus_walk_9x4.png",
+      "classic_sheet": "walk_9x4/02_marcus_walk_9x4.png",
+      "signature_action": "เปิดหนังสือปกแข็งและจดพล็อตนิยายด้วยปากกาขนนก",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/02_marcus_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/02_marcus_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/02_marcus_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/02_marcus_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/02_marcus_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/02_marcus_neutral_256.png",
+        "happy": "portraits_style2/02_marcus_happy_256.png",
+        "blush": "portraits_style2/02_marcus_blush_256.png",
+        "sad": "portraits_style2/02_marcus_sad_256.png"
+      }
+    },
+    {
+      "id": "03_lilian",
+      "name": "ลิเลียน ซิลเวน (Lilian Sylvane)",
+      "race_key": "elf",
+      "race_label": "เอลฟ์ (Wood Elf)",
+      "role": "นักพฤกษศาสตร์ & หมอยาสมุนไพรรากไม้โลก",
+      "hd_sheet": "walk_9x4_hd_1152x512/03_lilian_walk_9x4.png",
+      "classic_sheet": "walk_9x4/03_lilian_walk_9x4.png",
+      "signature_action": "รินน้ำยาสมุนไพรเรืองแสงรดต้นกล้าจนผลิใบเป็นประกาย",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/03_lilian_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/03_lilian_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/03_lilian_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/03_lilian_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/03_lilian_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/03_lilian_neutral_256.png",
+        "happy": "portraits_style2/03_lilian_happy_256.png",
+        "blush": "portraits_style2/03_lilian_blush_256.png",
+        "sad": "portraits_style2/03_lilian_sad_256.png"
+      }
+    },
+    {
+      "id": "04_eli",
+      "name": "อีไล น็อกทิส (Eli Noctis)",
+      "race_key": "elf",
+      "race_label": "เอลฟ์ (Dark Elf)",
+      "role": "นักดาราศาสตร์ราตรี & ผู้ดูแลสวนดอกไม้จันทร์",
+      "hd_sheet": "walk_9x4_hd_1152x512/04_eli_walk_9x4.png",
+      "classic_sheet": "walk_9x4/04_eli_walk_9x4.png",
+      "signature_action": "ยก Astrolabe ทองเหลืองและส่องกล้องดูดาวด้วยความตื่นตา",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/04_eli_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/04_eli_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/04_eli_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/04_eli_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/04_eli_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/04_eli_neutral_256.png",
+        "happy": "portraits_style2/04_eli_happy_256.png",
+        "blush": "portraits_style2/04_eli_blush_256.png",
+        "sad": "portraits_style2/04_eli_sad_256.png"
+      }
+    },
+    {
+      "id": "05_kyo",
+      "name": "เคียว เฟเธอร์วินด์ (Kyo Featherwind)",
+      "race_key": "avian",
+      "race_label": "เผ่าวิหก (Owl Avian)",
+      "role": "บุรุษไปรษณีย์เวหา & ผู้ดูแลบอร์ดข่าวสาร",
+      "hd_sheet": "walk_9x4_hd_1152x512/05_kyo_walk_9x4.png",
+      "classic_sheet": "walk_9x4/05_kyo_walk_9x4.png",
+      "signature_action": "ดึงซองจดหมายประทับครั่งแดงออกมายื่นส่งพร้อมกระพือปีก",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/05_kyo_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/05_kyo_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/05_kyo_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/05_kyo_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/05_kyo_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/05_kyo_neutral_256.png",
+        "happy": "portraits_style2/05_kyo_happy_256.png",
+        "blush": "portraits_style2/05_kyo_blush_256.png",
+        "sad": "portraits_style2/05_kyo_sad_256.png"
+      }
+    },
+    {
+      "id": "06_sora",
+      "name": "โซระ ซันพลูม (Sora Sunplume)",
+      "race_key": "avian",
+      "race_label": "เผ่าวิหก (Sun-Hawk Avian)",
+      "role": "หน่วยลาดตระเวนเวหา & นักพยากรณ์ลมมรสุม",
+      "hd_sheet": "walk_9x4_hd_1152x512/06_sora_walk_9x4.png",
+      "classic_sheet": "walk_9x4/06_sora_walk_9x4.png",
+      "signature_action": "สยายปีกเหยี่ยวเพลิงและส่องกล้องลาดตระเวนขอบฟ้า",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/06_sora_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/06_sora_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/06_sora_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/06_sora_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/06_sora_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/06_sora_neutral_256.png",
+        "happy": "portraits_style2/06_sora_happy_256.png",
+        "blush": "portraits_style2/06_sora_blush_256.png",
+        "sad": "portraits_style2/06_sora_sad_256.png"
+      }
+    },
+    {
+      "id": "07_sera",
+      "name": "เซร่า วิสเกอร์เบลล์ (Sera Whiskerbell)",
+      "race_key": "beastkin",
+      "race_label": "เผ่าครึ่งสัตว์ (Cat Beastkin)",
+      "role": "เชฟขนมปัง & เจ้าของร้าน Elderbark Bakery",
+      "hd_sheet": "walk_9x4_hd_1152x512/07_sera_walk_9x4.png",
+      "classic_sheet": "walk_9x4/07_sera_walk_9x4.png",
+      "signature_action": "ยื่นขนมปังอบใหม่สีทองหอมกรุ่นพร้อมรอยยิ้มสดใส",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/07_sera_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/07_sera_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/07_sera_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/07_sera_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/07_sera_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/07_sera_neutral_256.png",
+        "happy": "portraits_style2/07_sera_happy_256.png",
+        "blush": "portraits_style2/07_sera_blush_256.png",
+        "sad": "portraits_style2/07_sera_sad_256.png"
+      }
+    },
+    {
+      "id": "08_roland",
+      "name": "โรแลนด์ แฟงวูด (Roland Fangwood)",
+      "race_key": "beastkin",
+      "race_label": "เผ่าครึ่งสัตว์ (Wolf Beastkin)",
+      "role": "หัวหน้าผู้พิทักษ์ป่า & ช่างไม้ประจำหุบเขา",
+      "hd_sheet": "walk_9x4_hd_1152x512/08_roland_walk_9x4.png",
+      "classic_sheet": "walk_9x4/08_roland_walk_9x4.png",
+      "signature_action": "กวัดแกว่งขวานช่างไม้ผ่าฟืนและตรวจงานไม้อย่างมั่นคง",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/08_roland_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/08_roland_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/08_roland_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/08_roland_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/08_roland_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/08_roland_neutral_256.png",
+        "happy": "portraits_style2/08_roland_happy_256.png",
+        "blush": "portraits_style2/08_roland_blush_256.png",
+        "sad": "portraits_style2/08_roland_sad_256.png"
+      }
+    },
+    {
+      "id": "09_celeste",
+      "name": "เซเลส น็อกเทิร์น (Celeste Nocturne)",
+      "race_key": "vampire",
+      "race_label": "แวมไพร์ (Noble Vampire)",
+      "role": "จิตรกรสีน้ำมัน & นักไวโอลินประจำโรงเตี๊ยม",
+      "hd_sheet": "walk_9x4_hd_1152x512/09_celeste_walk_9x4.png",
+      "classic_sheet": "walk_9x4/09_celeste_walk_9x4.png",
+      "signature_action": "บรรเลงไวโอลินไม้แดงอย่างสง่างามพร้อมตัวโน้ตลอยละล่อง",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/09_celeste_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/09_celeste_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/09_celeste_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/09_celeste_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/09_celeste_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/09_celeste_neutral_256.png",
+        "happy": "portraits_style2/09_celeste_happy_256.png",
+        "blush": "portraits_style2/09_celeste_blush_256.png",
+        "sad": "portraits_style2/09_celeste_sad_256.png"
+      }
+    },
+    {
+      "id": "10_lucian",
+      "name": "ลูเซียน เวน (Lucian Vane)",
+      "race_key": "vampire",
+      "race_label": "แวมไพร์ (Alchemist Vampire)",
+      "role": "นักแปรธาตุโลหิต & หมอปรุงยาเวทมนตร์โบราณ",
+      "hd_sheet": "walk_9x4_hd_1152x512/10_lucian_walk_9x4.png",
+      "classic_sheet": "walk_9x4/10_lucian_walk_9x4.png",
+      "signature_action": "แกว่งขวดน้ำยาแปรธาตุสีทับทิมเรืองแสงจนเกิดประกายเวท",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/10_lucian_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/10_lucian_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/10_lucian_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/10_lucian_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/10_lucian_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/10_lucian_neutral_256.png",
+        "happy": "portraits_style2/10_lucian_happy_256.png",
+        "blush": "portraits_style2/10_lucian_blush_256.png",
+        "sad": "portraits_style2/10_lucian_sad_256.png"
+      }
+    },
+    {
+      "id": "11_pip",
+      "name": "พิป โกลด์ลีฟ (Pip Goldleaf)",
+      "race_key": "goblin",
+      "race_label": "ก็อบลินเหลือง (Yellow Goblin)",
+      "role": "เฒ่าแก่ร้านชำ Goldleaf & นายหน้าบอร์ดภารกิจ",
+      "hd_sheet": "walk_9x4_hd_1152x512/11_pip_walk_9x4.png",
+      "classic_sheet": "walk_9x4/11_pip_walk_9x4.png",
+      "signature_action": "เขย่าถุงเงินพ่อค้าและโยนนับเหรียญทองอย่างอารมณ์ดี",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/11_pip_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/11_pip_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/11_pip_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/11_pip_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/11_pip_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/11_pip_neutral_256.png",
+        "happy": "portraits_style2/11_pip_happy_256.png",
+        "blush": "portraits_style2/11_pip_blush_256.png",
+        "sad": "portraits_style2/11_pip_sad_256.png"
+      }
+    },
+    {
+      "id": "12_trixie",
+      "name": "ทริกซี่ สปาร์คเกียร์ (Trixie Sparkgear)",
+      "race_key": "goblin",
+      "race_label": "ก็อบลินเหลือง (Yellow Goblin)",
+      "role": "วิศวกรเครื่องจักรกลฟันเฟือง & ช่างประดิษฐ์",
+      "hd_sheet": "walk_9x4_hd_1152x512/12_trixie_walk_9x4.png",
+      "classic_sheet": "walk_9x4/12_trixie_walk_9x4.png",
+      "signature_action": "ใช้ประแจขันซ่อมฟันเฟืองทองเหลืองอย่างคล่องแคล่ว",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/12_trixie_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/12_trixie_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/12_trixie_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/12_trixie_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/12_trixie_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/12_trixie_neutral_256.png",
+        "happy": "portraits_style2/12_trixie_happy_256.png",
+        "blush": "portraits_style2/12_trixie_blush_256.png",
+        "sad": "portraits_style2/12_trixie_sad_256.png"
+      }
+    },
+    {
+      "id": "13_mirelle",
+      "name": "มิเรลล์ เพิร์ลวอยซ์ (Mirelle Pearlvoice)",
+      "race_key": "merfolk",
+      "race_label": "เผ่าเงือก (Siren Songstress)",
+      "role": "นักขับขานบทเพลงวารี & ผู้ดูแลสระน้ำศักดิ์สิทธิ์",
+      "hd_sheet": "walk_9x4_hd_1152x512/13_mirelle_walk_9x4.png",
+      "classic_sheet": "walk_9x4/13_mirelle_walk_9x4.png",
+      "signature_action": "ประสานมือขับขานบทเพลงวารีพร้อมฟองน้ำและตัวโน้ตลอยขึ้น",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/13_mirelle_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/13_mirelle_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/13_mirelle_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/13_mirelle_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/13_mirelle_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/13_mirelle_neutral_256.png",
+        "happy": "portraits_style2/13_mirelle_happy_256.png",
+        "blush": "portraits_style2/13_mirelle_blush_256.png",
+        "sad": "portraits_style2/13_mirelle_sad_256.png"
+      }
+    },
+    {
+      "id": "14_kael",
+      "name": "คาเอล ไทด์คอลเลอร์ (Kael Tidecaller)",
+      "race_key": "merfolk",
+      "race_label": "เผ่าเงือก (Merfolk Diver)",
+      "role": "นักประดาน้ำโบราณคดี & ผู้พิทักษ์ซากวิหารใต้น้ำ",
+      "hd_sheet": "walk_9x4_hd_1152x512/14_kael_walk_9x4.png",
+      "classic_sheet": "walk_9x4/14_kael_walk_9x4.png",
+      "signature_action": "ถือไข่มุกสมุทรเรืองแสงสีฟ้าน้ำทะเลตรวจสอบพลังโบราณ",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/14_kael_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/14_kael_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/14_kael_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/14_kael_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/14_kael_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/14_kael_neutral_256.png",
+        "happy": "portraits_style2/14_kael_happy_256.png",
+        "blush": "portraits_style2/14_kael_blush_256.png",
+        "sad": "portraits_style2/14_kael_sad_256.png"
+      }
+    },
+    {
+      "id": "15_thorn",
+      "name": "ทอร์น ไอรอนรูท (Thorn Ironroot)",
+      "race_key": "dwarf",
+      "race_label": "คนแคระ (Blacksmith Dwarf)",
+      "role": "ช่างตีเหล็กศิลาเพลิง & นักหลอมอาวุธ",
+      "hd_sheet": "walk_9x4_hd_1152x512/15_thorn_walk_9x4.png",
+      "classic_sheet": "walk_9x4/15_thorn_walk_9x4.png",
+      "signature_action": "เงื้อค้อนช่างตีเหล็กทุบแท่งเหล็กร้อนแดงบนทั่งตีเหล็ก",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/15_thorn_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/15_thorn_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/15_thorn_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/15_thorn_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/15_thorn_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/15_thorn_neutral_256.png",
+        "happy": "portraits_style2/15_thorn_happy_256.png",
+        "blush": "portraits_style2/15_thorn_blush_256.png",
+        "sad": "portraits_style2/15_thorn_sad_256.png"
+      }
+    },
+    {
+      "id": "16_bram",
+      "name": "คุณปู่บราม โอ๊กบาร์เรล (Grandpa Bram)",
+      "race_key": "dwarf",
+      "race_label": "คนแคระ (Tavern Master Dwarf)",
+      "role": "เจ้าของโรงเตี๊ยมตะเกียงมอส & เชฟสตูว์หม้อไฟ",
+      "hd_sheet": "walk_9x4_hd_1152x512/16_bram_walk_9x4.png",
+      "classic_sheet": "walk_9x4/16_bram_walk_9x4.png",
+      "signature_action": "เช็ดแก้วไม้และยกแก้วเอลน้ำผึ้งฟองนุ่มขึ้นชนฉลองอย่างอารมณ์ดี",
+      "idle_hd_sheet": "idle_6x4_hd_768x512/16_bram_idle_6x4.png",
+      "idle_classic_sheet": "idle_6x4/16_bram_idle_6x4.png",
+      "interact_hd_sheet": "interact_8x4_hd_1024x512/16_bram_interact_8x4.png",
+      "interact_classic_sheet": "interact_8x4/16_bram_interact_8x4.png",
+      "portrait_2x2_sheet": "portraits_style2/16_bram_portrait_2x2.png",
+      "portrait_frames": {
+        "neutral": "portraits_style2/16_bram_neutral_256.png",
+        "happy": "portraits_style2/16_bram_happy_256.png",
+        "blush": "portraits_style2/16_bram_blush_256.png",
+        "sad": "portraits_style2/16_bram_sad_256.png"
+      }
+    }
+  ],
+  "sheets": {
+    "walk_9x4": {
+      "columns": 9,
+      "rows": 4,
+      "total_frames": 36,
+      "row_order": [
+        "row0_walk_up",
+        "row1_walk_left",
+        "row2_walk_down",
+        "row3_walk_right"
+      ],
+      "hd_dir": "walk_9x4_hd_1152x512",
+      "hd_px": [
+        1152,
+        512
+      ],
+      "classic_dir": "walk_9x4",
+      "classic_px": [
+        576,
+        256
+      ]
+    },
+    "idle_6x4": {
+      "columns": 6,
+      "rows": 4,
+      "total_frames": 24,
+      "row_order": [
+        "row0_idle_up",
+        "row1_idle_left",
+        "row2_idle_down",
+        "row3_idle_right"
+      ],
+      "hd_dir": "idle_6x4_hd_768x512",
+      "hd_px": [
+        768,
+        512
+      ],
+      "classic_dir": "idle_6x4",
+      "classic_px": [
+        384,
+        256
+      ]
+    },
+    "interact_8x4": {
+      "columns": 8,
+      "rows": 4,
+      "total_frames": 32,
+      "row_order": [
+        "row0_greet_talk",
+        "row1_pickup_examine",
+        "row2_signature_action",
+        "row3_happy_celebrate"
+      ],
+      "hd_dir": "interact_8x4_hd_1024x512",
+      "hd_px": [
+        1024,
+        512
+      ],
+      "classic_dir": "interact_8x4",
+      "classic_px": [
+        512,
+        256
+      ]
+    }
+  },
+  "pets": [
+    {
+      "id": "pet_cat",
+      "name": "โมจิ (Mochi — Orange Tabby Cat)",
+      "hd_sheet": "pets_4x4_hd_512x512/pet_cat_4x4.png",
+      "classic_sheet": "pets_4x4/pet_cat_4x4.png",
+      "grid": [
+        4,
+        4
+      ],
+      "row_order": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ]
+    },
+    {
+      "id": "pet_dog",
+      "name": "โคริ (Kori — Shiba Inu Puppy)",
+      "hd_sheet": "pets_4x4_hd_512x512/pet_dog_4x4.png",
+      "classic_sheet": "pets_4x4/pet_dog_4x4.png",
+      "grid": [
+        4,
+        4
+      ],
+      "row_order": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ]
+    },
+    {
+      "id": "pet_fairy",
+      "name": "ลูมิ (Lumi — World-Tree Light Fairy)",
+      "hd_sheet": "pets_4x4_hd_512x512/pet_fairy_4x4.png",
+      "classic_sheet": "pets_4x4/pet_fairy_4x4.png",
+      "grid": [
+        4,
+        4
+      ],
+      "row_order": [
+        "up",
+        "left",
+        "down",
+        "right"
+      ]
+    }
+  ],
+  "items": {
+    "total_items": 39,
+    "sheet_32": "items_icons/items_39_sheet_8x5_256x160.png",
+    "sheet_64_hd": "items_icons/items_39_sheet_8x5_512x320.png",
+    "atlas_json": "items_icons/items_atlas.json"
+  },
+  "world_sprites": {
+    "tileset_classic": "world_sprites/tileset_seasons_8x3_256x96.png",
+    "tileset_hd": "world_sprites/tileset_seasons_8x3_512x192.png",
+    "props_and_trees": "world_sprites/props_and_trees_8x2_512x192.png",
+    "world_tree_states": "world_sprites/world_tree_states_2x1_512x256.png",
+    "buildings_6_houses": "world_sprites/buildings_6_houses_3x2_768x384.png",
+    "landmarks_5_restorable": "world_sprites/landmarks_5_restorable_5x2_1280x384.png",
+    "atlas_json": "world_sprites/world_atlas.json"
+  }
+}

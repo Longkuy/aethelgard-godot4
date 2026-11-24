@@ -1,0 +1,258 @@
+{
+  "version": "1.0",
+  "map_id": "aethelgard_valley",
+  "name_th": "หุบเขาต้นไม้โลก (Aethelgard Valley)",
+  "tile_size_px": 32,
+  "outdoor_dimensions": {
+    "width_tiles": 84,
+    "height_tiles": 64,
+    "width_px": 2688,
+    "height_px": 2048
+  },
+  "districts": [
+    {
+      "id": "square",
+      "name": "จัตุรัสต้นไม้โลก (World Tree Square)",
+      "bounds": [
+        32,
+        22,
+        20,
+        16
+      ],
+      "spawn": [
+        42,
+        31
+      ]
+    },
+    {
+      "id": "farm",
+      "name": "ฟาร์มรากไม้ทอง (Golden-Root Farm)",
+      "bounds": [
+        8,
+        9,
+        18,
+        19
+      ],
+      "spawn": [
+        16,
+        17
+      ]
+    },
+    {
+      "id": "market",
+      "name": "ย่านตลาด & โรงเตี๊ยม (Market Row)",
+      "bounds": [
+        50,
+        11,
+        13,
+        18
+      ],
+      "spawn": [
+        55,
+        28
+      ]
+    },
+    {
+      "id": "forge",
+      "name": "ย่านช่างเหล็ก & หอเวหา (Forge District)",
+      "bounds": [
+        64,
+        14,
+        15,
+        24
+      ],
+      "spawn": [
+        69,
+        25
+      ]
+    },
+    {
+      "id": "grove",
+      "name": "ป่าพฤกษา & หอดูดาว (Sylvan Grove)",
+      "bounds": [
+        12,
+        33,
+        20,
+        13
+      ],
+      "spawn": [
+        18,
+        41
+      ]
+    },
+    {
+      "id": "lake",
+      "name": "ทะเลสาบมุกศักดิ์สิทธิ์ (Sacred Lake)",
+      "bounds": [
+        28,
+        46,
+        28,
+        14
+      ],
+      "spawn": [
+        42,
+        46
+      ]
+    }
+  ],
+  "buildings": [
+    {
+      "id": "farmhouse",
+      "name": "บ้านตัวเอก",
+      "owner": "01_ren",
+      "outdoor_rect": [
+        13,
+        10,
+        7,
+        5
+      ],
+      "door_tile": [
+        16,
+        15
+      ],
+      "indoor_size": [
+        16,
+        12
+      ],
+      "exit_tile": [
+        8,
+        10
+      ]
+    },
+    {
+      "id": "shop",
+      "name": "ร้านชำ Goldleaf",
+      "owner": "11_pip",
+      "outdoor_rect": [
+        31,
+        13,
+        7,
+        5
+      ],
+      "door_tile": [
+        34,
+        18
+      ],
+      "indoor_size": [
+        16,
+        12
+      ],
+      "exit_tile": [
+        8,
+        10
+      ]
+    },
+    {
+      "id": "bakery",
+      "name": "ร้านขนมปัง Elderbark Bakery",
+      "owner": "07_sera",
+      "outdoor_rect": [
+        52,
+        12,
+        7,
+        5
+      ],
+      "door_tile": [
+        55,
+        17
+      ],
+      "indoor_size": [
+        16,
+        12
+      ],
+      "exit_tile": [
+        8,
+        10
+      ]
+    },
+    {
+      "id": "tavern",
+      "name": "โรงเตี๊ยมตะเกียงมอส",
+      "owner": "16_bram",
+      "outdoor_rect": [
+        52,
+        21,
+        9,
+        5
+      ],
+      "door_tile": [
+        56,
+        26
+      ],
+      "indoor_size": [
+        18,
+        13
+      ],
+      "exit_tile": [
+        9,
+        11
+      ]
+    },
+    {
+      "id": "smithy",
+      "name": "โรงตีเหล็กศิลาเพลิง",
+      "owner": "15_thorn",
+      "outdoor_rect": [
+        66,
+        16,
+        8,
+        5
+      ],
+      "door_tile": [
+        69,
+        21
+      ],
+      "indoor_size": [
+        16,
+        12
+      ],
+      "exit_tile": [
+        8,
+        10
+      ]
+    },
+    {
+      "id": "cottage",
+      "name": "กระท่อมสมุนไพรลิเลียน",
+      "owner": "03_lilian",
+      "outdoor_rect": [
+        14,
+        35,
+        7,
+        5
+      ],
+      "door_tile": [
+        17,
+        40
+      ],
+      "indoor_size": [
+        16,
+        12
+      ],
+      "exit_tile": [
+        8,
+        10
+      ]
+    }
+  ],
+  "bridges": [
+    [
+      18,
+      45,
+      3,
+      7
+    ],
+    [
+      40,
+      44,
+      4,
+      6
+    ],
+    [
+      68,
+      44,
+      3,
+      7
+    ]
+  ]
+}

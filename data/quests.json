@@ -1,0 +1,174 @@
+{
+  "version": "1.0",
+  "quests_count": 10,
+  "quests": [
+    {
+      "id": "q01_welcome",
+      "giver": "11_pip",
+      "title": "ยินดีต้อนรับสู่หุบเขาต้นไม้โลก",
+      "desc": "ทักทายชาวเมืองอย่างน้อย 5 คนจากเผ่าพันธุ์ต่างๆ รอบจัตุรัส",
+      "objective": {
+        "type": "talk_npcs",
+        "count": 5
+      },
+      "reward": {
+        "gold": 150,
+        "hearts_all": 1
+      }
+    },
+    {
+      "id": "q02_first_shift",
+      "giver": "01_ren",
+      "title": "กะงานพาร์ทไทม์วันแรกในเมือง",
+      "desc": "ลองรับงานพาร์ทไทม์ที่ร้านค้าในเมืองอย่างน้อย 1 กะ เพื่อเริ่มต้นชีวิตใหม่ในเอเธลการ์ด",
+      "objective": {
+        "type": "work_shifts",
+        "count": 1
+      },
+      "reward": {
+        "gold": 200,
+        "item_id": "item_honey_croissant",
+        "item": "ครัวซองต์เนยน้ำผึ้ง"
+      }
+    },
+    {
+      "id": "q03_warm_bread",
+      "giver": "07_sera",
+      "title": "กลิ่นขนมปังยามเช้า",
+      "desc": "ช่วยส่งขนมปังเนยน้ำผึ้งอบใหม่ให้มาร์คัสและเคียวที่จัตุรัส",
+      "objective": {
+        "type": "have_item",
+        "item_id": "item_honey_bread",
+        "item": "ขนมปังเนยน้ำผึ้ง",
+        "count": 1
+      },
+      "reward": {
+        "gold": 180,
+        "hearts": {
+          "07_sera": 1
+        }
+      }
+    },
+    {
+      "id": "q04_herb_dew",
+      "giver": "03_lilian",
+      "title": "น้ำค้างใบไม้โลก",
+      "desc": "เก็บดอกน้ำค้างรากไม้ 3 ดอกในโซนป่าพฤกษาให้ลิเลียนปรุงยา",
+      "objective": {
+        "type": "have_item",
+        "item_id": "item_rootdew_flower",
+        "item": "ดอกน้ำค้างรากไม้",
+        "count": 1
+      },
+      "reward": {
+        "gold": 220,
+        "item_id": "item_emerald_tea",
+        "item": "ชาเขียวมรกต"
+      }
+    },
+    {
+      "id": "q05_bridge_repair",
+      "giver": "08_roland",
+      "title": "ซ่อมสะพานไม้ข้ามลำธาร",
+      "desc": "รวบรวมไม้โอ๊กเนื้อแข็ง 10 ท่อนช่วยโรแลนด์เสริมคานสะพาน",
+      "objective": {
+        "type": "have_item",
+        "item_id": "item_hard_oak",
+        "item": "ไม้โอ๊กเนื้อแข็ง",
+        "count": 2
+      },
+      "reward": {
+        "gold": 300,
+        "hearts": {
+          "08_roland": 1
+        }
+      }
+    },
+    {
+      "id": "q06_forge_ore",
+      "giver": "15_thorn",
+      "title": "ไฟแห่งเตาหลอมศิลาเพลิง",
+      "desc": "นำแร่ศิลาเพลิง 5 ก้อนมาให้ทอร์นทดลองตีจอบระดับ Journeyman",
+      "objective": {
+        "type": "have_item",
+        "item_id": "item_ember_ore",
+        "item": "แร่ศิลาเพลิง",
+        "count": 1
+      },
+      "reward": {
+        "gold": 350,
+        "item_id": "item_brass_compass",
+        "item": "เข็มทิศทองเหลือง"
+      }
+    },
+    {
+      "id": "q07_clockwork_lamp",
+      "giver": "12_trixie",
+      "title": "โคมไฟฟันเฟืองอัตโนมัติ",
+      "desc": "ช่วยทริกซี่ทดสอบโคมไฟถนนรอบจัตุรัสตอนค่ำหลัง 19:00",
+      "objective": {
+        "type": "inspect_night",
+        "count": 4
+      },
+      "reward": {
+        "gold": 260,
+        "hearts": {
+          "12_trixie": 1
+        }
+      }
+    },
+    {
+      "id": "q08_sunken_tablet",
+      "giver": "14_kael",
+      "title": "จารึกใต้อ่างเก็บน้ำ",
+      "desc": "นำแผ่นจารึกโบราณที่คาเอลกู้ขึ้นมาไปให้มาร์คัสและอีไลช่วยถอดความ",
+      "objective": {
+        "type": "have_item",
+        "item_id": "item_ancient_tablet",
+        "item": "แผ่นจารึกโบราณ",
+        "count": 1
+      },
+      "reward": {
+        "gold": 400,
+        "hearts": {
+          "14_kael": 1,
+          "02_marcus": 1
+        }
+      }
+    },
+    {
+      "id": "q09_crimson_elixir",
+      "giver": "10_lucian",
+      "title": "สูตรน้ำอมฤตทับทิมแห่งสันติภาพ",
+      "desc": "นำผลึกมานาแดงและน้ำศักดิ์สิทธิ์จากมิเรลล์มาให้ลูเซียนปรุงน้ำอมฤต",
+      "objective": {
+        "type": "have_item",
+        "item_id": "item_crimson_mana",
+        "item": "ผลึกมานาแดง",
+        "count": 1
+      },
+      "reward": {
+        "gold": 450,
+        "hearts": {
+          "10_lucian": 1,
+          "09_celeste": 1
+        }
+      }
+    },
+    {
+      "id": "q10_tavern_feast",
+      "giver": "16_bram",
+      "title": "ค่ำคืนเทศกาล 8 เผ่าพันธุ์",
+      "desc": "นำวัตถุดิบจากฟาร์มมาร่วมงานเลี้ยงใหญ่ที่โรงเตี๊ยมตะเกียงมอสของปู่บราม",
+      "objective": {
+        "type": "attend_event",
+        "scene": "tavern",
+        "time": "19:00"
+      },
+      "reward": {
+        "gold": 600,
+        "hearts_all": 2
+      }
+    }
+  ]
+}

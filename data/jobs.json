@@ -1,0 +1,214 @@
+{
+  "version": "1.0",
+  "description_th": "ระบบงานพาร์ทไทม์และกิจกรรมประจำวันในเมือง World Tree Valley (ไม่เน้นปลูกผัก)",
+  "jobs": [
+    {
+      "id": "job_bakery",
+      "title_th": "ผู้ช่วยอบขนมปังเช้า",
+      "building_id": "bakery",
+      "location_th": "ร้านขนมปัง Elderbark Bakery",
+      "employer_id": "07_sera",
+      "shift_hours": [
+        7,
+        14
+      ],
+      "duration_hours": 3,
+      "energy_cost": 20,
+      "base_pay_gold": 120,
+      "bonus_stat": "craft",
+      "stat_gains": {
+        "craft": 12,
+        "charm": 6
+      },
+      "friendship_gains": {
+        "07_sera": 15
+      },
+      "bonus_item_id": "item_honey_croissant",
+      "bonus_item_chance": 0.35,
+      "description_th": "ช่วยเซร่านวดแป้ง อบครัวซองต์เนยน้ำผึ้ง และจัดหน้าร้านรับกลิ่นหอมยามเช้า"
+    },
+    {
+      "id": "job_smithy",
+      "title_th": "ลูกมือเตาหลอมศิลาเพลิง",
+      "building_id": "smithy",
+      "location_th": "โรงตีเหล็กศิลาเพลิง",
+      "employer_id": "15_thorn",
+      "shift_hours": [
+        8,
+        16
+      ],
+      "duration_hours": 3,
+      "energy_cost": 25,
+      "base_pay_gold": 150,
+      "bonus_stat": "craft",
+      "stat_gains": {
+        "craft": 15,
+        "courage": 10
+      },
+      "friendship_gains": {
+        "15_thorn": 15,
+        "12_trixie": 5
+      },
+      "bonus_item_id": "item_brass_gear",
+      "bonus_item_chance": 0.3,
+      "description_th": "ช่วยทอร์นสูบลมเตาหลอม คัดแยกแร่ และขัดแต่งเครื่องมือช่าง"
+    },
+    {
+      "id": "job_tavern",
+      "title_th": "พนักงานเสิร์ฟโรงเตี๊ยมยามค่ำ",
+      "building_id": "tavern",
+      "location_th": "โรงเตี๊ยมตะเกียงมอส",
+      "employer_id": "16_bram",
+      "shift_hours": [
+        17,
+        23
+      ],
+      "duration_hours": 3,
+      "energy_cost": 20,
+      "base_pay_gold": 140,
+      "bonus_stat": "charm",
+      "stat_gains": {
+        "charm": 15,
+        "courage": 5
+      },
+      "friendship_gains": {
+        "16_bram": 15,
+        "08_roland": 5,
+        "09_celeste": 5
+      },
+      "bonus_item_id": "item_honey_ale",
+      "bonus_item_chance": 0.3,
+      "description_th": "ช่วยคุณปู่บรามเสิร์ฟสตูว์และเอลน้ำผึ้ง พร้อมพูดคุยรับฟังเรื่องเล่าจากชาวเมืองทั้ง 8 เผ่า"
+    },
+    {
+      "id": "job_shop",
+      "title_th": "พนักงานจัดสต็อกร้านชำ",
+      "building_id": "shop",
+      "location_th": "ร้านชำ Goldleaf",
+      "employer_id": "11_pip",
+      "shift_hours": [
+        9,
+        18
+      ],
+      "duration_hours": 2,
+      "energy_cost": 15,
+      "base_pay_gold": 110,
+      "bonus_stat": "charm",
+      "stat_gains": {
+        "charm": 10,
+        "wisdom": 8
+      },
+      "friendship_gains": {
+        "11_pip": 15
+      },
+      "bonus_item_id": "item_roasted_coffee",
+      "bonus_item_chance": 0.25,
+      "description_th": "ช่วยพิปจัดชั้นวางสินค้า เช็กบัญชีรายวัน และแนะนำของฝากให้ลูกค้า"
+    },
+    {
+      "id": "job_herbalist",
+      "title_th": "ผู้ช่วยคัดแยกสมุนไพร",
+      "building_id": "cottage",
+      "location_th": "กระท่อมสมุนไพรลิเลียน",
+      "employer_id": "03_lilian",
+      "shift_hours": [
+        8,
+        15
+      ],
+      "duration_hours": 2,
+      "energy_cost": 15,
+      "base_pay_gold": 115,
+      "bonus_stat": "wisdom",
+      "stat_gains": {
+        "wisdom": 12,
+        "craft": 8
+      },
+      "friendship_gains": {
+        "03_lilian": 15,
+        "10_lucian": 5
+      },
+      "bonus_item_id": "item_emerald_tea",
+      "bonus_item_chance": 0.35,
+      "description_th": "ช่วยลิเลียนตากดอกน้ำค้างรากไม้ บดสมุนไพร และจัดขวดยาสมานแผล"
+    },
+    {
+      "id": "job_courier",
+      "title_th": "คนส่งจดหมายด่วนสายลม",
+      "building_id": "outdoor",
+      "location_th": "จัตุรัสต้นไม้โลก",
+      "employer_id": "05_kyo",
+      "shift_hours": [
+        7,
+        17
+      ],
+      "duration_hours": 2,
+      "energy_cost": 18,
+      "base_pay_gold": 125,
+      "bonus_stat": "courage",
+      "stat_gains": {
+        "courage": 10,
+        "charm": 8
+      },
+      "friendship_gains": {
+        "05_kyo": 15,
+        "06_sora": 5
+      },
+      "bonus_item_id": "item_sunflower_seeds",
+      "bonus_item_chance": 0.3,
+      "description_th": "วิ่งส่งพัสดุและจดหมายประทับตราขี้ผึ้งไปตามบ้านต่างๆ ทั่วทั้งหุบเขา"
+    },
+    {
+      "id": "job_patrol",
+      "title_th": "ลาดตระเวนรอบหุบเขา",
+      "building_id": "outdoor",
+      "location_th": "สะพานตะวันตกและชายป่า",
+      "employer_id": "08_roland",
+      "shift_hours": [
+        14,
+        21
+      ],
+      "duration_hours": 3,
+      "energy_cost": 25,
+      "base_pay_gold": 160,
+      "bonus_stat": "courage",
+      "stat_gains": {
+        "courage": 18,
+        "wisdom": 4
+      },
+      "friendship_gains": {
+        "08_roland": 15,
+        "14_kael": 5
+      },
+      "bonus_item_id": "item_wild_honey",
+      "bonus_item_chance": 0.25,
+      "description_th": "เดินตรวจตราความเรียบร้อยตามสะพานและแนวป่าร่วมกับโรแลนด์ ดูแลความปลอดภัยให้ชาวเมือง"
+    },
+    {
+      "id": "job_archives",
+      "title_th": "ผู้ช่วยคัดลอกจารึกโบราณ",
+      "building_id": "outdoor",
+      "location_th": "ลานหินจารึกต้นไม้โลก",
+      "employer_id": "02_marcus",
+      "shift_hours": [
+        10,
+        20
+      ],
+      "duration_hours": 2,
+      "energy_cost": 15,
+      "base_pay_gold": 130,
+      "bonus_stat": "wisdom",
+      "stat_gains": {
+        "wisdom": 18,
+        "charm": 4
+      },
+      "friendship_gains": {
+        "02_marcus": 12,
+        "04_eli": 10,
+        "13_mirelle": 5
+      },
+      "bonus_item_id": "item_indigo_ink",
+      "bonus_item_chance": 0.3,
+      "description_th": "ช่วยมาร์คัสและอีไลถอดความบันทึกประวัติศาสตร์แปดเผ่าและจัดหมวดหมู่แผนที่เก่า"
+    }
+  ]
+}

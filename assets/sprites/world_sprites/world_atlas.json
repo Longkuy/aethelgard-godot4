@@ -1,0 +1,23 @@
+{
+  "tileset_classic": "world_sprites/tileset_seasons_8x3_256x96.png",
+  "tileset_hd": "world_sprites/tileset_seasons_8x3_512x192.png",
+  "props_and_trees": "world_sprites/props_and_trees_8x2_512x192.png",
+  "world_tree_states": "world_sprites/world_tree_states_2x1_512x256.png",
+  "buildings_sheet": "world_sprites/buildings_6_houses_3x2_768x384.png",
+  "landmarks_sheet": "world_sprites/landmarks_5_restorable_5x2_1280x384.png",
+  "houses": [
+    "farmhouse",
+    "shop",
+    "bakery",
+    "tavern",
+    "cottage",
+    "smithy"
+  ],
+  "landmarks": [
+    "lm_observatory",
+    "lm_hotspring",
+    "lm_museum",
+    "lm_stage",
+    "lm_nightmarket"
+  ]
+}
