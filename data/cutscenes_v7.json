@@ -1,0 +1,868 @@
+{
+  "version": "7.0",
+  "cutscenes": {
+    "cs_opening_arrival": {
+      "id": "cs_opening_arrival",
+      "category": "main_scene",
+      "title_th": "ก้าวแรกสู่หุบเขาต้นไม้โลก",
+      "subtitle_th": "การต้อนรับอันอบอุ่นจากชาวเมืองเอเธลการ์ด",
+      "stage_scene": "outdoor",
+      "focus_tile": [
+        42,
+        30
+      ],
+      "bgm_zone": "plaza",
+      "cast": [
+        "16_bram",
+        "01_ren",
+        "03_lilian"
+      ],
+      "beats": [
+        {
+          "speaker": "16_bram",
+          "emotion": "happy",
+          "emote": "🎉",
+          "text": "ฮ่าๆๆ! มาถึงจนได้สินะ {player}! ยินดีต้อนรับสู่หุบเขาต้นไม้โลก เมืองที่ทั้งแปดเผ่าพันธุ์อาศัยอยู่ร่วมกันอย่างอบอุ่น!"
+        },
+        {
+          "speaker": "01_ren",
+          "emotion": "happy",
+          "emote": "🧭",
+          "text": "สวัสดี {player}! ฉันชื่อเรน เวล บ้านพัก '{farm}' ของเธอทางทิศตะวันตกเฉียงเหนือจัดเตรียมไว้พร้อมเข้าอยู่แล้วนะ!"
+        },
+        {
+          "speaker": "03_lilian",
+          "emotion": "happy",
+          "emote": "🌿",
+          "text": "ดูยอดต้นไม้โลกสิจ๊ะ... ใบไม้ขยับต้อนรับการมาถึงของ {player} ใหญ่เลย ขอให้ชีวิตใหม่ที่นี่เปี่ยมด้วยสายใยและความสุขนะจ๊ะ!"
+        }
+      ],
+      "choices": [
+        {
+          "text_th": "ฝากเนื้อฝากตัวด้วยนะครับ/ค่ะทุกคน! จะดูแลหุบเขานี้ให้ดีที่สุดเลย!",
+          "speaker": "16_bram",
+          "emotion": "happy",
+          "reply_th": "ฮ่าๆๆ หน่วยก้านดีมากหลานรัก! เอ้า ปู่มอบขนมปังอุ่นๆ ให้เป็นขวัญถุงวันแรกนะ!",
+          "stat": {
+            "charm": 8
+          }
+        }
+      ]
+    },
+    "cs_enter_farmhouse": {
+      "id": "cs_enter_farmhouse",
+      "category": "scene_entry",
+      "title_th": "บ้านหลังใหม่: {farm}",
+      "subtitle_th": "เข้าสู่บ้านพักตัวเอกเป็นครั้งแรก",
+      "stage_scene": "farmhouse",
+      "focus_tile": [
+        8,
+        7
+      ],
+      "bgm_zone": "home",
+      "cast": [
+        "08_roland"
+      ],
+      "beats": [
+        {
+          "speaker": "08_roland",
+          "emotion": "happy",
+          "emote": "🏡",
+          "text": "เข้ามาดูข้างในสิ {player}! ฉันเพิ่งขัดพื้นไม้โอ๊กและเช็กเตาผิงให้เสร็จเมื่อเช้านี้เอง แข็งแรงอบอุ่นแน่นอน"
+        },
+        {
+          "speaker": "08_roland",
+          "emotion": "neutral",
+          "emote": "🪞",
+          "text": "ตรงมุมห้องมี 'กระจกแต่งตัวเวทมนตร์' และคุณสามารถกดปุ่ม [H] เพื่อวางเฟอร์นิเจอร์บนช่องตารางพื้นห้องได้ตามใจชอบเลยนะ!"
+        }
+      ]
+    },
+    "cs_enter_loft": {
+      "id": "cs_enter_loft",
+      "category": "scene_entry",
+      "title_th": "ห้องใต้หลังคาชมดาว (Starlight Loft)",
+      "subtitle_th": "เปิดใช้งานชั้น 2 ของบ้านพักเป็นครั้งแรก",
+      "stage_scene": "farmhouse_upstairs",
+      "focus_tile": [
+        7,
+        5
+      ],
+      "bgm_zone": "home",
+      "cast": [
+        "08_roland",
+        "15_thorn"
+      ],
+      "beats": [
+        {
+          "speaker": "08_roland",
+          "emotion": "happy",
+          "emote": "🌟",
+          "text": "เป็นไงบ้าง {player}! คานไม้โอ๊กชั้น 2 ยกสูงรับกับช่องหน้าต่างกระจกโค้ง มองเห็นหมู่ดาวเหนือต้นไม้โลกเต็มตาเลย!"
+        },
+        {
+          "speaker": "15_thorn",
+          "emotion": "happy",
+          "emote": "⚒️",
+          "text": "ฮ่า! กรอบหน้าต่างตีจากเหล็กศิลาเพลิงไร้รอยรั่วซึม เหมาะทำห้องพักผ่อนและเรือนหอคู่ชีวิตเป็นที่สุด!"
+        }
+      ]
+    },
+    "cs_enter_shop": {
+      "id": "cs_enter_shop",
+      "category": "scene_entry",
+      "title_th": "ร้านชำ Goldleaf อันคึกคัก",
+      "subtitle_th": "ก้าวแรกในร้านค้าประจำหุบเขา",
+      "stage_scene": "shop",
+      "focus_tile": [
+        8,
+        6
+      ],
+      "bgm_zone": "tavern",
+      "cast": [
+        "11_pip",
+        "05_kyo"
+      ],
+      "beats": [
+        {
+          "speaker": "11_pip",
+          "emotion": "happy",
+          "emote": "🪙",
+          "text": "กริ๊งๆ! ยินดีต้อนรับลูกค้าคนสำคัญ {player} สู่ร้านชำ Goldleaf จ้า! ของขวัญของฝากครบแปดเผ่ามีให้เลือกเพียบ!"
+        },
+        {
+          "speaker": "05_kyo",
+          "emotion": "happy",
+          "emote": "📦",
+          "text": "ส่วนถ้าอยากทำงานพาร์ทไทม์จัดสต็อกสินค้า หรือซื้อเครื่องประดับแต่งตัวเท่ๆ แวะคุยกับเฒ่าแก่พิปได้ทุกวันเลยนะ!"
+        }
+      ]
+    },
+    "cs_enter_bakery": {
+      "id": "cs_enter_bakery",
+      "category": "scene_entry",
+      "title_th": "กลิ่นเนยน้ำผึ้งแห่ง Elderbark Bakery",
+      "subtitle_th": "ก้าวแรกในร้านขนมปังของเซร่า",
+      "stage_scene": "bakery",
+      "focus_tile": [
+        8,
+        6
+      ],
+      "bgm_zone": "tavern",
+      "cast": [
+        "07_sera"
+      ],
+      "beats": [
+        {
+          "speaker": "07_sera",
+          "emotion": "happy",
+          "emote": "🥐",
+          "text": "เมี้ยวว~ ยินดีต้อนรับจ้า {player}! กลิ่นครัวซองต์เนยน้ำผึ้งเพิ่งออกจากเตาอบหินหอมเตะจมูกเลยใช่ไหมล่ะ~"
+        },
+        {
+          "speaker": "07_sera",
+          "emotion": "blush",
+          "emote": "✨",
+          "text": "ถ้าวันไหนเหนื่อยๆ แวะมาซื้อขนมอบเติมพลัง หรือมาสมัครเป็นลูกมือคุมไฟเตาอบช่วยเซร่าได้เสมอนะเมี้ยว!"
+        }
+      ]
+    },
+    "cs_enter_tavern": {
+      "id": "cs_enter_tavern",
+      "category": "scene_entry",
+      "title_th": "โรงเตี๊ยมตะเกียงมอส & เสียงไวโอลิน",
+      "subtitle_th": "ศูนย์รวมมิตรภาพยามค่ำคืนของแปดเผ่า",
+      "stage_scene": "tavern",
+      "focus_tile": [
+        9,
+        7
+      ],
+      "bgm_zone": "tavern",
+      "cast": [
+        "16_bram",
+        "09_celeste"
+      ],
+      "beats": [
+        {
+          "speaker": "16_bram",
+          "emotion": "happy",
+          "emote": "🍺",
+          "text": "ฮ่าๆๆ เชิญเข้ามาเลย {player}! ที่โรงเตี๊ยมตะเกียงมอสแห่งนี้ ไม่ว่าเผ่าไหนก็มานั่งชนแก้วเอลน้ำผึ้งเป็นพี่น้องกันหมด!"
+        },
+        {
+          "speaker": "09_celeste",
+          "emotion": "happy",
+          "emote": "🎻",
+          "text": "และหากคุณมีอารมณ์ศิลปิน สามารถแวะมาที่มุมเวทีไม้เพื่อร่วมบรรเลงมินิเกมดนตรีประสานเสียงกับดิฉันได้เสมอนะคะ"
+        }
+      ]
+    },
+    "cs_enter_smithy": {
+      "id": "cs_enter_smithy",
+      "category": "scene_entry",
+      "title_th": "เปลวไฟแห่งโรงตีเหล็กศิลาเพลิง",
+      "subtitle_th": "ก้าวแรกในโรงช่างของทอร์นและทริกซี่",
+      "stage_scene": "smithy",
+      "focus_tile": [
+        8,
+        6
+      ],
+      "bgm_zone": "smithy",
+      "cast": [
+        "15_thorn",
+        "12_trixie"
+      ],
+      "beats": [
+        {
+          "speaker": "15_thorn",
+          "emotion": "happy",
+          "emote": "🔥",
+          "text": "ฮ่า! ยินดีต้อนรับสู่โรงตีเหล็กศิลาเพลิง {player}! ระวังสะเก็ดไฟหน่อยล่ะ ที่นี่หลอมแต่แร่ชั้นยอดเท่านั้น!"
+        },
+        {
+          "speaker": "12_trixie",
+          "emotion": "happy",
+          "emote": "⚙️",
+          "text": "ปิ๊งป่อง! แร่เหล็ก ฟันเฟืองทองเหลือง และเลนส์คริสตัลสำหรับบูรณะแลนด์มาร์กเมือง หาซื้อจากที่นี่ได้ครบเลยน้า!"
+        }
+      ]
+    },
+    "cs_enter_cottage": {
+      "id": "cs_enter_cottage",
+      "category": "scene_entry",
+      "title_th": "กระท่อมสมุนไพรแสงหิ่งห้อย",
+      "subtitle_th": "ก้าวแรกในเรือนปรุงยาของลิเลียน",
+      "stage_scene": "cottage",
+      "focus_tile": [
+        8,
+        6
+      ],
+      "bgm_zone": "nature",
+      "cast": [
+        "03_lilian",
+        "10_lucian"
+      ],
+      "beats": [
+        {
+          "speaker": "03_lilian",
+          "emotion": "happy",
+          "emote": "🌿",
+          "text": "ยินดีต้อนรับจ้ะ {player} กลิ่นดอกคาโมมายล์และชาเขียวมรกตในกระท่อมช่วยให้ใจสงบลงใช่ไหมจ๊ะ"
+        },
+        {
+          "speaker": "10_lucian",
+          "emotion": "neutral",
+          "emote": "🧪",
+          "text": "ถ้าอยากได้สมุนไพรหายากไปคราฟต์น้ำอมฤตหรือของขวัญ ลิเลียนคัดเกรดบริสุทธิ์ที่สุดไว้ให้ตรงเคาน์เตอร์แล้วล่ะ"
+        }
+      ]
+    },
+    "cs_enter_ruins_b1": {
+      "id": "cs_enter_ruins_b1",
+      "category": "scene_entry",
+      "title_th": "ความลับใต้รากไม้โลก ชั้น B1",
+      "subtitle_th": "เปิดฉากสำรวจโถงรากศิลาและปริศนาเสาแสง",
+      "stage_scene": "ruins_b1",
+      "focus_tile": [
+        10,
+        9
+      ],
+      "bgm_zone": "ruins",
+      "cast": [
+        "14_kael",
+        "04_eli"
+      ],
+      "beats": [
+        {
+          "speaker": "14_kael",
+          "emotion": "neutral",
+          "emote": "🔦",
+          "text": "ระวังฝีเท้าด้วย {player}! นี่คือโถงรากศิลาโบราณที่สร้างขึ้นตั้งแต่ยุคก่อตั้งแปดเผ่าพันธุ์"
+        },
+        {
+          "speaker": "04_eli",
+          "emotion": "happy",
+          "emote": "✨",
+          "text": "เดินไปกด [E] หมุนเสาปริซึมเพื่อหักเหลำแสงไปยังแท่นรับแสงรูน และถ้าเจอภูตเงามืด กด [F] ปล่อยคลื่นแสงตะเกียงชำระล้างได้เลยครับ!"
+        }
+      ]
+    },
+    "cs_enter_ruins_b2": {
+      "id": "cs_enter_ruins_b2",
+      "category": "scene_entry",
+      "title_th": "โถงกระจกวารี ชั้น B2",
+      "subtitle_th": "ลำแสงคู่ขนานแห่งสายน้ำและทองคำ",
+      "stage_scene": "ruins_b2",
+      "focus_tile": [
+        10,
+        8
+      ],
+      "bgm_zone": "ruins",
+      "cast": [
+        "13_mirelle",
+        "14_kael"
+      ],
+      "beats": [
+        {
+          "speaker": "13_mirelle",
+          "emotion": "neutral",
+          "emote": "💧",
+          "text": "ได้ยินเสียงหยดน้ำกังวานไหมจ๊ะ {player}... ชั้นนี้มีลำแสงสองสีที่ต้องสะท้อนไขว้กันไปเปิดผนึกสองแท่นพร้อมกันจ้ะ"
+        }
+      ]
+    },
+    "cs_enter_ruins_b3": {
+      "id": "cs_enter_ruins_b3",
+      "category": "scene_entry",
+      "title_th": "โถงหัวใจบรรพกาล ชั้น B3",
+      "subtitle_th": "ปริซึมแยกแสงและแหวนสายใยรากไม้โลก",
+      "stage_scene": "ruins_b3",
+      "focus_tile": [
+        10,
+        8
+      ],
+      "bgm_zone": "ruins",
+      "cast": [
+        "01_ren",
+        "02_marcus"
+      ],
+      "beats": [
+        {
+          "speaker": "02_marcus",
+          "emotion": "happy",
+          "emote": "📖",
+          "text": "เหลือเชื่อเลยครับ {player}! เสาตรงกลางห้องคือ 'ปริซึมแยกแสงโบราณ (✦)' ที่แยกลำแสงเดียวออกเป็นซ้าย-ขวาได้!"
+        },
+        {
+          "speaker": "01_ren",
+          "emotion": "happy",
+          "emote": "💍",
+          "text": "และถ้าปลดผนึกสำเร็จ นอกจากหีบแหวนสายใยรากไม้โลกแล้ว ประตูลงสู่ชั้นลึกสุด B4 ก็จะเปิดออกด้วย!"
+        }
+      ]
+    },
+    "cs_enter_ruins_b4": {
+      "id": "cs_enter_ruins_b4",
+      "category": "boss_event",
+      "title_th": "ชั้น B4: ผู้พิทักษ์รากไม้ต้องสาป!",
+      "subtitle_th": "ศึกชำระล้างหมอกเงามืดใต้แกนกลางต้นไม้โลก",
+      "stage_scene": "ruins_b4",
+      "focus_tile": [
+        11,
+        7
+      ],
+      "bgm_zone": "ruins",
+      "cast": [
+        "08_roland",
+        "03_lilian"
+      ],
+      "beats": [
+        {
+          "speaker": "08_roland",
+          "emotion": "sad",
+          "emote": "❗",
+          "text": "ระวังตัวด้วย {player}!! โกเลมผู้พิทักษ์รากไม้โบราณถูกหมอกเงามืดครอบงำจนคลุ้มคลั่งไปแล้ว!"
+        },
+        {
+          "speaker": "03_lilian",
+          "emotion": "neutral",
+          "emote": "✨",
+          "text": "เกราะเงาของมันแข็งแกร่งมาก! ต้องหมุนเสาปริซึมทั้งสองฝั่งให้ลำแสงศักดิ์สิทธิ์ส่องตัดเกราะมันก่อน แล้วกด [F] ปล่อยคลื่นแสงชำระล้างนะจ๊ะ!"
+        }
+      ]
+    },
+    "cs_boss_purified": {
+      "id": "cs_boss_purified",
+      "category": "boss_event",
+      "title_th": "แสงอรุณแห่งรากไม้บรรพกาล",
+      "subtitle_th": "ชำระล้างผู้พิทักษ์รากไม้โลกสำเร็จ!",
+      "stage_scene": "ruins_b4",
+      "focus_tile": [
+        11,
+        6
+      ],
+      "bgm_zone": "wedding",
+      "cast": [
+        "03_lilian",
+        "14_kael",
+        "16_bram"
+      ],
+      "beats": [
+        {
+          "speaker": "03_lilian",
+          "emotion": "happy",
+          "emote": "🌟",
+          "text": "หมอกเงามืดสลายไปหมดแล้วจ้ะ {player}! ดูสิ โกเลมผู้พิทักษ์กลับคืนเป็นแสงสีทองอันอบอุ่นแล้ว!"
+        },
+        {
+          "speaker": "14_kael",
+          "emotion": "happy",
+          "emote": "👑",
+          "text": "ผู้พิทักษ์มอบ 'มงกุฎทองแปดเผ่า' และขุมทรัพย์โบราณให้เธอเพื่อเป็นเกียรติแก่ผู้กอบกู้รากไม้โลก!"
+        },
+        {
+          "speaker": "16_bram",
+          "emotion": "happy",
+          "emote": "🎉",
+          "text": "ฮ่าๆๆ ยอดเยี่ยมไร้เทียมทานจริงๆ หลานรัก! ชื่อของ {player} จะถูกจารึกไว้ในตำนานเอเธลการ์ดตลอดกาล!"
+        }
+      ]
+    },
+    "cs_lm_observatory": {
+      "id": "cs_lm_observatory",
+      "category": "landmark",
+      "title_th": "พิธีเปิดหอดูดาวรากไม้โลก",
+      "subtitle_th": "บูรณะแลนด์มาร์กสำเร็จร่วมกับอีไล & ทริกซี่",
+      "stage_scene": "outdoor",
+      "focus_tile": [
+        48,
+        11
+      ],
+      "bgm_zone": "nature",
+      "cast": [
+        "04_eli",
+        "12_trixie"
+      ],
+      "beats": [
+        {
+          "speaker": "12_trixie",
+          "emotion": "happy",
+          "emote": "🔭",
+          "text": "ปิ๊งป่อง!! เฟืองโดมหมุนเปิดรับท้องฟ้าลื่นปรื๊ดไร้เสียงรบกวน! หอดูดาวรากไม้โลกพร้อมใช้งานแล้วจ้า!"
+        },
+        {
+          "speaker": "04_eli",
+          "emotion": "happy",
+          "emote": "🌠",
+          "text": "ขอบคุณมากครับ {player} จากนี้แวะมาส่องกล้องรับปัญญาและอธิษฐานเรียกคืนฝนดาวตกได้ทุกวันเลยนะครับ!"
+        }
+      ]
+    },
+    "cs_lm_hotspring": {
+      "id": "cs_lm_hotspring",
+      "category": "landmark",
+      "title_th": "ไอน้ำอุ่นแห่งบ่อน้ำพุร้อนรากไม้",
+      "subtitle_th": "บูรณะแลนด์มาร์กสำเร็จร่วมกับลิเลียน & โรแลนด์",
+      "stage_scene": "outdoor",
+      "focus_tile": [
+        9,
+        39
+      ],
+      "bgm_zone": "nature",
+      "cast": [
+        "03_lilian",
+        "08_roland"
+      ],
+      "beats": [
+        {
+          "speaker": "08_roland",
+          "emotion": "happy",
+          "emote": "♨️",
+          "text": "ฮ่าๆ รางไม้ไผ่ส่งน้ำแร่ธรรมชาติไหลเข้าบ่อเต็มเปี่ยม อุณหภูมิกำลังอุ่นสบายคลายปวดเมื่อยดีแท้!"
+        },
+        {
+          "speaker": "03_lilian",
+          "emotion": "happy",
+          "emote": "🌿",
+          "text": "เมื่อไหร่ที่ {player} พลังงานหมด แวะมาแช่น้ำพุร้อนฟื้นพลังเต็ม 100% ได้ฟรีทุกวันเลยนะจ๊ะ!"
+        }
+      ]
+    },
+    "cs_lm_museum": {
+      "id": "cs_lm_museum",
+      "category": "landmark",
+      "title_th": "เปิดประตูพิพิธภัณฑ์ & หอสมุด 8 เผ่า",
+      "subtitle_th": "บูรณะแลนด์มาร์กสำเร็จร่วมกับมาร์คัส & คาเอล",
+      "stage_scene": "outdoor",
+      "focus_tile": [
+        26,
+        16
+      ],
+      "bgm_zone": "plaza",
+      "cast": [
+        "02_marcus",
+        "14_kael"
+      ],
+      "beats": [
+        {
+          "speaker": "02_marcus",
+          "emotion": "happy",
+          "emote": "📚",
+          "text": "ตื้นตันใจเหลือเกินครับ {player}! ในที่สุดมรดกทางประวัติศาสตร์ของทั้ง 8 เผ่าก็มีสถานที่จัดแสดงอันสง่างามเสียที!"
+        },
+        {
+          "speaker": "14_kael",
+          "emotion": "happy",
+          "emote": "🏛️",
+          "text": "ถ้าตกปลาหรือสำรวจพบโบราณวัตถุหายาก นำมาบริจาคที่นี่เพื่อรับรางวัลใหญ่และโบนัสราคาขายของ +20% ได้เลย!"
+        }
+      ]
+    },
+    "cs_lm_stage": {
+      "id": "cs_lm_stage",
+      "category": "landmark",
+      "title_th": "ม่านกำมะหยี่แห่งเวทีดนตรีต้นไม้โลก",
+      "subtitle_th": "บูรณะแลนด์มาร์กสำเร็จร่วมกับเซเลส & มิเรลล์",
+      "stage_scene": "outdoor",
+      "focus_tile": [
+        30,
+        42
+      ],
+      "bgm_zone": "wedding",
+      "cast": [
+        "09_celeste",
+        "13_mirelle"
+      ],
+      "beats": [
+        {
+          "speaker": "09_celeste",
+          "emotion": "happy",
+          "emote": "🎻",
+          "text": "อะคูสติกของเวทีกลางแจ้งแห่งนี้กังวานราวกับต้นไม้โลกกำลังร่วมบรรเลงดนตรีไปกับพวกเราเลยค่ะ {player}!"
+        },
+        {
+          "speaker": "13_mirelle",
+          "emotion": "happy",
+          "emote": "🎵",
+          "text": "แวะมากด [E] จัดมินิคอนเสิร์ต 4 เลนส่งความสุขเพิ่มหัวใจให้ชาวเมืองทุกคนได้ทุกวันเลยนะจ๊ะ!"
+        }
+      ]
+    },
+    "cs_lm_nightmarket": {
+      "id": "cs_lm_nightmarket",
+      "category": "landmark",
+      "title_th": "แสงโคมไฟตลาดนัดกลางคืนรากไม้",
+      "subtitle_th": "บูรณะแลนด์มาร์กสำเร็จร่วมกับพิป เซร่า ทอร์น & ปู่บราม",
+      "stage_scene": "outdoor",
+      "focus_tile": [
+        59,
+        38
+      ],
+      "bgm_zone": "tavern",
+      "cast": [
+        "11_pip",
+        "07_sera",
+        "16_bram"
+      ],
+      "beats": [
+        {
+          "speaker": "11_pip",
+          "emotion": "happy",
+          "emote": "🏮",
+          "text": "ฮิฮิ! จุดโคมไฟเปิดตลาดนัดกลางคืนอย่างเป็นทางการ! ของหายากและเครื่องประดับพิเศษมีวางขายทุกคืน 18:00–24:00 น.!"
+        },
+        {
+          "speaker": "07_sera",
+          "emotion": "happy",
+          "emote": "🎉",
+          "text": "แถมวันศุกร์ เสาร์ อาทิตย์ ลดราคาพิเศษถึง 25% ด้วยนะเมี้ยว~ ห้ามพลาดเด็ดขาดเลยจ้า {player}!"
+        }
+      ]
+    },
+    "cs_fest_7": {
+      "id": "cs_fest_7",
+      "category": "festival",
+      "title_th": "เทศกาลโคมไฟต้นไม้โลก",
+      "subtitle_th": "ค่ำคืนปล่อยโคมลอยอธิษฐานของทั้ง 8 เผ่า",
+      "stage_scene": "outdoor",
+      "focus_tile": [
+        42,
+        30
+      ],
+      "bgm_zone": "wedding",
+      "cast": [
+        "03_lilian",
+        "01_ren",
+        "07_sera",
+        "16_bram"
+      ],
+      "beats": [
+        {
+          "speaker": "16_bram",
+          "emotion": "happy",
+          "emote": "🏮",
+          "text": "ฮ่าๆๆ คืนเทศกาลโคมไฟมาถึงแล้ว! ชาวเมืองทุกคนเขียนคำอธิษฐานลงบนโคมกระดาษพร้อมปล่อยขึ้นสู่ยอดต้นไม้โลก!"
+        },
+        {
+          "speaker": "07_sera",
+          "emotion": "happy",
+          "emote": "✨",
+          "text": "ว้าววว โคมลอยนับร้อยดวงลอยสว่างเต็มท้องฟ้าไปหมดเลยเมี้ยว~ สวยเหมือนทะเลดาวเลยจ้ะ {player}!"
+        },
+        {
+          "speaker": "03_lilian",
+          "emotion": "blush",
+          "emote": "💖",
+          "text": "ฉันอธิษฐานขอให้ {player} และทุกคนในเอเธลการ์ดมีความสุขด้วยกันแบบนี้ไปทุกๆ ปีเลยจ้ะ!"
+        }
+      ]
+    },
+    "cs_fest_14": {
+      "id": "cs_fest_14",
+      "category": "festival",
+      "title_th": "คืนดนตรีโรงเตี๊ยมตะเกียงมอส",
+      "subtitle_th": "บทเพลงประสานเสียงและงานเลี้ยงหม้อไฟใหญ่",
+      "stage_scene": "tavern",
+      "focus_tile": [
+        9,
+        7
+      ],
+      "bgm_zone": "tavern",
+      "cast": [
+        "09_celeste",
+        "13_mirelle",
+        "16_bram"
+      ],
+      "beats": [
+        {
+          "speaker": "09_celeste",
+          "emotion": "happy",
+          "emote": "🎻",
+          "text": "ค่ำคืนนี้ไวโอลินแห่งรัตติกาลและบทเพลงไซเรนจะบรรเลงผสานกันเพื่อฉลองมิตรภาพของพวกเราทุกคนค่ะ!"
+        },
+        {
+          "speaker": "13_mirelle",
+          "emotion": "happy",
+          "emote": "🎶",
+          "text": "มาเต้นรำและร้องเพลงไปด้วยกันนะจ๊ะ {player}! เสียงปรบมือของทุกคนอบอุ่นหัวใจจังเลย!"
+        }
+      ]
+    },
+    "cs_fest_21": {
+      "id": "cs_fest_21",
+      "category": "festival",
+      "title_th": "ตลาดนัดหัตถศิลป์แปดเผ่า",
+      "subtitle_th": "มหกรรมโชว์ผลผลิต งานช่าง และของขวัญลดราคา",
+      "stage_scene": "outdoor",
+      "focus_tile": [
+        42,
+        31
+      ],
+      "bgm_zone": "plaza",
+      "cast": [
+        "11_pip",
+        "12_trixie",
+        "15_thorn"
+      ],
+      "beats": [
+        {
+          "speaker": "11_pip",
+          "emotion": "happy",
+          "emote": "🎪",
+          "text": "เร่เข้ามาจ้าเร่เข้ามา! มหกรรมหัตถศิลป์แปดเผ่า วันนี้ร้านค้าทั่วหุบเขาลดราคาพิเศษ 20% ตลอดทั้งวัน!"
+        },
+        {
+          "speaker": "15_thorn",
+          "emotion": "happy",
+          "emote": "⚒️",
+          "text": "ผลงานคราฟต์ของ {player} ก็ได้รับเสียงชื่นชมจากกรรมการช่างฝีมือไม่น้อยเลยนะ เอ้ารับรางวัลเกียรติยศไปเลย!"
+        }
+      ]
+    },
+    "cs_fest_28": {
+      "id": "cs_fest_28",
+      "category": "festival",
+      "title_th": "คืนฝนดาวตกเอเธลการ์ด",
+      "subtitle_th": "ค่ำคืนส่งท้ายฤดูกาลใต้สายฝนแห่งดวงดาว",
+      "stage_scene": "outdoor",
+      "focus_tile": [
+        42,
+        48
+      ],
+      "bgm_zone": "wedding",
+      "cast": [
+        "04_eli",
+        "06_sora",
+        "10_lucian"
+      ],
+      "beats": [
+        {
+          "speaker": "04_eli",
+          "emotion": "happy",
+          "emote": "🌠",
+          "text": "เริ่มตกลงมาแล้วครับ {player}! มองไปเหนือทะเลสาบมุกสิครับ สายฝนดาวตกสะท้อนผิวน้ำสว่างไสวไปทั่วทั้งหุบเขาเลย!"
+        },
+        {
+          "speaker": "06_sora",
+          "emotion": "happy",
+          "emote": "✨",
+          "text": "ขอบคุณสำหรับฤดูกาลที่แสนวิเศษนะ {player}! ฤดูกาลหน้าที่จะมาถึงต้องสนุกยิ่งกว่าเดิมแน่นอน!"
+        }
+      ]
+    },
+    "cs_child_birth": {
+      "id": "cs_child_birth",
+      "category": "family",
+      "title_th": "ปาฏิหาริย์ดอกตูมแห่งต้นไม้โลก",
+      "subtitle_th": "กำเนิดทายาทตัวน้อยแห่งสายใยรัก",
+      "stage_scene": "farmhouse",
+      "focus_tile": [
+        6,
+        5
+      ],
+      "bgm_zone": "wedding",
+      "cast": [
+        "03_lilian",
+        "16_bram"
+      ],
+      "beats": [
+        {
+          "speaker": "03_lilian",
+          "emotion": "happy",
+          "emote": "🌸",
+          "text": "{player} จ๊ะ! ดูแสงสีทองที่ลอยลงมาจากกิ่งต้นไม้โลกเข้าสู่อ้อมกอดของพวกเธอสองคนสิ... ดอกตูมแห่งชีวิตได้ผลิบานแล้วจ้ะ!"
+        },
+        {
+          "speaker": "16_bram",
+          "emotion": "happy",
+          "emote": "👶",
+          "text": "ฮ่าๆๆ ยินดีด้วยนะครอบครัวใหม่! ทารกตัวน้อยลืมตาดูโลกพร้อมรอยยิ้มพิมพ์เดียวกับพ่อแม่ไม่มีผิดเลย!"
+        }
+      ]
+    },
+    "cs_child_grow": {
+      "id": "cs_child_grow",
+      "category": "family",
+      "title_th": "ก้าวแรกของลูกน้อยในบ้านอบอุ่น",
+      "subtitle_th": "ทายาทตัวน้อยเติบโตสู่วัยเดินเตาะแตะ!",
+      "stage_scene": "farmhouse",
+      "focus_tile": [
+        7,
+        6
+      ],
+      "bgm_zone": "home",
+      "cast": [
+        "02_marcus"
+      ],
+      "beats": [
+        {
+          "speaker": "02_marcus",
+          "emotion": "happy",
+          "emote": "🌱",
+          "text": "ยินดีด้วยนะครับ {player}! ตอนนี้เจ้าตัวน้อยเริ่มเดินเตาะแตะสำรวจรอบบ้านได้แล้ว แถมฉลาดและร่าเริงมากเลยครับ!"
+        }
+      ]
+    },
+    "cs_child_explorer": {
+      "id": "cs_child_explorer",
+      "category": "family",
+      "title_th": "นักสำรวจตัวน้อยแห่งต้นไม้โลก",
+      "subtitle_th": "ทายาทเติบโตสู่วัยนักสำรวจรุ่นเยาว์ ออกเดินเล่นชมเมืองได้แล้ว!",
+      "stage_scene": "outdoor",
+      "focus_tile": [
+        42,
+        31
+      ],
+      "bgm_zone": "plaza",
+      "cast": [
+        "01_ren",
+        "03_lilian"
+      ],
+      "beats": [
+        {
+          "speaker": "01_ren",
+          "emotion": "happy",
+          "emote": "🧭",
+          "text": "ดูสิ {player}! วันนี้เจ้าตัวน้อยโตพอจะเดินออกไปทัศนศึกษาที่จัตุรัสต้นไม้โลกในตอนบ่ายวันแดดออกได้แล้ว!"
+        },
+        {
+          "speaker": "03_lilian",
+          "emotion": "happy",
+          "emote": "💖",
+          "text": "ชาวเมืองทุกคนเอ็นดูหลานคนนี้กันหมดเลยจ้ะ สายใยแห่งครอบครัวของ {player} ช่างงดงามเหลือเกิน!"
+        }
+      ]
+    },
+    "cs_confession": {
+      "id": "cs_confession",
+      "category": "romance",
+      "title_th": "คำสารภาพรักใต้สายลมต้นไม้โลก",
+      "subtitle_th": "ก้าวข้ามจากมิตรภาพสู่คนรักคนพิเศษ",
+      "stage_scene": "outdoor",
+      "focus_tile": [
+        42,
+        30
+      ],
+      "bgm_zone": "wedding",
+      "cast": [
+        "03_lilian"
+      ],
+      "beats": [
+        {
+          "speaker": "03_lilian",
+          "emotion": "happy",
+          "emote": "💕",
+          "text": "กลีบดอกไม้สีชมพูโปรยปรายลงมาอวยพรคำสารภาพรักของ {player} แล้วจ้ะ... เมื่อหัวใจเต็ม 10 ดวง อย่าลืมมอบแหวนสายใยรากไม้โลกนะจ๊ะ!"
+        }
+      ]
+    },
+    "cs_wedding": {
+      "id": "cs_wedding",
+      "category": "romance",
+      "title_th": "พิธีวิวาห์ศักดิ์สิทธิ์ใต้ต้นไม้โลก",
+      "subtitle_th": "คำมั่นสัญญานิรันดร์ท่ามกลางคำอวยพรของแปดเผ่าพันธุ์",
+      "stage_scene": "outdoor",
+      "focus_tile": [
+        42,
+        29
+      ],
+      "bgm_zone": "wedding",
+      "cast": [
+        "16_bram",
+        "03_lilian",
+        "09_celeste"
+      ],
+      "beats": [
+        {
+          "speaker": "16_bram",
+          "emotion": "happy",
+          "emote": "🔔",
+          "text": "ฮ่าๆๆ! เสียงระฆังวิวาห์ดังกังวานไปทั่วหุบเขา! วันนี้ชาวเมืองทั้งแปดเผ่ามารวมตัวกันเป็นสักขีพยานรักแท้ของ {player}!"
+        },
+        {
+          "speaker": "09_celeste",
+          "emotion": "happy",
+          "emote": "🎻",
+          "text": "ขอให้ท่วงทำนองไวโอลินและแสงสีทองของต้นไม้โลกโอบกอดคู่บ่าวสาวให้มีความสุขชั่วนิจนิรันดร์ค่ะ!"
+        },
+        {
+          "speaker": "03_lilian",
+          "emotion": "blush",
+          "emote": "💍",
+          "text": "ขอต้อนรับสู่ชีวิตคู่ในเรือนหอ {farm} นะจ๊ะ! (+500G ขวัญถุงวิวาห์ & ปลดล็อกชุดวิวาห์ศักดิ์สิทธิ์!)"
+        }
+      ]
+    },
+    "cs_museum_complete": {
+      "id": "cs_museum_complete",
+      "category": "landmark",
+      "title_th": "มรดกครบสมบูรณ์แห่งพิพิธภัณฑ์ 8 เผ่า!",
+      "subtitle_th": "รวบรวมโบราณวัตถุและของล้ำค่าครบทั้ง 12 ชิ้นสำเร็จ!",
+      "stage_scene": "outdoor",
+      "focus_tile": [
+        26,
+        16
+      ],
+      "bgm_zone": "wedding",
+      "cast": [
+        "02_marcus",
+        "14_kael",
+        "16_bram"
+      ],
+      "beats": [
+        {
+          "speaker": "02_marcus",
+          "emotion": "happy",
+          "emote": "🏛️",
+          "text": "ประวัติศาสตร์หน้าใหม่ถูกจารึกแล้วครับ {player}!! โบราณวัตถุทั้ง 12 ชิ้นของหุบเขาต้นไม้โลกกลับคืนสู่แท่นจัดแสดงครบสมบูรณ์ 100%!"
+        },
+        {
+          "speaker": "14_kael",
+          "emotion": "happy",
+          "emote": "🌟",
+          "text": "ในนามของผู้ดูแลพิพิธภัณฑ์ พวกข้าน้อมมอบพรแห่งความมั่งคั่ง เพิ่มราคาขายสินค้าทุกชนิด +20% ถาวรให้แก่ {player}!"
+        }
+      ]
+    }
+  }
+}

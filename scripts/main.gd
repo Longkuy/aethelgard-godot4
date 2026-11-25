@@ -1,5 +1,5 @@
 extends Node2D
-## Main Game Orchestrator for Aethelgard: Echoes of the World Tree (Godot 4 Edition)
+## Main Game Orchestrator for Aethelgard: Echoes of the World Tree (Godot 4 Complete v7.0 Edition)
 
 const TILE := 32.0
 
@@ -28,9 +28,11 @@ var dlg_panel: DialoguePanel
 var mg_modal: MiniGameModal
 var wm_modal: WorldMapModal
 var uni_modal: UniversalModal
+var cutscene_dir: CutsceneDirector
 
 var _toast_timer: float = 0.0
 var _bgm_check_t: float = 0.0
+var _lantern_step_acc: float = 0.0
 
 func _ready() -> void:
 	world = ValleyWorld.new()
@@ -49,6 +51,10 @@ func _ready() -> void:
 
 	GameState.hud_updated.connect(_refresh_hud)
 	GameState.toast_requested.connect(show_toast)
+	GameState.cutscene_requested.connect(func(cs_id: String):
+		if cutscene_dir and not cutscene_dir.is_playing:
+			cutscene_dir.play_cutscene_by_id(cs_id, world, true)
+	)
 	_refresh_hud()
 	_refresh_title_slots()
 
@@ -56,7 +62,7 @@ func _build_hud_and_modals() -> void:
 	# Top-Left HUD
 	var tl := PanelContainer.new()
 	tl.position = Vector2(12, 12)
-	tl.custom_minimum_size = Vector2(270, 0)
+	tl.custom_minimum_size = Vector2(288, 0)
 	var tl_vb := VBoxContainer.new()
 	tl.add_child(tl_vb)
 	bgm_lbl = Label.new(); bgm_lbl.add_theme_font_size_override("font_size", 12)
@@ -64,17 +70,20 @@ func _build_hud_and_modals() -> void:
 	zone_lbl = Label.new(); zone_lbl.add_theme_font_size_override("font_size", 15)
 	tl_vb.add_child(bgm_lbl); tl_vb.add_child(zone_lbl)
 
-	var tl_btns := HBoxContainer.new()
+	var tl_btns := HFlowContainer.new()
+	tl_btns.add_theme_constant_override("h_separation", 4)
 	var b_map := Button.new(); b_map.text = "แผนที่ [M]"; b_map.pressed.connect(func(): wm_modal.open_map(world))
-	var b_story := Button.new(); b_story.text = "เนื้อเรื่อง/รากไม้"; b_story.pressed.connect(func(): uni_modal.open_quests_and_town_modal("story"))
-	tl_btns.add_child(b_map); tl_btns.add_child(b_story)
+	var b_story := Button.new(); b_story.text = "พงศาวดาร"; b_story.pressed.connect(func(): uni_modal.open_quests_and_town_modal("story"))
+	var b_thtr := Button.new(); b_thtr.text = "🎬 คัตซีน (75)"; b_thtr.pressed.connect(func(): uni_modal.open_quests_and_town_modal("theater"))
+	var b_cal := Button.new(); b_cal.text = "📅 ปฏิทิน/รางวัล"; b_cal.pressed.connect(func(): uni_modal.open_quests_and_town_modal("calendar"))
+	tl_btns.add_child(b_map); tl_btns.add_child(b_story); tl_btns.add_child(b_thtr); tl_btns.add_child(b_cal)
 	tl_vb.add_child(tl_btns)
 	ui_layer.add_child(tl)
 
 	# Top-Right HUD
 	var tr := PanelContainer.new()
-	tr.position = Vector2(968, 12)
-	tr.custom_minimum_size = Vector2(300, 0)
+	tr.position = Vector2(952, 12)
+	tr.custom_minimum_size = Vector2(316, 0)
 	var tr_vb := VBoxContainer.new()
 	tr.add_child(tr_vb)
 	clock_lbl = Label.new()
@@ -89,13 +98,13 @@ func _build_hud_and_modals() -> void:
 		world.sync_npc_schedules()
 		show_toast("เปลี่ยนสภาพอากาศเป็น: %s" % GameState.weather)
 	)
-	var b_cust := Button.new(); b_cust.text = "แต่งตัว 8 เผ่า"; b_cust.pressed.connect(func(): uni_modal.open_protagonist_creator())
+	var b_cust := Button.new(); b_cust.text = "👒 แต่งตัว/ชุด"; b_cust.pressed.connect(func(): uni_modal.open_protagonist_creator("hero"))
 	var b_aud := Button.new(); b_aud.text = "เสียง BGM"; b_aud.pressed.connect(func():
 		AudioManager.audio_enabled = not AudioManager.audio_enabled
 		show_toast("เสียงเพลง BGM: %s" % ("เปิด" if AudioManager.audio_enabled else "ปิด"))
 	)
 	var b_save := Button.new(); b_save.text = "เซฟ 3 ช่อง"; b_save.pressed.connect(func(): uni_modal.open_save_slots_modal())
-	var b_ruins := Button.new(); b_ruins.text = "โบราณสถาน"; b_ruins.pressed.connect(func(): _change_scene("ruins_b1", Vector2i(10, 11), true))
+	var b_ruins := Button.new(); b_ruins.text = "บอส/ดันเจี้ยน"; b_ruins.pressed.connect(func(): _change_scene("ruins_b1", Vector2i(10, 11), true))
 	for b in [b_skip, b_wea, b_cust, b_aud, b_save, b_ruins]:
 		tr_grid.add_child(b)
 	tr_vb.add_child(tr_grid)
@@ -103,7 +112,7 @@ func _build_hud_and_modals() -> void:
 
 	# Home Grid Edit Bar ([H])
 	home_edit_bar = PanelContainer.new()
-	home_edit_bar.position = Vector2(300, 12)
+	home_edit_bar.position = Vector2(308, 12)
 	home_edit_bar.visible = false
 	var heb_hb := HBoxContainer.new()
 	home_edit_bar.add_child(heb_hb)
@@ -114,21 +123,22 @@ func _build_hud_and_modals() -> void:
 	heb_hb.add_child(heb_lbl); heb_hb.add_child(b_rot); heb_hb.add_child(b_cat); heb_hb.add_child(b_end)
 	ui_layer.add_child(home_edit_bar)
 
-	# Bottom Hotbar
+	# Bottom Hotbar (1..9 + [F] Sacred Light!)
 	var hb_panel := PanelContainer.new()
-	hb_panel.position = Vector2(280, 654)
+	hb_panel.position = Vector2(145, 654)
 	var hb_row := HBoxContainer.new()
-	hb_row.add_theme_constant_override("separation", 6)
+	hb_row.add_theme_constant_override("separation", 5)
 	hb_panel.add_child(hb_row)
 	var bar_defs := [
-		["1.เดิน/คุย", func(): pass],
-		["2.งานเสริม", func(): uni_modal.open_jobs_modal()],
-		["3.ร้าน/บ้าน", func(): uni_modal.open_shop_modal("decor" if GameState.current_scene.begins_with("farmhouse") else "bag")],
-		["4.คราฟต์", func(): uni_modal.open_craft_modal()],
-		["5.คู่รัก/เพื่อน", func(): uni_modal.open_relationships_modal()],
-		["6.เควสต์/เมือง", func(): uni_modal.open_quests_and_town_modal("quests")],
-		["7.จดหมาย", func(): uni_modal.open_mailbox_modal()],
-		["8.ลูบสัตว์ [P]", _pet_companion]
+		["1.งานเสริม", func(): uni_modal.open_jobs_modal()],
+		["2.ร้าน/ตลาดมืด", func(): uni_modal.open_shop_modal("decor" if GameState.current_scene.begins_with("farmhouse") else "bag")],
+		["3.คราฟต์", func(): uni_modal.open_craft_modal()],
+		["4.ครอบครัว/คู่รัก", func(): uni_modal.open_relationships_modal()],
+		["5.เควสต์/เมือง", func(): uni_modal.open_quests_and_town_modal("quests")],
+		["6.จดหมาย", func(): uni_modal.open_mailbox_modal()],
+		["7.สัตว์เลี้ยง [P]", _pet_companion],
+		["8.แสงชำระ [F]", func(): world.trigger_sacred_pulse()],
+		["9.ตะเกียง [9]", _toggle_lantern]
 	]
 	for bd in bar_defs:
 		var b := Button.new(); b.text = bd[0]; b.pressed.connect(bd[1])
@@ -137,14 +147,14 @@ func _build_hud_and_modals() -> void:
 
 	# Context Prompt & Toast
 	prompt_panel = PanelContainer.new()
-	prompt_panel.position = Vector2(440, 602)
+	prompt_panel.position = Vector2(430, 602)
 	prompt_panel.visible = false
 	prompt_lbl = Label.new()
 	prompt_panel.add_child(prompt_lbl)
 	ui_layer.add_child(prompt_panel)
 
 	toast_panel = PanelContainer.new()
-	toast_panel.position = Vector2(360, 16)
+	toast_panel.position = Vector2(340, 16)
 	toast_panel.visible = false
 	toast_lbl = Label.new()
 	toast_panel.add_child(toast_lbl)
@@ -152,9 +162,14 @@ func _build_hud_and_modals() -> void:
 
 	# Center Modals
 	dlg_panel = DialoguePanel.new()
-	dlg_panel.position = Vector2(200, 445)
+	dlg_panel.position = Vector2(200, 442)
 	dlg_panel.job_requested.connect(_start_job)
 	dlg_panel.gift_picker_requested.connect(func(cid: String): uni_modal.open_gift_picker(cid))
+	dlg_panel.heart_event_cutscene_requested.connect(func(ev: Dictionary):
+		cutscene_dir.play_cutscene_dict(ev, "heart_event", world, true)
+	)
+	dlg_panel.confession_cutscene_requested.connect(_play_confession_cutscene)
+	dlg_panel.wedding_cutscene_requested.connect(_play_wedding_cutscene)
 	ui_layer.add_child(dlg_panel)
 
 	mg_modal = MiniGameModal.new()
@@ -197,21 +212,21 @@ func _build_hud_and_modals() -> void:
 	title_overlay.color = Color(0.06, 0.12, 0.09, 0.94)
 	title_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var t_card := PanelContainer.new()
-	t_card.position = Vector2(250, 95)
-	t_card.custom_minimum_size = Vector2(780, 510)
+	t_card.position = Vector2(230, 88)
+	t_card.custom_minimum_size = Vector2(820, 524)
 	var t_vb := VBoxContainer.new()
 	t_vb.alignment = BoxContainer.ALIGNMENT_CENTER
 	t_vb.add_theme_constant_override("separation", 12)
 	t_card.add_child(t_vb)
 
 	var t_head := Label.new()
-	t_head.text = "AETHELGARD: ECHOES OF THE WORLD TREE\nGodot 4 Complete Edition (v6.0 — 284 Sprites & 6 Deep Systems)"
+	t_head.text = "AETHELGARD: ECHOES OF THE WORLD TREE\nGodot 4 Complete Edition (v7.0 — 284 Sprites • All Systems • 75 Cutscenes)"
 	t_head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	t_head.add_theme_font_size_override("font_size", 22)
 	t_vb.add_child(t_head)
 
 	var t_sub := Label.new()
-	t_sub.text = "แต่งตัวเอก 8 เผ่า • 6 มินิเกมแยกสาย • แต่งงาน & ชีวิตคู่ • แต่งบ้านตาราง & ชั้น 2 • โบราณสถานเสาแสง • เซฟ 3 ช่อง + BGM 7 โซน"
+	t_sub.text = "แต่งตัวเอก 8 เผ่า + หมวก/ปีก/ชุดพิเศษ • 6 มินิเกม • แต่งงาน & เลี้ยงลูก 3 วัย • แต่งบ้านตาราง & ชั้น 2 • ดันเจี้ยนเสาแสง & บอส B4 • เทศกาล & โรงละครคัตซีน 75 ฉาก!"
 	t_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	t_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	t_vb.add_child(t_sub)
@@ -229,8 +244,8 @@ func _build_hud_and_modals() -> void:
 	t_vb.add_child(pet_hb)
 
 	var start_hb := HBoxContainer.new(); start_hb.alignment = BoxContainer.ALIGNMENT_CENTER; start_hb.add_theme_constant_override("separation", 12)
-	var b_cr := Button.new(); b_cr.text = "แต่งตัวเอก 8 เผ่า & สีชุด"; b_cr.pressed.connect(func(): uni_modal.open_protagonist_creator())
-	var b_play := Button.new(); b_play.text = "เข้าสู่เมืองเอเธลการ์ด (เริ่มเล่น!)"
+	var b_cr := Button.new(); b_cr.text = "👒 แต่งตัวเอก 8 เผ่า & ตู้เสื้อผ้า"; b_cr.pressed.connect(func(): uni_modal.open_protagonist_creator("hero"))
+	var b_play := Button.new(); b_play.text = "🎬 เข้าสู่เอเธลการ์ด (เริ่มเล่น!)"
 	b_play.pressed.connect(func():
 		GameState.started = true
 		title_overlay.visible = false
@@ -238,27 +253,77 @@ func _build_hud_and_modals() -> void:
 		world.sync_npc_schedules()
 		GameState.save_slot(GameState.active_slot, true)
 		_sync_bgm_zone()
-		show_toast("ยินดีต้อนรับ %s สู่ %s! (ช่องเซฟ %d)" % [GameState.player_name, GameState.cottage_name, GameState.active_slot])
+		if not GameState.watched_cutscenes.has("cs_opening_arrival"):
+			cutscene_dir.play_cutscene_by_id("cs_opening_arrival", world, false)
+		else:
+			show_toast("ยินดีต้อนรับ %s สู่ %s! (ช่องเซฟ %d)" % [GameState.player_name, GameState.cottage_name, GameState.active_slot])
 	)
 	start_hb.add_child(b_cr); start_hb.add_child(b_play)
 	t_vb.add_child(start_hb)
 	title_overlay.add_child(t_card)
 	ui_layer.add_child(title_overlay)
 
-	# Universal Modal added AFTER Title Overlay so Protagonist Creator opens cleanly on top of Title Screen too!
 	uni_modal = UniversalModal.new()
-	uni_modal.position = Vector2(210, 75)
+	uni_modal.position = Vector2(200, 70)
 	uni_modal.start_job_requested.connect(_start_job)
-	uni_modal.play_chapter_requested.connect(func(ch: Dictionary): dlg_panel.play_chapter(ch))
+	uni_modal.play_chapter_requested.connect(func(ch: Dictionary): cutscene_dir.play_cutscene_dict(ch, "chronicle", world, true))
+	uni_modal.replay_cutscene_requested.connect(func(cs_d: Dictionary, mode: String): cutscene_dir.play_cutscene_dict(cs_d, mode, world, true))
 	uni_modal.gift_chosen.connect(func(cid: String, iid: String): dlg_panel.show_gift_reaction(cid, iid))
 	uni_modal.hero_customized.connect(func():
 		world.player_actor.refresh_appearance()
 		for a in world.npc_actors.values(): a.refresh_appearance()
+		if world.child_actor: world.child_actor.refresh_child()
 		_refresh_hud()
 		_refresh_title_slots()
 	)
 	uni_modal.enter_ruins_requested.connect(func(): _change_scene("ruins_b1", Vector2i(10, 11), true))
 	ui_layer.add_child(uni_modal)
+
+	cutscene_dir = CutsceneDirector.new()
+	cutscene_dir.cutscene_finished.connect(func(_id: String):
+		_sync_bgm_zone()
+		_refresh_hud()
+	)
+	ui_layer.add_child(cutscene_dir)
+
+func _play_confession_cutscene(cid: String) -> void:
+	var cname := str(GameData.char_by_id.get(cid, {}).get("name_th", cid))
+	var cs := {
+		"id": "cs_confession",
+		"title_th": "คำสารภาพรักใต้สายลมต้นไม้โลก",
+		"subtitle_th": "{player} & " + cname + " ตกลงคบหาดูใจกันอย่างเป็นทางการ",
+		"stage_scene": GameState.current_scene,
+		"bgm_zone": "wedding",
+		"cast": [cid, "03_lilian"],
+		"beats": [
+			{"speaker": cid, "emotion": "blush", "emote": "💖", "text": "{player}... ขอบคุณที่พูดความรู้สึกในใจออกมานะ ฉันเองก็หลงรักเธอมาตลอดเหมือนกัน!"},
+			{"speaker": "03_lilian", "emotion": "happy", "emote": "🌸", "text": "ยินดีด้วยนะจ๊ะทั้งสองคน! เมื่อความผูกพันเต็ม 10 หัวใจ อย่าลืมนำ 'แหวนสายใยรากไม้โลก' มาจัดพิธีวิวาห์นะจ๊ะ!"}
+		]
+	}
+	cutscene_dir.play_cutscene_dict(cs, "cutscene", world, false)
+
+func _play_wedding_cutscene(cid: String) -> void:
+	var cname := str(GameData.char_by_id.get(cid, {}).get("name_th", cid))
+	var cs := {
+		"id": "cs_wedding",
+		"title_th": "พิธีวิวาห์ศักดิ์สิทธิ์ใต้ต้นไม้โลก",
+		"subtitle_th": "งานแต่งงานของ {player} & " + cname,
+		"stage_scene": "outdoor",
+		"focus_tile": [42, 29],
+		"bgm_zone": "wedding",
+		"cast": [cid, "16_bram", "09_celeste", "03_lilian"],
+		"beats": [
+			{"speaker": "16_bram", "emotion": "happy", "emote": "🔔", "text": "ฮ่าๆๆ! วันนี้ชาวเมืองทั้งแปดเผ่ามารวมตัวกันอวยพรพิธีวิวาห์อันแสนอบอุ่นของ {player} และ " + cname + " ใต้ต้นไม้โลกสีทอง!"},
+			{"speaker": "09_celeste", "emotion": "happy", "emote": "🎻", "text": "ขอให้ท่วงทำนองไวโอลินและแสงอรุณแห่งรากไม้โลกคุ้มครองคู่บ่าวสาวให้ครองรักกันชั่วนิรันดร์ค่ะ!"},
+			{"speaker": cid, "emotion": "blush", "emote": "💍", "text": "ขอบคุณที่สวมแหวนวงนี้ให้ฉันนะ {player}... จากนี้ไปเรามาสร้างครอบครัวที่อบอุ่นด้วยกันที่ {farm} ตลอดไปเลยนะ! (+500G & ปลดล็อกชุดวิวาห์!)"}
+		]
+	}
+	cutscene_dir.play_cutscene_dict(cs, "cutscene", world, true)
+
+func _toggle_lantern() -> void:
+	GameState.night_lantern_on = not GameState.night_lantern_on
+	AudioManager.play_sfx("sparkle")
+	show_toast("🏮 ตะเกียงส่องทาง: %s" % ("เปิดสว่าง" if GameState.night_lantern_on else "ปิด"))
 
 func _refresh_title_slots() -> void:
 	if not title_slot_box: return
@@ -284,7 +349,8 @@ func show_toast(msg: String) -> void:
 func _refresh_hud() -> void:
 	var hh := int(GameState.time_min) / 60
 	var mm := int(GameState.time_min) % 60
-	clock_lbl.text = "%s วันที่ %d %s • %02d:%02d (%s)" % [GameState.get_weekday_name(), GameState.get_day_of_season(), GameState.get_season_name(), hh, mm, GameState.weather]
+	var fest_tag := " 🎉เทศกาล!" if GameData.FESTIVALS.has(GameState.get_day_of_season()) else ""
+	clock_lbl.text = "%s วันที่ %d %s%s • %02d:%02d (%s)" % [GameState.get_weekday_name(), GameState.get_day_of_season(), GameState.get_season_name(), fest_tag, hh, mm, GameState.weather]
 	gold_lbl.text = "ทอง: %d G  |  พลังงาน: %d/%d  |  %s" % [GameState.gold, GameState.stamina, GameState.get_max_stamina(), GameState.player_name]
 	stats_lbl.text = "เสน่ห์ Lv.%d | ฝีมือ Lv.%d | ปัญญา Lv.%d | ความกล้า Lv.%d" % [
 		GameState.get_stat_level("charm"), GameState.get_stat_level("craft"),
@@ -329,13 +395,34 @@ func _change_scene(scene_id: String, spawn_tile: Vector2i, save_return: bool = f
 		GameState.return_outdoor_pos = world.player_actor.position + Vector2(0, 18)
 	GameState.home_edit_mode = false
 	home_edit_bar.visible = false
+	world.clear_click_move()
 	GameState.current_scene = scene_id
 	world.player_actor.position = (Vector2(spawn_tile) + Vector2(0.5, 0.5)) * TILE
 	world.pet_actor.position = world.player_actor.position + Vector2(-20, 8)
+	if scene_id == "tavern" and GameState.time_min >= 19.0 * 60.0:
+		GameState.visited_tavern_night = true
 	world.sync_npc_schedules()
 	AudioManager.play_sfx("door")
 	_sync_bgm_zone()
 	_refresh_hud()
+
+	var entry_cs_map := {
+		"farmhouse": "cs_enter_farmhouse",
+		"farmhouse_upstairs": "cs_enter_loft",
+		"shop": "cs_enter_shop",
+		"bakery": "cs_enter_bakery",
+		"tavern": "cs_enter_tavern",
+		"smithy": "cs_enter_smithy",
+		"cottage": "cs_enter_cottage",
+		"ruins_b1": "cs_enter_ruins_b1",
+		"ruins_b2": "cs_enter_ruins_b2",
+		"ruins_b3": "cs_enter_ruins_b3",
+		"ruins_b4": "cs_enter_ruins_b4"
+	}
+	if entry_cs_map.has(scene_id):
+		var csid := str(entry_cs_map[scene_id])
+		if not GameState.watched_cutscenes.has(csid) and GameData.cutscenes_v7.has(csid):
+			cutscene_dir.play_cutscene_by_id(csid, world, false)
 
 func _advance_hours(hrs: float) -> void:
 	GameState.time_min += hrs * 60.0
@@ -413,25 +500,30 @@ func _on_minigame_finished(ctx_mode: String, pl: Variant, sc: int, mx: int) -> v
 		show_toast("จบมินิคอนเสิร์ต 4 เลน! ชาวเมืองทุกคน +15 แต้มหัวใจ & ฟื้นพลังงาน +25!")
 
 func _is_ui_blocking() -> bool:
-	return (not GameState.started) or title_overlay.visible or day_summary_overlay.visible or dlg_panel.visible or mg_modal.visible or wm_modal.visible or uni_modal.visible
+	return (not GameState.started) or title_overlay.visible or day_summary_overlay.visible or dlg_panel.visible or mg_modal.visible or wm_modal.visible or uni_modal.visible or (cutscene_dir != null and cutscene_dir.is_playing)
 
 func _find_interaction() -> Dictionary:
 	var p := world.player_actor.position
 	var sc := GameState.current_scene
+	if world.child_actor and world.child_actor.visible and world.child_actor.position.distance_to(p) < 48.0:
+		return {"kind": "child", "label": "กด [E] อุ้ม/เล่นกับลูกน้อย '%s'" % str(GameState.child_data.get("name", "ลูมิน่า"))}
 	for cid in world.npc_actors.keys():
 		var a: CharacterActor = world.npc_actors[cid]
 		if a.visible and a.position.distance_to(p) < 52.0:
 			return {"kind": "npc", "cid": cid, "label": "กด [E] พูดคุยกับ " + str(GameData.char_by_id[cid]["name_th"])}
 
 	if sc == "outdoor":
+		if GameData.FESTIVALS.has(GameState.get_day_of_season()) and GameState.festival_joined_day != GameState.day and p.distance_to(Vector2(42.5 * TILE, 31.0 * TILE)) < 68.0:
+			var fdef: Dictionary = GameData.FESTIVALS[GameState.get_day_of_season()]
+			return {"kind": "festival", "label": "กด [E] 🎉 เข้าร่วม " + str(fdef["name_th"])}
 		if p.distance_to(Vector2(39.5 * TILE, 27.5 * TILE)) < 48.0:
-			return {"kind": "enter_ruins", "label": "กด [E] ลงสู่โบราณสถานใต้รากไม้โลก (ชั้น B1)"}
+			return {"kind": "enter_ruins", "label": "กด [E] ลงสู่โบราณสถานใต้รากไม้โลก (ชั้น B1–B4)"}
 		if p.distance_to(Vector2(20.5 * TILE, 15.5 * TILE)) < 42.0:
 			return {"kind": "mail", "label": "กด [E] เปิดตู้จดหมาย"}
 		if p.distance_to(Vector2(45.5 * TILE, 29.5 * TILE)) < 44.0:
 			return {"kind": "quests", "label": "กด [E] เปิดกระดานเควสต์"}
 		if p.distance_to(Vector2(42.5 * TILE, 28.5 * TILE)) < 54.0:
-			return {"kind": "story", "label": "กด [E] เปิดพงศาวดารต้นไม้โลก"}
+			return {"kind": "story", "label": "กด [E] เปิดพงศาวดาร & โรงละครคัตซีน"}
 		for b in ValleyWorld.BUILDINGS:
 			var dp := (Vector2(b["door"]) + Vector2(0.5, 0.3)) * TILE
 			if p.distance_to(dp) < 40.0:
@@ -451,6 +543,11 @@ func _find_interaction() -> Dictionary:
 	elif GameData.RUINS_FLOORS.has(sc):
 		var fl: Dictionary = GameData.RUINS_FLOORS[sc]
 		var rs: Dictionary = GameState.ruins_state[sc]
+		if sc == "ruins_b4" and not GameState.boss_purified:
+			var bt: Vector2i = fl.get("boss_tile", Vector2i(11, 6))
+			var bp := Vector2((bt.x + 0.5) * TILE, (bt.y + 0.5) * TILE)
+			if p.distance_to(bp) < 155.0:
+				return {"kind": "boss_purify", "label": "กด [F] หรือ [E] ปล่อยคลื่นแสงศักดิ์สิทธิ์ชำระล้างบอสผู้พิทักษ์!"}
 		var eu: Dictionary = fl["exit_up"]
 		if p.distance_to(Vector2((int(eu["x"]) + 0.5) * TILE, (int(eu["y"]) + 0.5) * TILE)) < 42.0:
 			return {"kind": "ruins_up", "to": str(eu["to"]), "label": "กด [E] ขึ้นบันไดกลับ"}
@@ -459,7 +556,8 @@ func _find_interaction() -> Dictionary:
 			return {"kind": "ruins_down", "to": str(sd["to"]), "solved": bool(rs["solved"]), "label": "กด [E] ลงสู่ชั้นถัดไป" if bool(rs["solved"]) else "ผนึกเสาแสงยังไม่เปิด"}
 		var ch: Dictionary = fl["chest"]
 		if not bool(rs["chest_opened"]) and p.distance_to(Vector2((int(ch["x"]) + 0.5) * TILE, (int(ch["y"]) + 0.5) * TILE)) < 46.0:
-			return {"kind": "ruins_chest", "label": "กด [E] เปิดหีบสมบัติบรรพกาล!" if bool(rs["solved"]) else "หีบถูกผนึกด้วยเสาแสง"}
+			var can_open := bool(rs["solved"]) and (sc != "ruins_b4" or GameState.boss_purified)
+			return {"kind": "ruins_chest", "label": "กด [E] เปิดหีบสมบัติบรรพกาล!" if can_open else "ต้องปลดผนึกเสาแสง/ชำระล้างบอสก่อน"}
 		for pi in range(fl["pillars"].size()):
 			var pl: Dictionary = fl["pillars"][pi]
 			if p.distance_to(Vector2((int(pl["x"]) + 0.5) * TILE, (int(pl["y"]) + 0.5) * TILE)) < 48.0:
@@ -496,6 +594,11 @@ func _execute_interaction() -> void:
 	var ctx := _find_interaction()
 	if ctx.is_empty(): return
 	match str(ctx["kind"]):
+		"child":
+			var cmsg := GameState.interact_with_child()
+			if cmsg != "": show_toast(cmsg)
+		"festival":
+			GameState.join_today_festival()
 		"npc": dlg_panel.open_npc_dialogue(str(ctx["cid"]))
 		"enter_ruins": _change_scene("ruins_b1", Vector2i(10, 11), true)
 		"mail": uni_modal.open_mailbox_modal()
@@ -512,10 +615,17 @@ func _execute_interaction() -> void:
 				mg_modal.start_minigame("rhythm_stage", "concert", null)
 			elif lmid == "lm_museum":
 				uni_modal.open_quests_and_town_modal("museum")
+			elif lmid == "lm_nightmarket":
+				uni_modal.open_shop_modal("nightmarket")
+			elif lmid == "lm_observatory":
+				GameState.meteor_shower_tonight = true
+				GameState.add_stat_xp({"wisdom": 10})
+				AudioManager.play_sfx("sparkle")
+				show_toast("🔭 ส่องกล้องดูดาวสำเร็จ! (+10 ปัญญา & คืนนี้จะมีฝนดาวตก!)")
 			else:
 				GameState.stamina = GameState.get_max_stamina()
 				AudioManager.play_sfx("sparkle")
-				show_toast("รับพรจากแลนด์มาร์ก! ฟื้นพลังงานเต็ม 100%")
+				show_toast("♨️ แช่บ่อน้ำพุร้อนรากไม้! ฟื้นพลังงานเต็ม 100%")
 		"forage":
 			var sp: Dictionary = ctx["spot"]
 			sp["collected"] = true
@@ -523,23 +633,31 @@ func _execute_interaction() -> void:
 			GameState.add_item(str(sp["item_id"]), qty)
 			GameState.foraged_count += qty
 			world.player_actor.interact_timer = 0.4
+			GameState.check_achievements()
 			AudioManager.play_sfx("sparkle")
 			show_toast("เก็บ '%s' x%d สำเร็จ!" % [GameData.item_by_id.get(str(sp["item_id"]), {}).get("name_th", ""), qty])
 		"fish":
 			mg_modal.start_minigame("stardew_fish", "fish", null)
+		"boss_purify":
+			world.trigger_sacred_pulse()
 		"ruins_up":
 			var target_to := str(ctx["to"])
 			if target_to == "outdoor": _change_scene("outdoor", Vector2i(39, 28), false)
 			else: _change_scene(target_to, Vector2i(10, 3), false)
 		"ruins_down":
-			if bool(ctx["solved"]): _change_scene(str(ctx["to"]), Vector2i(10, 11), false)
-			else: show_toast("หมุนเสาปริซึมให้ลำแสงชนแท่นรับแสงครบก่อน!")
+			if bool(ctx["solved"]):
+				var next_sc := str(ctx["to"])
+				var sp_t: Vector2i = GameData.RUINS_FLOORS[next_sc]["spawn"]
+				_change_scene(next_sc, sp_t, false)
+			else:
+				show_toast("หมุนเสาปริซึมให้ลำแสงชนแท่นรับแสงครบก่อน!")
 		"ruins_pillar":
 			GameState.rotate_ruins_pillar(GameState.current_scene, int(ctx["idx"]))
+			GameState.check_achievements()
 		"ruins_chest":
 			var rs: Dictionary = GameState.ruins_state[GameState.current_scene]
-			if not bool(rs["solved"]):
-				show_toast("ต้องไขปริศนาเสาแสงให้สำเร็จก่อน!")
+			if not bool(rs["solved"]) or (GameState.current_scene == "ruins_b4" and not GameState.boss_purified):
+				show_toast("ต้องไขปริศนาเสาแสงและชำระล้างผู้พิทักษ์ให้สำเร็จก่อน!")
 				return
 			rs["chest_opened"] = true
 			var ch: Dictionary = GameData.RUINS_FLOORS[GameState.current_scene]["chest"]
@@ -547,6 +665,7 @@ func _execute_interaction() -> void:
 			for iid in ch["items"].keys():
 				GameState.add_item(str(iid), int(ch["items"][iid]))
 			AudioManager.play_sfx("quest")
+			GameState.check_achievements()
 			GameState.save_slot(GameState.active_slot, true)
 			show_toast("เปิดหีบสมบัติบรรพกาล! รับ +%d G และไอเทมโบราณ!" % int(ch["gold"]))
 		"ruins_ore":
@@ -567,7 +686,7 @@ func _execute_interaction() -> void:
 			uni_modal.open_craft_modal()
 		"decor_act":
 			var act := str(ctx["act"])
-			if act == "mirror": uni_modal.open_protagonist_creator()
+			if act == "mirror": uni_modal.open_protagonist_creator("wardrobe")
 			elif act == "music": mg_modal.start_minigame("rhythm_stage", "concert", null)
 			else:
 				GameState.stamina = mini(GameState.get_max_stamina(), GameState.stamina + 12)
@@ -576,6 +695,14 @@ func _execute_interaction() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not GameState.started: return
+	if cutscene_dir and cutscene_dir.is_playing:
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.is_action_pressed("skip_cutscene") or event.physical_keycode == KEY_ESCAPE:
+				cutscene_dir.skip_cutscene()
+			elif event.is_action_pressed("interact"):
+				cutscene_dir.advance_or_reveal()
+		return
+
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_ESCAPE:
 			if GameState.home_edit_mode: GameState.home_edit_mode = false; home_edit_bar.visible = false
@@ -595,22 +722,29 @@ func _unhandled_input(event: InputEvent) -> void:
 			GameState.selected_decor_rot = (GameState.selected_decor_rot + 1) % 2
 			return
 		if _is_ui_blocking():
-			if dlg_panel.visible and not dlg_panel.current_chapter.is_empty() and event.is_action_pressed("interact"):
-				dlg_panel.advance_cutscene()
 			return
 		if event.is_action_pressed("pet_companion"):
 			_pet_companion()
+		elif event.is_action_pressed("sacred_pulse"):
+			world.trigger_sacred_pulse()
+		elif event.is_action_pressed("toggle_lantern"):
+			_toggle_lantern()
 		elif event.is_action_pressed("interact"):
 			_execute_interaction()
 
-	if GameState.home_edit_mode and event is InputEventMouseButton and event.pressed:
+	if event is InputEventMouseButton and event.pressed:
 		var wpos := get_global_mouse_position()
-		var tx := int(floor(wpos.x / TILE))
-		var ty := int(floor(wpos.y / TILE))
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			GameState.place_decor_on_grid(GameState.selected_decor_id, GameState.current_scene, tx, ty, GameState.selected_decor_rot)
-		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			GameState.remove_decor_at_tile(GameState.current_scene, tx, ty)
+		if GameState.home_edit_mode:
+			var tx := int(floor(wpos.x / TILE))
+			var ty := int(floor(wpos.y / TILE))
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				GameState.place_decor_on_grid(GameState.selected_decor_id, GameState.current_scene, tx, ty, GameState.selected_decor_rot)
+			elif event.button_index == MOUSE_BUTTON_RIGHT:
+				GameState.remove_decor_at_tile(GameState.current_scene, tx, ty)
+		elif not _is_ui_blocking() and event.button_index == MOUSE_BUTTON_LEFT:
+			var vpos := get_viewport().get_mouse_position()
+			if vpos.y > 95.0 and vpos.y < 645.0:
+				world.set_click_move_target(wpos)
 
 func _process(delta: float) -> void:
 	if _toast_timer > 0.0:
@@ -620,6 +754,8 @@ func _process(delta: float) -> void:
 
 	var mpos := get_global_mouse_position()
 	world.hover_tile = Vector2i(int(floor(mpos.x / TILE)), int(floor(mpos.y / TILE)))
+
+	var cs_active := (cutscene_dir != null and cutscene_dir.is_playing)
 
 	if GameState.started and not _is_ui_blocking() and not GameState.home_edit_mode:
 		var prev_hr := int(GameState.time_min) / 60
@@ -631,6 +767,15 @@ func _process(delta: float) -> void:
 			_refresh_hud()
 
 		var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+		if dir.length() > 0.05:
+			world.clear_click_move()
+		elif world.has_click_target:
+			var to_click := world.click_target - world.player_actor.position
+			if to_click.length() < 8.0:
+				world.clear_click_move()
+			else:
+				dir = to_click.normalized()
+
 		var moving := dir.length() > 0.05
 		var sprinting := Input.is_action_pressed("sprint")
 		if moving:
@@ -639,12 +784,20 @@ func _process(delta: float) -> void:
 			var spd := (205.0 if sprinting else 135.0) * avian_mult * delta
 			var nx := Vector2(world.player_actor.position.x + dir.x * spd, world.player_actor.position.y)
 			var ny := Vector2(world.player_actor.position.x, world.player_actor.position.y + dir.y * spd)
-			if not world.is_point_blocked(nx): world.player_actor.position.x = nx.x
-			if not world.is_point_blocked(ny): world.player_actor.position.y = ny.y
+			var moved_ok := false
+			if not world.is_point_blocked(nx): world.player_actor.position.x = nx.x; moved_ok = true
+			if not world.is_point_blocked(ny): world.player_actor.position.y = ny.y; moved_ok = true
+			if not moved_ok and world.has_click_target:
+				world.clear_click_move()
 			if absf(dir.x) > absf(dir.y):
 				world.player_actor.dir_row = 1 if dir.x < 0.0 else 3
 			else:
 				world.player_actor.dir_row = 0 if dir.y < 0.0 else 2
+			if GameState.night_lantern_on and GameState.current_scene == "outdoor" and (GameState.time_min >= 18.0 * 60.0 or GameState.time_min < 6.0 * 60.0):
+				_lantern_step_acc += spd
+				if _lantern_step_acc >= 96.0:
+					_lantern_step_acc = 0.0
+					GameState.night_lantern_steps += 1
 		world.player_actor.update_actor(delta, moving, sprinting)
 
 		var near := _find_interaction()
@@ -655,16 +808,19 @@ func _process(delta: float) -> void:
 		prompt_panel.visible = false
 		world.player_actor.update_actor(delta, false, false)
 
-	world.update_world(delta)
+	world.update_world(delta, cs_active)
 
-	# Camera Zoom & Clamp + Day/Night Lighting
+	# Camera Zoom & Clamp + Smooth Cutscene Focus + Day/Night Lighting
 	var z := 1.65 if GameState.current_scene == "outdoor" else (2.0 if GameState.current_scene.begins_with("ruins_") else 2.15)
+	if cs_active:
+		z = maxf(z, 1.95)
 	cam.zoom = Vector2(z, z)
+	var focus_pt := cutscene_dir.focus_world_pos if cs_active else world.player_actor.position
 	var bounds := world.get_scene_pixel_bounds()
 	var half_vp := (get_viewport_rect().size * 0.5) / z
-	var cx := bounds.x * 0.5 if bounds.x <= half_vp.x * 2.0 else clampf(world.player_actor.position.x, half_vp.x, bounds.x - half_vp.x)
-	var cy := bounds.y * 0.5 if bounds.y <= half_vp.y * 2.0 else clampf(world.player_actor.position.y, half_vp.y, bounds.y - half_vp.y)
-	cam.position = Vector2(cx, cy)
+	var cx := bounds.x * 0.5 if bounds.x <= half_vp.x * 2.0 else clampf(focus_pt.x, half_vp.x, bounds.x - half_vp.x)
+	var cy := bounds.y * 0.5 if bounds.y <= half_vp.y * 2.0 else clampf(focus_pt.y, half_vp.y, bounds.y - half_vp.y)
+	cam.position = cam.position.lerp(Vector2(cx, cy), minf(1.0, delta * 8.0)) if cs_active else Vector2(cx, cy)
 
 	var hr := GameState.time_min / 60.0
 	if GameState.current_scene == "outdoor":

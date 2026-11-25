@@ -37,11 +37,20 @@ var tree_tiles: Array[Vector2i] = []
 
 var ground_drawer: Node2D
 var entities_root: Node2D
+var fx_drawer: Node2D
 var player_actor: CharacterActor
 var pet_actor: PetActor
+var child_actor: ChildActor
 var npc_actors: Dictionary = {}
 var npc_states: Dictionary = {}
 var hover_tile: Vector2i = Vector2i(8, 6)
+
+var has_click_target: bool = false
+var click_target: Vector2 = Vector2.ZERO
+var _pulse_timer: float = 0.0
+var _pulse_origin: Vector2 = Vector2.ZERO
+var _wisp_cd: float = 0.0
+var _particles: Array = []
 
 var _tileset_tex: Texture2D
 var _props_tex: Texture2D
@@ -53,6 +62,13 @@ func _ready() -> void:
 	_world_tree_tex = GameData.get_tex("world_sprites/world_tree_states_2x1_512x256.png")
 
 	_build_valley_grids()
+	for i in range(68):
+		_particles.append({
+			"seed": float(i) * 19.37,
+			"x": fposmod(sin(float(i) * 12.9898) * 43758.54, 1.0),
+			"y": fposmod(sin(float(i) * 78.233) * 29432.17, 1.0),
+			"spd": 0.65 + fposmod(sin(float(i) * 39.11) * 9182.3, 0.75)
+		})
 
 	ground_drawer = Node2D.new()
 	ground_drawer.draw.connect(_draw_ground_and_props)
@@ -71,8 +87,68 @@ func _ready() -> void:
 	pet_actor.position = player_actor.position + Vector2(-24, 8)
 	entities_root.add_child(pet_actor)
 
+	child_actor = ChildActor.new()
+	entities_root.add_child(child_actor)
+
+	fx_drawer = Node2D.new()
+	fx_drawer.z_index = 20
+	fx_drawer.draw.connect(_draw_atmosphere_and_fx)
+	add_child(fx_drawer)
+
 	_spawn_npcs()
 	sync_npc_schedules()
+
+func set_click_move_target(world_pos: Vector2) -> void:
+	if not is_point_blocked(world_pos):
+		click_target = world_pos
+		has_click_target = true
+
+func clear_click_move() -> void:
+	has_click_target = false
+
+func trigger_sacred_pulse() -> void:
+	_pulse_origin = player_actor.position
+	_pulse_timer = 0.55
+	player_actor.play_hop()
+	player_actor.show_emote("✨", 1.5)
+	AudioManager.play_sfx("sparkle")
+
+	var sc := GameState.current_scene
+	if GameState.night_lantern_on and sc == "outdoor":
+		var hr := GameState.time_min / 60.0
+		if hr >= 18.0 or hr < 6.0:
+			GameState.night_lantern_steps += 1
+
+	if GameData.RUINS_FLOORS.has(sc):
+		var fl: Dictionary = GameData.RUINS_FLOORS[sc]
+		var wlist: Array = fl.get("wisps", [])
+		var now_s := Time.get_ticks_msec() / 1000.0
+		if not GameState.purified_wisps_floor.has(sc):
+			GameState.purified_wisps_floor[sc] = {}
+		var pmap: Dictionary = GameState.purified_wisps_floor[sc]
+		var purified_any := false
+		for wi in range(wlist.size()):
+			if pmap.has(str(wi)):
+				continue
+			var wp := _get_wisp_pos(wlist[wi], now_s, wi)
+			if wp.distance_to(_pulse_origin) <= 125.0:
+				pmap[str(wi)] = true
+				purified_any = true
+				GameState.add_gold(20)
+				GameState.add_stat_xp({"courage": 4})
+		if purified_any:
+			GameState.toast_requested.emit("✨ ชำระล้างภูตหมอกเงามืดสำเร็จ! (+20G +ความกล้า)")
+		if sc == "ruins_b4" and not GameState.boss_purified:
+			var btile: Vector2i = fl.get("boss_tile", Vector2i(11, 6))
+			var bpos := Vector2((btile.x + 0.5) * TILE, (btile.y + 0.5) * TILE)
+			if bpos.distance_to(_pulse_origin) <= 165.0:
+				GameState.purify_boss_damage()
+
+func _get_wisp_pos(w: Dictionary, now_s: float, idx: int) -> Vector2:
+	var p1 := Vector2((float(w["x1"]) + 0.5) * TILE, (float(w["y1"]) + 0.5) * TILE)
+	var p2 := Vector2((float(w["x2"]) + 0.5) * TILE, (float(w["y2"]) + 0.5) * TILE)
+	var t := 0.5 + 0.5 * sin(now_s * float(w.get("spd", 1.5)) + float(idx) * 1.7)
+	return p1.lerp(p2, t)
 
 func _idx(x: int, y: int) -> int:
 	return y * MAP_W + x
@@ -185,7 +261,8 @@ func sync_npc_schedules() -> void:
 			var sp_scene := "farmhouse_upstairs" if (GameState.house_level >= 2 and hr >= 20.5) else "farmhouse"
 			st["scene"] = sp_scene
 			st["activity"] = "ใช้เวลาคู่สมรสในบ้านพัก"
-			actor.position = Vector2(6.5 * TILE, 5.8 * TILE)
+			st["home_pos"] = Vector2(6.5 * TILE, 5.8 * TILE)
+			actor.position = st["home_pos"]
 			actor.visible = (GameState.current_scene == sp_scene)
 			actor.badge_text = "💒"
 			idx += 1
@@ -215,25 +292,64 @@ func sync_npc_schedules() -> void:
 		actor.visible = (sc == GameState.current_scene)
 		actor.badge_text = "💒" if GameState.spouse_id == cid else ("💑" if GameState.partners.has(cid) else "")
 		idx += 1
+	if child_actor:
+		child_actor.refresh_child()
 
-func update_world(delta: float) -> void:
+func update_world(delta: float, cutscene_freeze: bool = false) -> void:
+	if _pulse_timer > 0.0:
+		_pulse_timer = maxf(0.0, _pulse_timer - delta)
+	if _wisp_cd > 0.0:
+		_wisp_cd = maxf(0.0, _wisp_cd - delta)
+
 	for cid in npc_actors.keys():
 		var actor: CharacterActor = npc_actors[cid]
 		var st: Dictionary = npc_states[cid]
+		if cutscene_freeze:
+			if actor.visible:
+				actor.update_actor(delta, false, false)
+			continue
 		actor.visible = (str(st["scene"]) == GameState.current_scene)
 		if actor.visible:
-			var sway := sin(Time.get_ticks_msec() / 1100.0 + float(cid.hash() % 17)) * 18.0
-			var target: Vector2 = st["home_pos"] + Vector2(sway, 0)
+			var phase := Time.get_ticks_msec() / 1200.0 + float(abs(cid.hash()) % 23)
+			var rx := sin(phase) * (24.0 if str(st["scene"]) == "outdoor" else 12.0)
+			var ry := cos(phase * 0.7) * (12.0 if str(st["scene"]) == "outdoor" else 4.0)
+			var target: Vector2 = st["home_pos"] + Vector2(rx, ry)
 			var diff := target - actor.position
-			var moving := diff.length() > 3.0
+			var moving := diff.length() > 3.5 and not is_point_blocked(actor.position + diff.normalized() * 8.0)
 			if moving:
-				actor.position += diff.normalized() * minf(diff.length(), 32.0 * delta)
-				actor.dir_row = 1 if diff.x < 0.0 else 3
+				actor.position += diff.normalized() * minf(diff.length(), 30.0 * delta)
+				if absf(diff.x) > absf(diff.y):
+					actor.dir_row = 1 if diff.x < 0.0 else 3
+				else:
+					actor.dir_row = 0 if diff.y < 0.0 else 2
 			else:
 				actor.dir_row = 2
 			actor.update_actor(delta, moving, false)
+
+	# Shadow Wisp cozy collision check in Ruins B1..B4
+	var sc := GameState.current_scene
+	if not cutscene_freeze and GameData.RUINS_FLOORS.has(sc) and _wisp_cd <= 0.0:
+		var fl: Dictionary = GameData.RUINS_FLOORS[sc]
+		var wlist: Array = fl.get("wisps", [])
+		var pmap: Dictionary = GameState.purified_wisps_floor.get(sc, {})
+		var now_s := Time.get_ticks_msec() / 1000.0
+		for wi in range(wlist.size()):
+			if pmap.has(str(wi)):
+				continue
+			var wp := _get_wisp_pos(wlist[wi], now_s, wi)
+			if wp.distance_to(player_actor.position) < 22.0:
+				_wisp_cd = 1.6
+				GameState.stamina = maxi(5, GameState.stamina - 4)
+				AudioManager.play_sfx("miss")
+				GameState.toast_requested.emit("👾 สัมผัสหมอกเงามืด (-4⚡)! กด [F] ปล่อยคลื่นแสงชำระล้างได้นะ!")
+				break
+
 	pet_actor.follow_target(player_actor.position, delta)
+	if child_actor:
+		child_actor.update_child(delta)
 	ground_drawer.queue_redraw()
+	if fx_drawer:
+		fx_drawer.queue_redraw()
 
 func is_point_blocked(pos: Vector2) -> bool:
 	var tx := int(floor(pos.x / TILE))
@@ -247,6 +363,10 @@ func is_point_blocked(pos: Vector2) -> bool:
 		var fl: Dictionary = GameData.RUINS_FLOORS[sc]
 		if tx < 1 or ty < 2 or tx >= int(fl["w"]) - 1 or ty >= int(fl["h"]) - 1:
 			return true
+		if sc == "ruins_b4" and not GameState.boss_purified:
+			var bt: Vector2i = fl.get("boss_tile", Vector2i(11, 6))
+			if abs(tx - bt.x) <= 1 and abs(ty - bt.y) <= 1:
+				return true
 		for arr_name in ["blocks", "emitters", "pillars", "receptors"]:
 			for o in fl[arr_name]:
 				if int(o["x"]) == tx and int(o["y"]) == ty:
@@ -450,6 +570,45 @@ func _draw_ground_and_props() -> void:
 			if otex:
 				ground_drawer.draw_texture_rect(otex, Rect2(op.x - 12, op.y - 12, 24, 24), false)
 
+		# Shadow Miasma Wisps (Purifiable with [F]!)
+		var wlist: Array = fl.get("wisps", [])
+		var pmap: Dictionary = GameState.purified_wisps_floor.get(sc, {})
+		for wi in range(wlist.size()):
+			if pmap.has(str(wi)):
+				continue
+			var wp := _get_wisp_pos(wlist[wi], now_sec, wi)
+			ground_drawer.draw_circle(wp, 16.0 + sin(now_sec * 6.0 + wi) * 2.5, Color(0.42, 0.12, 0.65, 0.36))
+			ground_drawer.draw_circle(wp, 9.0, Color("#581c87"))
+			ground_drawer.draw_circle(wp + Vector2(-3, -2), 2.2, Color("#f43f5e"))
+			ground_drawer.draw_circle(wp + Vector2(3, -2), 2.2, Color("#f43f5e"))
+
+		# Floor B4 Boss: Corrupted Root Warden -> Golden Guardian!
+		if sc == "ruins_b4":
+			var bt: Vector2i = fl.get("boss_tile", Vector2i(11, 6))
+			var bp := Vector2((bt.x + 0.5) * TILE, (bt.y + 0.5) * TILE)
+			if GameState.boss_purified:
+				ground_drawer.draw_circle(bp, 38.0 + sin(now_sec * 3.0) * 4.0, Color(1.0, 0.9, 0.35, 0.32))
+				ground_drawer.draw_circle(bp, 22.0, Color("#ca8a04"))
+				ground_drawer.draw_circle(bp, 15.0, Color("#fef08a"))
+				if font:
+					ground_drawer.draw_string(font, bp + Vector2(-62, -32), "✨ ผู้พิทักษ์รากไม้ศักดิ์สิทธิ์", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#fef08a"))
+			else:
+				var shield_up := not bool(rs["solved"])
+				if shield_up:
+					ground_drawer.draw_arc(bp, 42.0 + sin(now_sec * 5.0) * 3.0, 0.0, TAU, 32, Color(0.58, 0.2, 0.92, 0.85), 4.0)
+				ground_drawer.draw_circle(bp, 28.0, Color("#3b0764"))
+				ground_drawer.draw_rect(Rect2(bp.x - 20, bp.y - 24, 40, 42), Color("#4c1d95"))
+				ground_drawer.draw_rect(Rect2(bp.x - 20, bp.y - 24, 40, 42), Color("#f43f5e" if shield_up else "#fde047"), false, 2.5)
+				ground_drawer.draw_circle(bp + Vector2(-7, -6), 4.0, Color("#ef4444"))
+				ground_drawer.draw_circle(bp + Vector2(7, -6), 4.0, Color("#ef4444"))
+				# Boss HP Bar
+				var ratio := float(GameState.boss_hp) / float(maxi(1, GameState.boss_max_hp))
+				ground_drawer.draw_rect(Rect2(bp.x - 32, bp.y - 40, 64, 8), Color("#0f172a"))
+				ground_drawer.draw_rect(Rect2(bp.x - 30, bp.y - 38, 60.0 * ratio, 4), Color("#ec4899"))
+				if font:
+					var hint := "🛡️ เกราะเงามืด (ไขเสาแสงก่อน)" if shield_up else ("⚡ กด [F] ชำระล้าง! (%d/%d)" % [GameState.boss_hp, GameState.boss_max_hp])
+					ground_drawer.draw_string(font, bp + Vector2(-70, -46), hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#fde047"))
+
 	else:
 		# Indoor Room + 2nd Floor Starlight Loft + Grid Furniture Placement!
 		var rm: Dictionary = INDOORS.get(sc, INDOORS["farmhouse"])
@@ -498,3 +657,75 @@ func _draw_ground_and_props() -> void:
 					var gr := Rect2(hover_tile.x * TILE, hover_tile.y * TILE, gw * TILE, gh * TILE)
 					ground_drawer.draw_rect(gr, Color(0.15, 0.85, 0.35, 0.45) if ok else Color(0.95, 0.25, 0.25, 0.45))
 					ground_drawer.draw_rect(gr, Color.GREEN if ok else Color.RED, false, 2.5)
+
+func _draw_atmosphere_and_fx() -> void:
+	var now_s := Time.get_ticks_msec() / 1000.0
+	var sc := GameState.current_scene
+
+	# Click-to-move ring
+	if has_click_target:
+		fx_drawer.draw_arc(click_target, 10.0 + sin(now_s * 7.0) * 2.5, 0.0, TAU, 20, Color(0.99, 0.88, 0.28, 0.85), 2.2)
+
+	# [F] Sacred Light Pulse golden shockwave!
+	if _pulse_timer > 0.0:
+		var prog := 1.0 - (_pulse_timer / 0.55)
+		var rad := 18.0 + prog * 135.0
+		fx_drawer.draw_arc(_pulse_origin, rad, 0.0, TAU, 36, Color(1.0, 0.92, 0.38, (1.0 - prog) * 0.92), 5.0)
+		fx_drawer.draw_circle(_pulse_origin, rad * 0.65, Color(1.0, 0.96, 0.65, (1.0 - prog) * 0.22))
+
+	if sc != "outdoor":
+		return
+
+	var hr := GameState.time_min / 60.0
+	var is_night := (hr >= 18.0 or hr < 6.0)
+	var s_idx := GameState.get_season_index()
+	var cam_center := player_actor.position
+
+	# Chimney smoke from cozy town buildings
+	for b in BUILDINGS:
+		if str(b["id"]) in ["bakery", "tavern", "smithy", "farmhouse"]:
+			var cx := (float(b["x"]) + float(b["w"]) - 1.2) * TILE
+			var cy := float(b["y"]) * TILE - 14.0
+			for k in range(3):
+				var ph := fposmod(now_s * 0.55 + float(k) * 0.33, 1.0)
+				fx_drawer.draw_circle(Vector2(cx + sin(now_s * 2.0 + k) * 6.0 + ph * 10.0, cy - ph * 28.0), 4.0 + ph * 5.0, Color(0.95, 0.95, 0.98, (1.0 - ph) * 0.28))
+
+	# Night warm window & plaza streetlamp glows
+	if is_night:
+		for b in BUILDINGS:
+			var door_p := (Vector2(b["door"]) + Vector2(0.5, -0.3)) * TILE
+			fx_drawer.draw_circle(door_p, 44.0 + sin(now_s * 3.0) * 3.0, Color(1.0, 0.82, 0.35, 0.20))
+		for lp in [Vector2(36, 29), Vector2(48, 29), Vector2(42, 23), Vector2(42, 36), Vector2(59, 38)]:
+			var wlp: Vector2 = (lp + Vector2(0.5, 0.5)) * float(TILE)
+			fx_drawer.draw_circle(wlp, 48.0, Color(1.0, 0.86, 0.42, 0.18))
+			fx_drawer.draw_circle(wlp, 4.0, Color(1.0, 0.95, 0.65, 0.85))
+
+	# Weather Rain OR Seasonal Petals / Fireflies / Autumn Leaves / Snow
+	var span := Vector2(860.0, 540.0)
+	for pt in _particles:
+		var spd := float(pt["spd"])
+		if GameState.weather == "rainy":
+			var rx := cam_center.x - span.x * 0.5 + fposmod(float(pt["x"]) * span.x - now_s * 95.0 * spd, span.x)
+			var ry := cam_center.y - span.y * 0.5 + fposmod(float(pt["y"]) * span.y + now_s * 340.0 * spd, span.y)
+			fx_drawer.draw_line(Vector2(rx, ry), Vector2(rx - 5.0, ry + 15.0), Color(0.68, 0.85, 1.0, 0.52), 1.6)
+		elif is_night:
+			# Night fireflies
+			var fx := cam_center.x - span.x * 0.5 + fposmod(float(pt["x"]) * span.x + sin(now_s + float(pt["seed"])) * 24.0, span.x)
+			var fy := cam_center.y - span.y * 0.5 + fposmod(float(pt["y"]) * span.y + cos(now_s * 0.8 + float(pt["seed"])) * 18.0, span.y)
+			var a := 0.25 + 0.45 * absf(sin(now_s * 2.6 + float(pt["seed"])))
+			fx_drawer.draw_circle(Vector2(fx, fy), 2.6, Color(0.65, 1.0, 0.45, a))
+		else:
+			var px := cam_center.x - span.x * 0.5 + fposmod(float(pt["x"]) * span.x + now_s * 22.0 * spd + sin(now_s + float(pt["seed"])) * 14.0, span.x)
+			var py := cam_center.y - span.y * 0.5 + fposmod(float(pt["y"]) * span.y + now_s * 36.0 * spd, span.y)
+			var col := Color(1.0, 0.72, 0.85, 0.72) if s_idx == 0 else (Color(1.0, 0.94, 0.55, 0.50) if s_idx == 1 else (Color(0.96, 0.52, 0.16, 0.76) if s_idx == 2 else Color(0.94, 0.98, 1.0, 0.82)))
+			fx_drawer.draw_circle(Vector2(px, py), 2.8, col)
+
+	# Meteor Shower tonight!
+	if is_night and (GameState.meteor_shower_tonight or GameState.get_day_of_season() == 28):
+		for m in range(4):
+			var mp := fposmod(now_s * 0.65 + float(m) * 0.27, 1.0)
+			if mp < 0.45:
+				var start_p := cam_center + Vector2(260.0 - mp * 720.0 + m * 65.0, -220.0 + mp * 420.0)
+				fx_drawer.draw_line(start_p, start_p + Vector2(46.0, -28.0), Color(1.0, 0.96, 0.65, 0.85), 2.6)
+				fx_drawer.draw_circle(start_p, 3.5, Color.WHITE)
+

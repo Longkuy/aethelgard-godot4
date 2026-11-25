@@ -25,6 +25,7 @@ var museum_milestones: Array = []
 var night_market_stock: Array = []
 var chapters: Array = []
 var chapter_by_id: Dictionary = {}
+var cutscenes_v7: Dictionary = {}
 var world_map: Dictionary = {}
 var use_hd_sprites: bool = false
 
@@ -32,6 +33,67 @@ var _tex_cache: Dictionary = {}
 var ui_theme: Theme
 var font_regular: FontFile
 var font_bold: FontFile
+
+const ACCESSORIES := [
+	{"id": "acc_none", "name_th": "ไม่สวมเครื่องประดับ", "price": 0, "slot": "head", "desc_th": "แสดงทรงผมธรรมชาติของตัวเอก"},
+	{"id": "acc_straw_hat", "name_th": "หมวกฟางนักบุกเบิก", "price": 120, "slot": "head", "desc_th": "หมวกฟางสานคาดริบบิ้นแดง กันแดดยามเดินสำรวจหุบเขา"},
+	{"id": "acc_flower_crown", "name_th": "มงกุฎดอกไม้รากไม้โลก", "price": 180, "slot": "head", "desc_th": "มงกุฎดอกไม้เรืองแสงถักทอด้วยมือ (+เสน่ห์เมื่อสวมใส่)"},
+	{"id": "acc_witch_hat", "name_th": "หมวกจอมเวทดารา", "price": 260, "slot": "head", "desc_th": "หมวกทรงสูงสีครามประดับดาวทองแห่งหอดูดาว"},
+	{"id": "acc_wedding_veil", "name_th": "ผ้าคลุม/รัดเกล้าวิวาห์ศักดิ์สิทธิ์", "price": 350, "slot": "head", "desc_th": "เครื่องประดับศีรษะสีขาวมุกสำหรับพิธีวิวาห์ใต้ต้นไม้โลก"},
+	{"id": "acc_fairy_wings", "name_th": "ปีกภูตแสงต้นไม้โลก", "price": 480, "slot": "back", "desc_th": "ปีกโปร่งแสงสีฟ้าทองกระพือเบาๆ ด้านหลังตัวเอก"},
+	{"id": "acc_crimson_cape", "name_th": "ผ้าคลุมไหล่รัตติกาลสีชาด", "price": 420, "slot": "back", "desc_th": "ผ้าคลุมไหล่ขุนนางแวมไพร์โบกสะบัดสง่างาม"},
+	{"id": "acc_royal_crown", "name_th": "มงกุฎทองแปดเผ่าพันธุ์", "price": 900, "slot": "head", "desc_th": "มงกุฎเกียรติยศสูงสุดของผู้ชำระล้างบอสชั้น B4 สำเร็จ!"}
+]
+
+const OUTFIT_THEMES := [
+	{"id": "outfit_traveler", "name_th": "ชุดนักเดินทางดั้งเดิม", "price": 0, "hue": 0.0, "sat": 100.0, "val": 100.0, "aura": ""},
+	{"id": "outfit_spring", "name_th": "ชุดเทศกาลกลีบซากุระผลิ", "price": 160, "hue": -35.0, "sat": 125.0, "val": 108.0, "aura": "#f472b6"},
+	{"id": "outfit_summer", "name_th": "ชุดสายลมสมุทรฤดูร้อน", "price": 160, "hue": 145.0, "sat": 120.0, "val": 106.0, "aura": "#38bdf8"},
+	{"id": "outfit_autumn", "name_th": "ชุดใบเมเปิลสีอำพัน", "price": 160, "hue": 28.0, "sat": 135.0, "val": 102.0, "aura": "#f59e0b"},
+	{"id": "outfit_winter", "name_th": "ชุดคลุมเกล็ดหิมะจันทรา", "price": 200, "hue": 195.0, "sat": 85.0, "val": 115.0, "aura": "#e0f2fe"},
+	{"id": "outfit_wedding", "name_th": "ชุดพิธีวิวาห์สีทองบริสุทธิ์", "price": 450, "hue": 45.0, "sat": 60.0, "val": 128.0, "aura": "#fde047"}
+]
+
+const FESTIVALS := {
+	7: {"day": 7, "id": "cs_fest_7", "name_th": "เทศกาลโคมไฟต้นไม้โลก", "desc_th": "ชาวเมืองทั้ง 8 เผ่าร่วมปล่อยโคมลอยอธิษฐานรอบจัตุรัส (+35 หัวใจทุกคน & +15 เสน่ห์)", "hearts_all": 35, "stat": {"charm": 15}},
+	14: {"day": 14, "id": "cs_fest_14", "name_th": "คืนดนตรีโรงเตี๊ยมตะเกียงมอส", "desc_th": "งานเลี้ยงหม้อไฟและไวโอลินประสานเสียง (+35 หัวใจทุกคน & ฟื้นพลังเต็ม)", "hearts_all": 35, "stat": {"charm": 10, "wisdom": 10}},
+	21: {"day": 21, "id": "cs_fest_21", "name_th": "ตลาดนัดหัตถศิลป์แปดเผ่า", "desc_th": "มหกรรมประกวดงานช่างฝีมือและลดราคาสินค้าทั่วเมือง 20%! (+300G & +15 ฝีมือ)", "hearts_all": 25, "gold": 300, "stat": {"craft": 15}},
+	28: {"day": 28, "id": "cs_fest_28", "name_th": "คืนฝนดาวตกเอเธลการ์ด", "desc_th": "ชมสายฝนดาวตกส่งท้ายฤดูกาลริมทะเลสาบมุก (+ผลึกดาวตก x2 & +20 ปัญญา)", "hearts_all": 40, "item_id": "item_starfall_crystal", "item_qty": 2, "stat": {"wisdom": 20}}
+}
+
+const NPC_BIRTHDAYS := {
+	"01_ren": {"season": 0, "day": 4}, "03_lilian": {"season": 0, "day": 11}, "07_sera": {"season": 0, "day": 18}, "11_pip": {"season": 0, "day": 25},
+	"05_kyo": {"season": 1, "day": 3}, "06_sora": {"season": 1, "day": 10}, "13_mirelle": {"season": 1, "day": 17}, "14_kael": {"season": 1, "day": 24},
+	"02_marcus": {"season": 2, "day": 5}, "08_roland": {"season": 2, "day": 12}, "12_trixie": {"season": 2, "day": 19}, "16_bram": {"season": 2, "day": 26},
+	"04_eli": {"season": 3, "day": 6}, "09_celeste": {"season": 3, "day": 13}, "10_lucian": {"season": 3, "day": 20}, "15_thorn": {"season": 3, "day": 27}
+}
+
+const ACHIEVEMENTS := [
+	{"id": "ach_welcome", "title_th": "ก้าวแรกแห่งเอเธลการ์ด", "desc_th": "พูดคุยทักทายชาวเมืองครบ 5 คน"},
+	{"id": "ach_social_all", "title_th": "ขวัญใจแปดเผ่าพันธุ์", "desc_th": "พูดคุยครบทั้ง 16 ตัวละครในหุบเขา"},
+	{"id": "ach_first_job", "title_th": "คนขยันประจำเมือง", "desc_th": "ทำงานพาร์ทไทม์สำเร็จเป็นครั้งแรก"},
+	{"id": "ach_s_rank", "title_th": "ยอดฝีมือระดับ S", "desc_th": "ทำมินิเกมพาร์ทไทม์ได้ระดับ Rank S ครบ 3 ครั้ง"},
+	{"id": "ach_angler", "title_th": "นักตกปลาแห่งทะเลสาบมุก", "desc_th": "ตกปลาสำเร็จครบ 5 ตัว"},
+	{"id": "ach_forager", "title_th": "นักสำรวจของป่าเรืองแสง", "desc_th": "เก็บของป่าครบ 10 ชิ้น"},
+	{"id": "ach_chef", "title_th": "เชฟและช่างฝีมือเอก", "desc_th": "คราฟต์ไอเทมหรือทำอาหารครบ 5 ชิ้น"},
+	{"id": "ach_rich", "title_th": "เศรษฐีรากไม้ทอง", "desc_th": "สะสมเงินทองในกระเป๋าครบ 2,000 G"},
+	{"id": "ach_loft", "title_th": "สถาปนิกห้องชมดาว", "desc_th": "ต่อเติมบ้านชั้น 2 (Starlight Loft) สำเร็จ"},
+	{"id": "ach_decorator", "title_th": "นักจัดบ้านมือทอง", "desc_th": "วางเฟอร์นิเจอร์ตกแต่งในบ้านครบ 4 ชิ้น"},
+	{"id": "ach_fashion", "title_th": "แฟชั่นนิสต้าแปดเผ่า", "desc_th": "เป็นเจ้าของเครื่องประดับหรือชุดพิเศษ 3 ชิ้น"},
+	{"id": "ach_bestie", "title_th": "มิตรแท้รู้ใจ", "desc_th": "มีตัวละครที่ระดับหัวใจถึง 5 ดวง"},
+	{"id": "ach_lover", "title_th": "ดอกไม้แห่งความรัก", "desc_th": "สารภาพรักและคบหาดูใจกับคนพิเศษ"},
+	{"id": "ach_married", "title_th": "ระฆังวิวาห์ใต้ต้นไม้โลก", "desc_th": "เข้าพิธีแต่งงานกับคู่ชีวิตที่มี 10 หัวใจ"},
+	{"id": "ach_parent", "title_th": "ครอบครัวสุขสันต์สมบูรณ์", "desc_th": "ให้กำเนิดทายาทตัวน้อยแห่งต้นไม้โลก"},
+	{"id": "ach_child_grow", "title_th": "ก้าวเติบโตของสายใย", "desc_th": "เลี้ยงดูลูกน้อยจนเติบโตสู่วัยเดินได้"},
+	{"id": "ach_landmark_1", "title_th": "ผู้บุกเบิกการบูรณะ", "desc_th": "บูรณะแลนด์มาร์กของเมืองสำเร็จ 1 แห่ง"},
+	{"id": "ach_landmark_all", "title_th": "มหานครรากไม้ฟื้นคืน", "desc_th": "บูรณะแลนด์มาร์กครบทั้ง 5 แห่ง!"},
+	{"id": "ach_museum_half", "title_th": "ภัณฑารักษ์ผู้ทุ่มเท", "desc_th": "บริจาคโบราณวัตถุเข้าพิพิธภัณฑ์ครบ 6 ชิ้น"},
+	{"id": "ach_museum_all", "title_th": "ตำนานพิพิธภัณฑ์ 12 ชิ้น", "desc_th": "บริจาคโบราณวัตถุครบสมบูรณ์ทั้ง 12 ชิ้น!"},
+	{"id": "ach_ruins_b1", "title_th": "ผู้ไขปริศนาเสาแสง", "desc_th": "ปลดผนึกเสาปริซึมโบราณสถานชั้น B1 สำเร็จ"},
+	{"id": "ach_ruins_b3", "title_th": "ผู้ค้นพบแหวนบรรพกาล", "desc_th": "ปลดผนึกชั้น B3 โถงหัวใจบรรพกาลสำเร็จ"},
+	{"id": "ach_boss_b4", "title_th": "ผู้ชำระล้างรากไม้ต้องสาป", "desc_th": "ปราบหมอกมืดและชำระล้างบอสผู้พิทักษ์ชั้น B4 สำเร็จ!"},
+	{"id": "ach_chronicle", "title_th": "ผู้จารึกพงศาวดาร", "desc_th": "เล่นเนื้อเรื่องพงศาวดารต้นไม้โลกผ่าน 5 บท"}
+]
 
 const RACE_PERKS := {
 	"human": {"icon": "🧑", "name_th": "มนุษย์ (Human)", "perk_th": "XP สเตตัสทั้ง 4 แกน +10% ทุกกิจกรรม"},
@@ -64,7 +126,7 @@ const HOME_DECOR := [
 	{"id": "decor_workbench", "label": "โต๊ะงานฝีมือไม้โอ๊ก", "price": 250, "perk_th": "+5 ฝีมือทุกเช้า", "stat": "craft", "w": 2, "h": 1, "color": "#b45309", "passable": false, "action": ""},
 	{"id": "decor_lantern", "label": "โคมไฟคริสตัลแขวน", "price": 190, "perk_th": "+5 ความกล้าทุกเช้า", "stat": "courage", "w": 1, "h": 1, "color": "#eab308", "passable": false, "action": ""},
 	{"id": "decor_plush_bed", "label": "เตียงขนนกพรีเมียม", "price": 380, "perk_th": "พลังงานสูงสุด +20 ถาวร", "stat": "", "w": 2, "h": 2, "color": "#db2777", "passable": false, "action": ""},
-	{"id": "decor_mirror", "label": "กระจกแต่งตัวเวทมนตร์", "price": 180, "perk_th": "กด [E] แต่งตัวเอก 8 เผ่าในบ้าน!", "stat": "charm", "w": 1, "h": 2, "color": "#8b5cf6", "passable": false, "action": "mirror"},
+	{"id": "decor_mirror", "label": "กระจกแต่งตัวเวทมนตร์", "price": 180, "perk_th": "กด [E] แต่งตัวเอก 8 เผ่า & ตู้เสื้อผ้าในบ้าน!", "stat": "charm", "w": 1, "h": 2, "color": "#8b5cf6", "passable": false, "action": "mirror"},
 	{"id": "decor_aquarium", "label": "ตู้ปลาเรืองแสงทะเลสาบมุก", "price": 300, "perk_th": "กด [E] ชมปลาฟื้น +12 พลังงาน/วัน", "stat": "wisdom", "w": 2, "h": 1, "color": "#0284c7", "passable": false, "action": "aquarium"},
 	{"id": "decor_rug_royal", "label": "พรมทอตราแปดเผ่า", "price": 160, "perk_th": "ปูพื้นเดินทับได้ +5 เสน่ห์", "stat": "charm", "w": 3, "h": 2, "color": "#9f1239", "passable": true, "action": ""},
 	{"id": "decor_bonsai", "label": "บอนไซต้นไม้โลกเรืองแสง", "price": 260, "perk_th": "+5 ปัญญาทุกเช้า", "stat": "wisdom", "w": 1, "h": 1, "color": "#16a34a", "passable": false, "action": ""},
@@ -89,7 +151,8 @@ const RUINS_FLOORS := {
 			{"x": 14, "y": 9, "init": 1, "max_states": 2}
 		],
 		"receptors": [{"x": 14, "y": 4}],
-		"ores": [{"x": 4, "y": 3, "item_id": "item_ember_ore"}, {"x": 16, "y": 10, "item_id": "item_aqua_crystal"}]
+		"ores": [{"x": 4, "y": 3, "item_id": "item_ember_ore"}, {"x": 16, "y": 10, "item_id": "item_aqua_crystal"}],
+		"wisps": [{"x1": 5, "y1": 7, "x2": 15, "y2": 7, "spd": 1.4}]
 	},
 	"ruins_b2": {
 		"id": "ruins_b2", "depth": 2, "w": 20, "h": 14,
@@ -107,13 +170,14 @@ const RUINS_FLOORS := {
 			{"x": 8, "y": 5, "init": 1, "max_states": 2}
 		],
 		"receptors": [{"x": 16, "y": 7}, {"x": 16, "y": 5}],
-		"ores": [{"x": 4, "y": 7, "item_id": "item_pure_gold_ore"}, {"x": 15, "y": 10, "item_id": "item_starfall_crystal"}]
+		"ores": [{"x": 4, "y": 7, "item_id": "item_pure_gold_ore"}, {"x": 15, "y": 10, "item_id": "item_starfall_crystal"}],
+		"wisps": [{"x1": 5, "y1": 8, "x2": 14, "y2": 8, "spd": 1.7}, {"x1": 12, "y1": 4, "x2": 12, "y2": 9, "spd": 1.5}]
 	},
 	"ruins_b3": {
 		"id": "ruins_b3", "depth": 3, "w": 20, "h": 14,
 		"name_th": "โบราณสถานใต้รากไม้ ชั้น B3 (โถงหัวใจบรรพกาล)",
 		"exit_up": {"x": 10, "y": 12, "to": "ruins_b2"},
-		"stairs_down": {},
+		"stairs_down": {"x": 10, "y": 2, "to": "ruins_b4"},
 		"spawn": Vector2i(10, 11),
 		"chest": {"x": 12, "y": 3, "gold": 800, "items": {"item_world_tree_ring": 1, "item_crimson_mana": 1, "item_ruby_elixir": 1}, "stat": {"wisdom": 30, "courage": 25, "charm": 15}},
 		"emitters": [{"x": 3, "y": 7, "dir": 3, "color": "#f472b6"}],
@@ -127,7 +191,28 @@ const RUINS_FLOORS := {
 			{"x": 15, "y": 6, "init": 1, "max_states": 2}
 		],
 		"receptors": [{"x": 9, "y": 3}, {"x": 15, "y": 3}],
-		"ores": [{"x": 4, "y": 4, "item_id": "item_crimson_mana"}, {"x": 16, "y": 10, "item_id": "item_pure_gold_ore"}, {"x": 17, "y": 5, "item_id": "item_raw_gem"}]
+		"ores": [{"x": 4, "y": 4, "item_id": "item_crimson_mana"}, {"x": 16, "y": 10, "item_id": "item_pure_gold_ore"}, {"x": 17, "y": 5, "item_id": "item_raw_gem"}],
+		"wisps": [{"x1": 4, "y1": 9, "x2": 16, "y2": 9, "spd": 1.9}, {"x1": 6, "y1": 4, "x2": 14, "y2": 4, "spd": 1.6}]
+	},
+	"ruins_b4": {
+		"id": "ruins_b4", "depth": 4, "w": 22, "h": 16,
+		"name_th": "ชั้น B4: วิหารแกนรากไม้โลก (บอสผู้พิทักษ์รากไม้ต้องสาป!)",
+		"exit_up": {"x": 11, "y": 14, "to": "ruins_b3"},
+		"stairs_down": {},
+		"spawn": Vector2i(11, 13),
+		"boss_tile": Vector2i(11, 6),
+		"chest": {"x": 11, "y": 3, "gold": 1500, "items": {"item_crimson_mana": 2, "item_starfall_crystal": 2, "item_pure_gold_ore": 2}, "stat": {"courage": 40, "wisdom": 35, "charm": 25}},
+		"emitters": [{"x": 3, "y": 9, "dir": 3, "color": "#fde047"}, {"x": 18, "y": 9, "dir": 1, "color": "#38bdf8"}],
+		"blocks": [{"x": 9, "y": 9}, {"x": 13, "y": 9}],
+		"pillars": [
+			{"x": 7, "y": 9, "init": 1, "max_states": 2},
+			{"x": 7, "y": 4, "init": 1, "max_states": 2},
+			{"x": 15, "y": 9, "init": 0, "max_states": 2},
+			{"x": 15, "y": 4, "init": 0, "max_states": 2}
+		],
+		"receptors": [{"x": 9, "y": 4}, {"x": 13, "y": 4}],
+		"ores": [{"x": 4, "y": 5, "item_id": "item_crimson_mana"}, {"x": 18, "y": 5, "item_id": "item_starfall_crystal"}],
+		"wisps": [{"x1": 5, "y1": 11, "x2": 17, "y2": 11, "spd": 2.1}, {"x1": 5, "y1": 7, "x2": 17, "y2": 7, "spd": 1.8}]
 	}
 }
 
@@ -147,7 +232,10 @@ func _setup_input_actions() -> void:
 		"open_map": [KEY_M],
 		"pet_companion": [KEY_P],
 		"home_edit": [KEY_H],
-		"rotate_decor": [KEY_R]
+		"rotate_decor": [KEY_R],
+		"sacred_pulse": [KEY_F],
+		"toggle_lantern": [KEY_9],
+		"skip_cutscene": [KEY_TAB]
 	}
 	for action in bindings.keys():
 		if not InputMap.has_action(action):
@@ -215,7 +303,7 @@ func _load_json_file(path: String) -> Variant:
 func _load_all_json_datasets() -> void:
 	var names := [
 		"characters", "dialogues", "schedules", "quests", "social_stats",
-		"jobs", "items", "events", "landmarks", "story_chronicles", "world_map", "manifest"
+		"jobs", "items", "events", "landmarks", "story_chronicles", "cutscenes_v7", "world_map", "manifest"
 	]
 	for n in names:
 		raw_json[n] = _load_json_file("%s/%s.json" % [DATA_ROOT, n])
@@ -267,7 +355,26 @@ func _load_all_json_datasets() -> void:
 	chapters = raw_json["story_chronicles"].get("chapters", [])
 	for ch in chapters:
 		chapter_by_id[ch["id"]] = ch
+	cutscenes_v7 = raw_json["cutscenes_v7"].get("cutscenes", {})
 	world_map = raw_json["world_map"]
+
+func get_accessory_def(acc_id: String) -> Dictionary:
+	for a in ACCESSORIES:
+		if str(a["id"]) == acc_id:
+			return a
+	return ACCESSORIES[0]
+
+func get_outfit_def(out_id: String) -> Dictionary:
+	for o in OUTFIT_THEMES:
+		if str(o["id"]) == out_id:
+			return o
+	return OUTFIT_THEMES[0]
+
+func is_npc_birthday(cid: String, season_idx: int, day_of_season: int) -> bool:
+	if not NPC_BIRTHDAYS.has(cid):
+		return false
+	var b: Dictionary = NPC_BIRTHDAYS[cid]
+	return int(b["season"]) == season_idx and int(b["day"]) == day_of_season
 
 func get_char_race_key(cid: String) -> String:
 	var c: Dictionary = char_by_id.get(cid, {})
