@@ -49,13 +49,13 @@ func _ready() -> void:
 
 	top_bar = ColorRect.new()
 	top_bar.color = Color(0.03, 0.05, 0.10, 0.94)
-	top_bar.position = Vector2(0, 0)
-	top_bar.size = Vector2(1280, 74)
+	top_bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	top_bar.offset_bottom = 74.0
 	add_child(top_bar)
 
 	var top_hb := HBoxContainer.new()
-	top_hb.position = Vector2(24, 12)
-	top_hb.size = Vector2(1232, 50)
+	top_hb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	top_hb.offset_left = 24.0; top_hb.offset_top = 12.0; top_hb.offset_right = -24.0; top_hb.offset_bottom = -12.0
 	top_hb.add_theme_constant_override("separation", 14)
 	top_bar.add_child(top_hb)
 
@@ -84,12 +84,14 @@ func _ready() -> void:
 
 	bottom_bar = ColorRect.new()
 	bottom_bar.color = Color(0.03, 0.05, 0.10, 0.94)
-	bottom_bar.position = Vector2(0, 646)
-	bottom_bar.size = Vector2(1280, 74)
+	bottom_bar.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	bottom_bar.offset_top = -74.0
 	add_child(bottom_bar)
 
 	dialog_card = PanelContainer.new()
-	dialog_card.position = Vector2(170, 448)
+	dialog_card.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	dialog_card.offset_left = -470.0; dialog_card.offset_right = 470.0
+	dialog_card.offset_top = -272.0; dialog_card.offset_bottom = -64.0
 	dialog_card.custom_minimum_size = Vector2(940, 208)
 	add_child(dialog_card)
 
@@ -176,11 +178,11 @@ func play_cutscene_dict(cs_dict: Dictionary, mode: String, world: ValleyWorld, r
 	else:
 		focus_world_pos = world.player_actor.position
 
-	# Stage cast actors around focus position for live choreography!
+	# Stage cast actors smoothly walking into position around focus point!
 	var cast_arr: Array = current_cs.get("cast", [])
 	if cast_arr.is_empty() and current_cs.has("character_id"):
 		cast_arr = [str(current_cs["character_id"])]
-	var offsets := [Vector2(-40, -10), Vector2(40, -10), Vector2(-64, 14), Vector2(64, 14)]
+	var offsets := [Vector2(-42, -10), Vector2(42, -10), Vector2(-68, 14), Vector2(68, 14)]
 	for i in range(cast_arr.size()):
 		var cid := str(cast_arr[i])
 		if world.npc_actors.has(cid):
@@ -188,8 +190,12 @@ func play_cutscene_dict(cs_dict: Dictionary, mode: String, world: ValleyWorld, r
 			var st2: Dictionary = world.npc_states[cid]
 			st2["scene"] = GameState.current_scene
 			act.visible = true
-			act.position = focus_world_pos + offsets[i % offsets.size()]
-			act.dir_row = 3 if offsets[i % offsets.size()].x < 0 else 1
+			var off: Vector2 = offsets[i % offsets.size()]
+			var dest := focus_world_pos + off
+			act.position = dest + Vector2(-28.0 if off.x < 0.0 else 28.0, 0.0)
+			act.dir_row = 3 if off.x < 0.0 else 1
+			var tw := create_tween()
+			tw.tween_property(act, "position", dest, 0.42).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	var bzone := str(current_cs.get("bgm_zone", ""))
 	if bzone != "":
@@ -235,7 +241,7 @@ func _show_current_beat() -> void:
 	_full_text = GameState.format_text(str(b.get("text", "")))
 	_shown_chars = 0.0
 	body_lbl.text = ""
-	AudioManager.play_sfx("talk")
+	AudioManager.play_voice(sp)
 
 	if _world and _world.npc_actors.has(sp):
 		var act: CharacterActor = _world.npc_actors[sp]

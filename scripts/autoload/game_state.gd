@@ -83,6 +83,9 @@ var talked_ever: Dictionary = {}
 var mailbox: Array = []
 var delivered_mail_ids: Dictionary = {}
 var forage_spots: Array = []
+var farm_plots: Dictionary = {} # "x,y" -> {"tilled": bool, "crop_id": String, "days": int, "watered": bool}
+var seeds: Dictionary = {}
+var selected_seed_id: String = "crop_sunwheat"
 
 var night_lantern_on: bool = false
 var night_lantern_steps: int = 0
@@ -95,6 +98,7 @@ var s_rank_jobs: int = 0
 var fish_caught: int = 0
 var foraged_count: int = 0
 var crafted_count: int = 0
+var crops_harvested: int = 0
 var compass_npc_id: String = ""
 var daily_log: Dictionary = {"gold": 0, "hearts": 0, "stats": 0, "items": 0}
 
@@ -127,6 +131,16 @@ func reset_to_new_game() -> void:
 		"item_emerald_tea": 1,
 		"item_hard_oak": 1
 	}
+	seeds = {
+		"crop_sunwheat": 4,
+		"crop_rootdew": 3,
+		"crop_moonbloom": 2
+	}
+	selected_seed_id = "crop_sunwheat"
+	farm_plots.clear()
+	for fy in range(11, 14):
+		for fx in range(21, 27):
+			farm_plots["%d,%d" % [fx, fy]] = {"tilled": false, "crop_id": "", "days": 0, "watered": false}
 	relations.clear()
 	for c in GameData.characters:
 		relations[c["id"]] = {"xp": 120, "talked_today": false, "gifted_today": false}
@@ -162,17 +176,19 @@ func reset_to_new_game() -> void:
 	achievements_unlocked.clear()
 	landmark_used_day.clear()
 	talked_ever.clear()
+	delivered_mail_ids = {"mail_d1": true}
 	night_lantern_on = false
 	night_lantern_steps = 0
 	visited_tavern_night = false
 	meteor_shower_tonight = false
 	festival_joined_day = 0
+	crops_harvested = 0
 	mailbox = [
 		{
 			"id": "mail_d1",
 			"sender": "คุณปู่บราม (โรงเตี๊ยมตะเกียงมอส)",
 			"title": "ยินดีต้อนรับสู่กระท่อมหลังใหม่!",
-			"body": "ฮ่าๆๆ ยินดีต้อนรับสู่หุบเขาต้นไม้โลกนะ! ลองกด [H] ในบ้านเพื่อวางเฟอร์นิเจอร์บนตาราง กด [9] จุดตะเกียงยามค่ำคืน หรือสำรวจโบราณสถานชั้น B1-B4 ดูสิ!",
+			"body": "ฮ่าๆๆ ยินดีต้อนรับสู่หุบเขาต้นไม้โลกนะ! ข้างบ้านมีแปลงสวนมานาให้ปลูกพืชรดน้ำด้วย ลองกด [E] ปลูกเมล็ด หรือกด [H] แต่งบ้านบนตารางได้เลย!",
 			"gift_id": "item_honey_bread",
 			"gold": 80,
 			"claimed": false
@@ -243,6 +259,9 @@ func save_slot(slot_num: int = active_slot, silent: bool = false) -> void:
 		"achievements_unlocked": achievements_unlocked, "talked_ever": talked_ever,
 		"night_lantern_steps": night_lantern_steps, "visited_tavern_night": visited_tavern_night,
 		"festival_joined_day": festival_joined_day,
+		"farm_plots": farm_plots, "seeds": seeds, "selected_seed_id": selected_seed_id,
+		"crops_harvested": crops_harvested, "delivered_mail_ids": delivered_mail_ids,
+		"decor_used_day": decor_used_day, "landmark_used_day": landmark_used_day,
 		"mailbox": mailbox, "total_shifts": total_shifts, "s_rank_jobs": s_rank_jobs,
 		"fish_caught": fish_caught, "foraged_count": foraged_count, "crafted_count": crafted_count
 	}
@@ -292,6 +311,8 @@ func load_slot(slot_num: int, announce: bool = true) -> bool:
 	house_level = int(d.get("house_level", 1))
 	if d.has("decor_owned"): decor_owned.merge(d["decor_owned"], true)
 	if d.has("decor_placed"): decor_placed = d["decor_placed"].duplicate(true)
+	if d.has("decor_used_day"): decor_used_day = d["decor_used_day"].duplicate(true)
+	if d.has("landmark_used_day"): landmark_used_day = d["landmark_used_day"].duplicate(true)
 	if d.has("ruins_state"):
 		for k in d["ruins_state"].keys():
 			if ruins_state.has(k):
@@ -309,6 +330,11 @@ func load_slot(slot_num: int, announce: bool = true) -> bool:
 	if d.has("watched_cutscenes"): watched_cutscenes = d["watched_cutscenes"].duplicate(true)
 	if d.has("achievements_unlocked"): achievements_unlocked = d["achievements_unlocked"].duplicate(true)
 	if d.has("talked_ever"): talked_ever = d["talked_ever"].duplicate(true)
+	if d.has("farm_plots"): farm_plots.merge(d["farm_plots"], true)
+	if d.has("seeds"): seeds = d["seeds"].duplicate(true)
+	selected_seed_id = str(d.get("selected_seed_id", "crop_sunwheat"))
+	crops_harvested = int(d.get("crops_harvested", 0))
+	if d.has("delivered_mail_ids"): delivered_mail_ids.merge(d["delivered_mail_ids"], true)
 	night_lantern_steps = int(d.get("night_lantern_steps", 0))
 	visited_tavern_night = bool(d.get("visited_tavern_night", false))
 	festival_joined_day = int(d.get("festival_joined_day", 0))
@@ -893,6 +919,90 @@ func check_achievements() -> void:
 			AudioManager.play_sfx("quest")
 			toast_requested.emit("🏆 ปลดล็อกความสำเร็จ: %s!" % str(a["title_th"]))
 
+# --- MANA GARDEN FARMING SYSTEM (18-TILE PLOT BESIDE FARMHOUSE) ---
+func interact_farm_plot(tx: int, ty: int) -> String:
+	var key := "%d,%d" % [tx, ty]
+	if not farm_plots.has(key):
+		return ""
+	var pl: Dictionary = farm_plots[key]
+	var cid := str(pl.get("crop_id", ""))
+	if cid != "":
+		var cdef := GameData.get_crop_def(cid)
+		if int(pl.get("days", 0)) >= int(cdef["grow_days"]):
+			var qty := 2 if (str(hero_custom.get("race_key", "")) == "elf" and randf() < 0.4) else 1
+			add_item(str(cdef["harvest_item"]), qty)
+			crops_harvested += qty
+			pl["crop_id"] = ""
+			pl["days"] = 0
+			pl["watered"] = false
+			add_stat_xp({"craft": 5, "wisdom": 3})
+			AudioManager.play_sfx("sparkle")
+			check_achievements()
+			save_slot(active_slot, true)
+			return "🌾 เก็บเกี่ยว '%s' x%d สำเร็จ!" % [str(cdef["name_th"]), qty]
+		elif not bool(pl.get("watered", false)):
+			var cost := get_stamina_cost(2)
+			if stamina < cost:
+				return "พลังงานไม่พอรดน้ำ!"
+			stamina -= cost
+			pl["watered"] = true
+			AudioManager.play_sfx("splash")
+			hud_updated.emit()
+			return "💧 รดน้ำแปลง '%s' แล้ว! (%d/%d วัน)" % [str(cdef["name_th"]), int(pl["days"]), int(cdef["grow_days"])]
+		return "🌱 '%s' รดน้ำแล้ว รอโตในวันพรุ่งนี้ (%d/%d วัน)" % [str(cdef["name_th"]), int(pl["days"]), int(cdef["grow_days"])]
+	if not bool(pl.get("tilled", false)):
+		var cost2 := get_stamina_cost(2)
+		if stamina < cost2:
+			return "พลังงานไม่พอพรวนดิน!"
+		stamina -= cost2
+		pl["tilled"] = true
+		AudioManager.play_sfx("door")
+		hud_updated.emit()
+		return "⛏️ พรวนดินแปลงสวนมานาเรียบร้อย! กด [E] อีกครั้งเพื่อหว่านเมล็ด"
+	# Plant selected seed (or auto-pick any owned seed)
+	var use_seed := selected_seed_id
+	if int(seeds.get(use_seed, 0)) <= 0:
+		use_seed = ""
+		for sk in seeds.keys():
+			if int(seeds[sk]) > 0:
+				use_seed = str(sk)
+				selected_seed_id = use_seed
+				break
+	if use_seed == "":
+		return "ไม่มีเมล็ดพันธุ์ในกระเป๋า! ซื้อเมล็ดได้ที่แท็บ '🌱 เมล็ดพันธุ์' ในเมนูร้านค้า"
+	seeds[use_seed] = int(seeds[use_seed]) - 1
+	if int(seeds[use_seed]) <= 0:
+		seeds.erase(use_seed)
+	pl["crop_id"] = use_seed
+	pl["days"] = 0
+	pl["watered"] = (weather == "rainy")
+	AudioManager.play_sfx("sparkle")
+	hud_updated.emit()
+	return "🌱 ปลูกเมล็ด '%s' แล้ว! %s" % [str(GameData.get_crop_def(use_seed)["name_th"]), "(ฝนตกรดน้ำให้แล้ว!)" if bool(pl["watered"]) else "(กด [E] รดน้ำได้เลย)"]
+
+func _deliver_scheduled_mail() -> void:
+	var scheduled := [
+		{"id": "mail_d2", "cond": day >= 2, "sender": "พิป โกลด์ลีฟ (ร้านชำ Goldleaf)", "title": "คูปองต้อนรับลูกค้าประจำ!", "body": "ฮิฮิ แวะมาอุดหนุนเมล็ดพันธุ์หรือของขวัญที่ร้านพิปได้ทุกวันนะ ส่งเงินขวัญถุงและเมล็ดพันธุ์มาให้ทดลองปลูกด้วย!", "gift_id": "item_sunfruit", "gold": 120},
+		{"id": "mail_d3", "cond": day >= 3, "sender": "คาเอล ทอร์น (หน่วยสำรวจ)", "title": "เบาะแสโบราณสถานใต้รากไม้โลก", "body": "ทางเข้าโบราณสถานอยู่ฝั่งซ้ายของต้นไม้โลก ข้างในมีปริศนาเสาแสงและบอสผู้พิทักษ์ชั้น B4 พกอาหารเติมพลังไปด้วยล่ะ!", "gift_id": "item_honey_croissant", "gold": 100},
+		{"id": "mail_d5", "cond": day >= 5, "sender": "เซร่า (Elderbark Bakery)", "title": "ครัวซองต์สูตรใหม่เพิ่งอบเสร็จเมี้ยว~", "body": "เซร่าแอบแบ่งครัวซองต์อุ่นๆ มาฝาก {player} ทานก่อนออกไปทำงานนะเมี้ยว!", "gift_id": "item_honey_croissant", "gold": 60},
+		{"id": "mail_fest_eve", "cond": get_day_of_season() in [6, 13, 20, 27], "sender": "สภาเมืองแปดเผ่าพันธุ์", "title": "แจ้งเตือน: พรุ่งนี้มีเทศกาลประจำฤดู!", "body": "พรุ่งนี้ชาวเมืองทั้ง 8 เผ่าจะมารวมตัวจัดเทศกาลใหญ่กลางจัตุรัส อย่าลืมแวะมากด [E] เข้าร่วมรับรางวัลและชมคัตซีนพิเศษนะ!", "gift_id": "item_wild_honey", "gold": 90}
+	]
+	for sm in scheduled:
+		var mid := str(sm["id"])
+		if mid == "mail_fest_eve":
+			mid = "mail_fest_eve_%d" % day
+		if bool(sm["cond"]) and not delivered_mail_ids.has(mid):
+			delivered_mail_ids[mid] = true
+			mailbox.push_front({
+				"id": mid,
+				"sender": str(sm["sender"]),
+				"title": str(sm["title"]),
+				"body": format_text(str(sm["body"])),
+				"gift_id": str(sm["gift_id"]),
+				"gold": int(sm["gold"]),
+				"claimed": false
+			})
+
 func start_next_morning() -> void:
 	day += 1
 	time_min = 6.0 * 60.0
@@ -906,8 +1016,16 @@ func start_next_morning() -> void:
 	for k in relations.keys():
 		relations[k]["talked_today"] = false
 		relations[k]["gifted_today"] = false
+	# Grow watered Mana Garden crops & auto-water on rainy mornings!
+	for fkey in farm_plots.keys():
+		var pl: Dictionary = farm_plots[fkey]
+		if str(pl.get("crop_id", "")) != "":
+			if bool(pl.get("watered", false)):
+				pl["days"] = int(pl.get("days", 0)) + 1
+			pl["watered"] = (weather == "rainy")
 	daily_log = {"gold": 0, "hearts": 0, "stats": 0, "items": 0}
 	spawn_daily_forage()
+	_deliver_scheduled_mail()
 	# Morning bonuses from placed furniture & spouse
 	var m_stats := {}
 	var seen := {}

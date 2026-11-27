@@ -393,14 +393,30 @@ func _draw_arena() -> void:
 					arena.draw_string(font, r.position + Vector2(16, 42), "%d. %s" % [i + 1, state_data["names"][i]], HORIZONTAL_ALIGNMENT_LEFT, 96, 14, Color("#0f172a") if lit_rune == i else Color.WHITE)
 		"sky_dash":
 			arena.draw_rect(Rect2(0, 182, sz.x, 28), Color("#14532d"))
-			arena.draw_circle(Vector2(float(state_data["px"]), 172), 14.0, Color("#fde047"))
+			var ptex2 := GameData.get_walk_sheet(str(GameState.hero_custom.get("base_id", "01_ren")), false)
+			var px := float(state_data["px"])
+			if ptex2:
+				arena.draw_texture_rect_region(ptex2, Rect2(px - 22, 144, 44, 44), Rect2(0, 128, 64, 64))
+			else:
+				arena.draw_circle(Vector2(px, 172), 14.0, Color("#fde047"))
+			var good_tex := GameData.get_item_icon("item_starfall_crystal", false)
 			for o in state_data["objs"]:
-				arena.draw_circle(Vector2(float(o["x"]), float(o["y"])), 11.0, Color("#34d399") if bool(o["good"]) else Color("#ef4444"))
+				var op := Vector2(float(o["x"]), float(o["y"]))
+				if bool(o["good"]) and good_tex:
+					arena.draw_texture_rect(good_tex, Rect2(op.x - 13, op.y - 13, 26, 26), false)
+				else:
+					arena.draw_circle(op, 11.0, Color("#34d399") if bool(o["good"]) else Color("#ef4444"))
+					if not bool(o["good"]):
+						arena.draw_circle(op + Vector2(-3, -3), 4.0, Color("#7f1d1d"))
 		"stardew_fish":
 			var cx := sz.x * 0.5 - 32.0
 			arena.draw_rect(Rect2(cx, 12, 52, 184), Color("#0c4a6e"))
 			arena.draw_rect(Rect2(cx + 4, float(state_data["bar_y"]), 44, float(state_data["bar_h"])), Color(0.29, 0.87, 0.5, 0.8))
-			arena.draw_circle(Vector2(cx + 26, float(state_data["fish_y"])), 9.0, Color("#fde047"))
+			var fish_tex := GameData.get_item_icon("item_grilled_salmon", false)
+			if fish_tex:
+				arena.draw_texture_rect(fish_tex, Rect2(cx + 12, float(state_data["fish_y"]) - 14, 28, 28), false)
+			else:
+				arena.draw_circle(Vector2(cx + 26, float(state_data["fish_y"])), 9.0, Color("#fde047"))
 			var ph := (float(state_data["prog"]) / 100.0) * 184.0
 			arena.draw_rect(Rect2(cx + 68, 12, 20, 184), Color("#1e293b"))
 			arena.draw_rect(Rect2(cx + 70, 12 + 184.0 - ph, 16, ph), Color("#22c55e"))

@@ -9,6 +9,7 @@ signal gift_picker_requested(npc_id: String)
 signal heart_event_cutscene_requested(ev_dict: Dictionary)
 signal confession_cutscene_requested(npc_id: String)
 signal wedding_cutscene_requested(npc_id: String)
+signal hangout_cutscene_requested(npc_id: String, spot_dict: Dictionary)
 
 var active_npc_id: String = ""
 
@@ -18,6 +19,7 @@ var body_lbl: Label
 var emo_lbl: Label
 var portrait_rect: TextureRect
 var actions_row: HFlowContainer
+var hangout_row: HFlowContainer
 
 var btn_tier_talk: Button
 var btn_gift: Button
@@ -56,6 +58,11 @@ func _ready() -> void:
 	body_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body_lbl.custom_minimum_size = Vector2(0, 66)
 	left.add_child(body_lbl)
+
+	hangout_row = HFlowContainer.new()
+	hangout_row.add_theme_constant_override("h_separation", 6)
+	hangout_row.visible = false
+	left.add_child(hangout_row)
 
 	actions_row = HFlowContainer.new()
 	actions_row.add_theme_constant_override("h_separation", 6)
@@ -96,6 +103,8 @@ func _make_btn(txt: String, cb: Callable) -> Button:
 
 func open_npc_dialogue(cid: String) -> void:
 	active_npc_id = cid
+	if GameState.compass_npc_id == cid:
+		GameState.compass_npc_id = ""
 	GameState.talked_ever[cid] = true
 	var rel: Dictionary = GameState.relations.get(cid, {"xp": 0, "talked_today": false, "gifted_today": false})
 	if not bool(rel.get("talked_today", false)):
@@ -106,7 +115,9 @@ func open_npc_dialogue(cid: String) -> void:
 	GameState.check_achievements()
 
 	visible = true
-	AudioManager.play_sfx("talk")
+	hangout_row.visible = false
+	actions_row.visible = true
+	AudioManager.play_voice(cid)
 
 	var dlg: Dictionary = GameData.dialogues.get(cid, {})
 	var emo := "neutral"
@@ -146,7 +157,7 @@ func _on_deep_talk() -> void:
 		_refresh_header_and_portrait(active_npc_id, "happy")
 		return
 	body_lbl.text = GameState.format_text(str(ht.get(key, "ดีใจที่ได้พูดคุยกันวันนี้นะ {player}!")))
-	AudioManager.play_sfx("talk")
+	AudioManager.play_voice(active_npc_id)
 	_refresh_header_and_portrait(active_npc_id, emo)
 
 func _refresh_header_and_portrait(cid: String, emo: String) -> void:
@@ -173,6 +184,8 @@ func _refresh_header_and_portrait(cid: String, emo: String) -> void:
 func show_gift_reaction(cid: String, item_id: String) -> void:
 	active_npc_id = cid
 	visible = true
+	hangout_row.visible = false
+	actions_row.visible = true
 	var it: Dictionary = GameData.item_by_id.get(item_id, {})
 	var c: Dictionary = GameData.char_by_id.get(cid, {})
 	if item_id == "item_world_tree_ring" and GameState.partners.has(cid) and GameState.spouse_id == "" and GameState.get_hearts(cid) >= 10:
@@ -214,17 +227,39 @@ func show_gift_reaction(cid: String, item_id: String) -> void:
 func _on_hangout() -> void:
 	var cost := GameState.get_stamina_cost(15)
 	if GameState.stamina < cost:
-		GameState.toast_requested.emit("พลังงานไม่พอสำหรับ Hangout!")
+		GameState.toast_requested.emit("พลังงานไม่พอสำหรับ Hangout! (ต้องการ %d⚡)" % cost)
 		return
-	GameState.stamina -= cost
-	GameState.time_min += 120.0
-	var gain := GameState.add_friendship(active_npc_id, 40)
-	GameState.add_stat_xp({"charm": 8})
-	AudioManager.play_sfx("heart")
-	_refresh_header_and_portrait(active_npc_id, "happy")
-	body_lbl.text = "ใช้เวลาเดินเล่นพูดคุยด้วยกันอย่างอบอุ่น! (+%d แต้มหัวใจ)" % gain
-	GameState.check_achievements()
-	GameState.save_slot(GameState.active_slot, true)
+	actions_row.visible = false
+	hangout_row.visible = true
+	for ch in hangout_row.get_children():
+		ch.queue_free()
+	body_lbl.text = "เลือกสถานที่ที่จะชวนไป Hangout ด้วยกัน (-%d⚡, ใช้เวลา 2 ชม.):" % cost
+	var spots := GameData.hangout_spots if not GameData.hangout_spots.is_empty() else [
+		{"id": "spot_lake", "name_th": "ทะเลสาบมุกศักดิ์สิทธิ์", "scene": "outdoor", "x": 42, "y": 48},
+		{"id": "spot_tavern", "name_th": "โรงเตี๊ยมตะเกียงมอส", "scene": "tavern", "x": 9, "y": 7},
+		{"id": "spot_tree", "name_th": "ใต้ร่มต้นไม้โลก", "scene": "outdoor", "x": 42, "y": 30}
+	]
+	for sp in spots:
+		var sp_dict: Dictionary = sp
+		var b := Button.new()
+		b.text = "📍 " + str(sp_dict.get("name_th", sp_dict.get("title_th", "จุดชมวิว")))
+		b.pressed.connect(func():
+			var cid := active_npc_id
+			GameState.stamina -= cost
+			GameState.time_min += 120.0
+			GameState.add_friendship(cid, 45)
+			GameState.add_stat_xp({"charm": 10})
+			AudioManager.play_sfx("heart")
+			GameState.check_achievements()
+			GameState.save_slot(GameState.active_slot, true)
+			close_panel()
+			hangout_cutscene_requested.emit(cid, sp_dict)
+		)
+		hangout_row.add_child(b)
+	var b_back := Button.new()
+	b_back.text = "ยกเลิก"
+	b_back.pressed.connect(func(): hangout_row.visible = false; actions_row.visible = true)
+	hangout_row.add_child(b_back)
 
 func _find_unlocked_event(cid: String) -> Dictionary:
 	var h := GameState.get_hearts(cid)

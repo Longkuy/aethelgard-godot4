@@ -121,6 +121,39 @@ func open_protagonist_creator(subtab: String = "hero") -> void:
 	_preview_mat.shader = load("res://shaders/protagonist_recolor.gdshader") as Shader
 	_preview_sprite.material = _preview_mat
 	stage.add_child(_preview_sprite)
+	var prev_acc := Node2D.new()
+	prev_acc.position = Vector2(64, 112)
+	prev_acc.scale = Vector2(2.0, 2.0)
+	prev_acc.draw.connect(func():
+		var acc := GameState.equipped_accessory
+		var hy := -46.0
+		if acc == "acc_fairy_wings":
+			prev_acc.draw_colored_polygon(PackedVector2Array([Vector2(-2, -24), Vector2(-20, -36), Vector2(-16, -14)]), Color(0.55, 0.92, 1.0, 0.78))
+			prev_acc.draw_colored_polygon(PackedVector2Array([Vector2(2, -24), Vector2(20, -36), Vector2(16, -14)]), Color(0.55, 0.92, 1.0, 0.78))
+		elif acc == "acc_crimson_cape":
+			prev_acc.draw_colored_polygon(PackedVector2Array([Vector2(-7, -28), Vector2(7, -28), Vector2(12, -6), Vector2(-12, -6)]), Color("#991b1b"))
+		elif acc == "acc_straw_hat":
+			prev_acc.draw_rect(Rect2(-13, hy + 2, 26, 4), Color("#eab308"))
+			prev_acc.draw_rect(Rect2(-8, hy - 5, 16, 7), Color("#facc15"))
+			prev_acc.draw_rect(Rect2(-8, hy, 16, 2), Color("#dc2626"))
+		elif acc == "acc_flower_crown":
+			prev_acc.draw_line(Vector2(-9, hy + 2), Vector2(9, hy + 2), Color("#16a34a"), 3.0)
+			prev_acc.draw_circle(Vector2(-6, hy + 1), 3.0, Color("#f472b6"))
+			prev_acc.draw_circle(Vector2(0, hy), 3.2, Color("#fde047"))
+			prev_acc.draw_circle(Vector2(6, hy + 1), 3.0, Color("#38bdf8"))
+		elif acc == "acc_witch_hat":
+			prev_acc.draw_rect(Rect2(-13, hy + 2, 26, 3), Color("#1e1b4b"))
+			prev_acc.draw_colored_polygon(PackedVector2Array([Vector2(-8, hy + 2), Vector2(8, hy + 2), Vector2(2, hy - 13)]), Color("#312e81"))
+			prev_acc.draw_circle(Vector2(0, hy - 1), 2.3, Color("#fde047"))
+		elif acc == "acc_wedding_veil":
+			prev_acc.draw_colored_polygon(PackedVector2Array([Vector2(-9, hy + 1), Vector2(9, hy + 1), Vector2(13, hy + 18), Vector2(-13, hy + 18)]), Color(1.0, 1.0, 1.0, 0.65))
+			prev_acc.draw_line(Vector2(-8, hy + 1), Vector2(8, hy + 1), Color("#fef08a"), 2.5)
+		elif acc == "acc_royal_crown":
+			prev_acc.draw_colored_polygon(PackedVector2Array([Vector2(-9, hy + 3), Vector2(-9, hy - 5), Vector2(-4, hy - 1), Vector2(0, hy - 7), Vector2(4, hy - 1), Vector2(9, hy - 5), Vector2(9, hy + 3)]), Color("#facc15"))
+			prev_acc.draw_circle(Vector2(0, hy - 1), 2.2, Color("#ef4444"))
+	)
+	stage.add_child(prev_acc)
+	prev_acc.queue_redraw()
 	_sync_preview_shader()
 	top_hb.add_child(prev_box)
 
@@ -276,6 +309,15 @@ func open_save_slots_modal() -> void:
 			hero_customized.emit()
 			open_save_slots_modal()
 	)
+	var vol_box := VBoxContainer.new()
+	var bgm_l := Label.new(); bgm_l.text = "🎵 ระดับเสียงเพลง BGM: %d%%" % int(AudioManager.bgm_volume * 100.0)
+	var bgm_s := HSlider.new(); bgm_s.min_value = 0.0; bgm_s.max_value = 100.0; bgm_s.value = AudioManager.bgm_volume * 100.0
+	bgm_s.value_changed.connect(func(v: float): AudioManager.bgm_volume = v / 100.0; bgm_l.text = "🎵 ระดับเสียงเพลง BGM: %d%%" % int(v))
+	var sfx_l := Label.new(); sfx_l.text = "🔊 ระดับเสียงเอฟเฟกต์/บรรยากาศ (SFX): %d%%" % int(AudioManager.sfx_volume * 100.0)
+	var sfx_s := HSlider.new(); sfx_s.min_value = 0.0; sfx_s.max_value = 100.0; sfx_s.value = AudioManager.sfx_volume * 100.0
+	sfx_s.value_changed.connect(func(v: float): AudioManager.sfx_volume = v / 100.0; sfx_l.text = "🔊 ระดับเสียงเอฟเฟกต์/บรรยากาศ (SFX): %d%%" % int(v))
+	vol_box.add_child(bgm_l); vol_box.add_child(bgm_s); vol_box.add_child(sfx_l); vol_box.add_child(sfx_s)
+	list_vb.add_child(vol_box)
 	for n in [1, 2, 3]:
 		var d := GameState.read_slot_summary(n)
 		var cur := " [กำลังเล่นช่องนี้]" if GameState.active_slot == n else ""
@@ -309,17 +351,41 @@ func open_jobs_modal() -> void:
 			not done
 		)
 
-# --- 4. SHOPS, BAG, NIGHT MARKET, 12 GRID FURNITURE & 2ND FLOOR LOFT ---
+# --- 4. SHOPS, BAG, SEEDS, NIGHT MARKET, 12 GRID FURNITURE & 2ND FLOOR LOFT ---
 func open_shop_modal(tab: String = "bag") -> void:
 	_clear()
-	title_lbl.text = "ร้านค้า กระเป๋า ตลาดกลางคืน เฟอร์นิเจอร์ & ต่อเติมชั้น 2 (มีเงิน %d G)" % GameState.gold
-	var tabs := [["bag", "กระเป๋า"], ["decor", "แต่งบ้าน & ชั้น 2"], ["nightmarket", "🏮 ตลาดกลางคืน"], ["shop", "ร้านชำ"], ["bakery", "ขนมปัง"], ["tavern", "โรงเตี๊ยม"], ["cottage", "สมุนไพร"], ["smithy", "ตีเหล็ก"]]
+	title_lbl.text = "ร้านค้า กระเป๋า เมล็ดพันธุ์ ตลาดกลางคืน & แต่งบ้าน (มีเงิน %d G)" % GameState.gold
+	var tabs := [["bag", "กระเป๋า"], ["seeds", "🌱 เมล็ดพันธุ์"], ["decor", "แต่งบ้าน & ชั้น 2"], ["nightmarket", "🏮 ตลาดกลางคืน"], ["shop", "ร้านชำ"], ["bakery", "ขนมปัง"], ["tavern", "โรงเตี๊ยม"], ["cottage", "สมุนไพร"], ["smithy", "ตีเหล็ก"]]
 	for t in tabs:
 		var b := Button.new(); b.text = t[1]
 		b.pressed.connect(func(): open_shop_modal(t[0]))
 		tabs_flow.add_child(b)
 
-	if tab == "bag":
+	if tab == "seeds":
+		_add_row(
+			"🌱 แปลงสวนมานาข้างบ้านพัก (18 แปลง)",
+			"เดินไปกด [E] ที่แปลงดินข้างบ้านเพื่อ พรวนดิน -> ปลูกเมล็ดที่เลือก -> รดน้ำ (วันฝนตกรดให้อัตโนมัติ!) -> เก็บเกี่ยวผลผลิต!"
+		)
+		for cr in GameData.CROPS:
+			var cid := str(cr["id"])
+			var owned_s := int(GameState.seeds.get(cid, 0))
+			var sp_buy := GameState.get_buy_price(int(cr["seed_price"]))
+			var sel_tag := " [กำลังถือเมล็ดนี้]" if GameState.selected_seed_id == cid else ""
+			_add_row(
+				"🌱 เมล็ด%s (มี %d เมล็ด • โต %d วัน)%s" % [str(cr["name_th"]), owned_s, int(cr["grow_days"]), sel_tag],
+				str(cr["desc_th"]),
+				"ซื้อ %dG & ถือปลูก" % sp_buy,
+				func():
+					if GameState.gold < sp_buy:
+						GameState.toast_requested.emit("เงินไม่พอซื้อเมล็ดพันธุ์!")
+						return
+					GameState.gold -= sp_buy
+					GameState.seeds[cid] = int(GameState.seeds.get(cid, 0)) + 1
+					GameState.selected_seed_id = cid
+					AudioManager.play_sfx("coin")
+					open_shop_modal("seeds")
+			)
+	elif tab == "bag":
 		if GameState.sell_bonus_pct > 0:
 			_add_row("🏛️ พรพิพิธภัณฑ์ทำงานอยู่!", "ขายไอเทมทุกชิ้นได้ราคาเพิ่มขึ้น +%d%% ถาวร!" % GameState.sell_bonus_pct)
 		if GameState.inventory.is_empty():

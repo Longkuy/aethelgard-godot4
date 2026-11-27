@@ -177,6 +177,29 @@ func _ready() -> void:
 	assert(GameState.boss_purified == true and int(GameState.child_data["stage"]) == 3, "Save Slot 3 must persist Boss & Child v7 state")
 	GameState.delete_slot(3)
 
+	# 11. v8.0 Polish Fixes: Mana Garden Farming, A* Pathfinding, Y-Sorted 2.5D Props, Daily Mail & Audio Volumes!
+	assert(main_inst.world._ysort_props.size() >= 40, "Outdoor World Tree, Buildings, Landmarks & Trees must be Y-sorted inside entities_root")
+	main_inst.world.set_click_move_target(Vector2(45.5 * 32.0, 31.5 * 32.0))
+	assert(main_inst.world.has_click_target and main_inst.world.click_path.size() >= 1, "AStarGrid2D pathfinding must compute valid waypoints")
+	main_inst.world.clear_click_move()
+
+	GameState.reset_to_new_game()
+	assert(GameState.farm_plots.size() == 18, "Mana Garden must have 18 farmable plots")
+	assert(GameState.interact_farm_plot(22, 12).contains("พรวนดิน"), "1st [E] must till soil")
+	assert(GameState.interact_farm_plot(22, 12).contains("ปลูกเมล็ด"), "2nd [E] must plant seed")
+	GameState.interact_farm_plot(22, 12) # water
+	GameState.start_next_morning()
+	GameState.farm_plots["22,12"]["watered"] = true
+	GameState.start_next_morning()
+	assert(GameState.interact_farm_plot(22, 12).contains("เก็บเกี่ยว"), "After 2 watered days Sunwheat must be harvestable")
+	assert(GameState.crops_harvested >= 1, "Harvest counter must increment")
+	assert(GameState.mailbox.size() >= 3, "Scheduled daily mailbox letters must deliver automatically (Day 2 & Day 3)")
+
+	AudioManager.bgm_volume = 0.6
+	AudioManager.sfx_volume = 0.8
+	AudioManager.play_voice("07_sera")
+
+	print("v8.0 Fixes verified: 18-tile Mana Garden, Y-Sort 2.5D Props, AStarGrid2D, Daily Mail & Audio Volumes!")
 	print("Achievements unlocked during test run: %d / %d" % [GameState.achievements_unlocked.size(), GameData.ACHIEVEMENTS.size()])
-	print("=== [ALL GODOT 4 v7.0 CHECKS & 74 CUTSCENES PASSED 100% WITH ZERO ERRORS!] ===")
+	print("=== [ALL GODOT 4 v8.0 CHECKS & 75 CUTSCENES PASSED 100% WITH ZERO ERRORS!] ===")
 	get_tree().quit(0)

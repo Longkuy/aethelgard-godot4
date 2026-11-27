@@ -154,7 +154,7 @@ func _build_hud_and_modals() -> void:
 	ui_layer.add_child(prompt_panel)
 
 	toast_panel = PanelContainer.new()
-	toast_panel.position = Vector2(340, 16)
+	toast_panel.position = Vector2(340, 74)
 	toast_panel.visible = false
 	toast_lbl = Label.new()
 	toast_panel.add_child(toast_lbl)
@@ -170,6 +170,7 @@ func _build_hud_and_modals() -> void:
 	)
 	dlg_panel.confession_cutscene_requested.connect(_play_confession_cutscene)
 	dlg_panel.wedding_cutscene_requested.connect(_play_wedding_cutscene)
+	dlg_panel.hangout_cutscene_requested.connect(_play_hangout_cutscene)
 	ui_layer.add_child(dlg_panel)
 
 	mg_modal = MiniGameModal.new()
@@ -316,6 +317,26 @@ func _play_wedding_cutscene(cid: String) -> void:
 			{"speaker": "16_bram", "emotion": "happy", "emote": "🔔", "text": "ฮ่าๆๆ! วันนี้ชาวเมืองทั้งแปดเผ่ามารวมตัวกันอวยพรพิธีวิวาห์อันแสนอบอุ่นของ {player} และ " + cname + " ใต้ต้นไม้โลกสีทอง!"},
 			{"speaker": "09_celeste", "emotion": "happy", "emote": "🎻", "text": "ขอให้ท่วงทำนองไวโอลินและแสงอรุณแห่งรากไม้โลกคุ้มครองคู่บ่าวสาวให้ครองรักกันชั่วนิรันดร์ค่ะ!"},
 			{"speaker": cid, "emotion": "blush", "emote": "💍", "text": "ขอบคุณที่สวมแหวนวงนี้ให้ฉันนะ {player}... จากนี้ไปเรามาสร้างครอบครัวที่อบอุ่นด้วยกันที่ {farm} ตลอดไปเลยนะ! (+500G & ปลดล็อกชุดวิวาห์!)"}
+		]
+	}
+	cutscene_dir.play_cutscene_dict(cs, "cutscene", world, true)
+
+func _play_hangout_cutscene(cid: String, spot: Dictionary) -> void:
+	var cname := str(GameData.char_by_id.get(cid, {}).get("name_th", cid))
+	var sname := str(spot.get("name_th", spot.get("title_th", "จัตุรัสต้นไม้โลก")))
+	var st_sc := str(spot.get("scene", "outdoor"))
+	var ft := [int(spot.get("x", 42)), int(spot.get("y", 30))]
+	var cs := {
+		"id": "hangout_%s_%d" % [cid, GameState.day],
+		"title_th": "เดตพักผ่อนกับ " + cname,
+		"subtitle_th": "สถานที่: " + sname,
+		"stage_scene": st_sc,
+		"focus_tile": ft,
+		"bgm_zone": "nature" if st_sc == "outdoor" else "tavern",
+		"cast": [cid],
+		"beats": [
+			{"speaker": cid, "emotion": "happy", "emote": "✨", "text": "ดีใจมากเลยที่ {player} ชวนมาพักผ่อนที่ '" + sname + "' ด้วยกัน บรรยากาศดีสุดๆ เลย!"},
+			{"speaker": cid, "emotion": "blush", "emote": "💖", "text": "เวลาอยู่กับ {player} สองชั่วโมงผ่านไปไวเหมือนพริบตาเดียวเลยนะ ไว้คราวหน้ามาเที่ยวด้วยกันอีกนะ! (+45 แต้มหัวใจ +10 เสน่ห์)"}
 		]
 	}
 	cutscene_dir.play_cutscene_dict(cs, "cutscene", world, true)
@@ -537,6 +558,22 @@ func _find_interaction() -> Dictionary:
 			var fp := Vector2((int(fs["tx"]) + 0.5) * TILE, (int(fs["ty"]) + 0.5) * TILE)
 			if p.distance_to(fp) < 38.0:
 				return {"kind": "forage", "spot": fs, "label": "กด [E] เก็บของป่าเรืองแสง"}
+		var pt := Vector2i(int(floor(p.x / TILE)), int(floor(p.y / TILE)))
+		if GameState.farm_plots.has("%d,%d" % [pt.x, pt.y]):
+			var fpl: Dictionary = GameState.farm_plots["%d,%d" % [pt.x, pt.y]]
+			var fcid := str(fpl.get("crop_id", ""))
+			var flbl := "กด [E] พรวนดินแปลงสวนมานา"
+			if fcid != "":
+				var crd := GameData.get_crop_def(fcid)
+				if int(fpl.get("days", 0)) >= int(crd["grow_days"]):
+					flbl = "กด [E] 🌾 เก็บเกี่ยว " + str(crd["name_th"])
+				elif not bool(fpl.get("watered", false)):
+					flbl = "กด [E] 💧 รดน้ำ " + str(crd["name_th"])
+				else:
+					flbl = "🌱 %s (รดน้ำแล้ว %d/%d วัน)" % [str(crd["name_th"]), int(fpl["days"]), int(crd["grow_days"])]
+			elif bool(fpl.get("tilled", false)):
+				flbl = "กด [E] 🌱 ปลูกเมล็ด " + str(GameData.get_crop_def(GameState.selected_seed_id)["name_th"])
+			return {"kind": "farm_plot", "tx": pt.x, "ty": pt.y, "label": flbl}
 		if world.is_near_water(p):
 			return {"kind": "fish", "label": "กด [E] เหวี่ยงเบ็ดตกปลา Stardew"}
 
@@ -587,13 +624,16 @@ func _find_interaction() -> Dictionary:
 				if act != "":
 					var dc := Vector2((float(pl["x"]) + float(pl["w"]) * 0.5) * TILE, (float(pl["y"]) + float(pl["h"]) * 0.5) * TILE)
 					if p.distance_to(dc) < 52.0:
-						return {"kind": "decor_act", "act": act, "label": "กด [E] ใช้งาน " + str(d["label"])}
+						return {"kind": "decor_act", "act": act, "did": str(pl["id"]), "label": "กด [E] ใช้งาน " + str(d["label"])}
 	return {}
 
 func _execute_interaction() -> void:
 	var ctx := _find_interaction()
 	if ctx.is_empty(): return
 	match str(ctx["kind"]):
+		"farm_plot":
+			var fmsg := GameState.interact_farm_plot(int(ctx["tx"]), int(ctx["ty"]))
+			if fmsg != "": show_toast(fmsg)
 		"child":
 			var cmsg := GameState.interact_with_child()
 			if cmsg != "": show_toast(cmsg)
@@ -618,14 +658,22 @@ func _execute_interaction() -> void:
 			elif lmid == "lm_nightmarket":
 				uni_modal.open_shop_modal("nightmarket")
 			elif lmid == "lm_observatory":
+				if int(GameState.landmark_used_day.get(lmid, -1)) == GameState.day:
+					show_toast("🔭 วันนี้คุณส่องกล้องดูดาวเรียบร้อยแล้ว พรุ่งนี้ค่อยมาใหม่นะ!")
+					return
+				GameState.landmark_used_day[lmid] = GameState.day
 				GameState.meteor_shower_tonight = true
 				GameState.add_stat_xp({"wisdom": 10})
 				AudioManager.play_sfx("sparkle")
 				show_toast("🔭 ส่องกล้องดูดาวสำเร็จ! (+10 ปัญญา & คืนนี้จะมีฝนดาวตก!)")
 			else:
+				if int(GameState.landmark_used_day.get(lmid, -1)) == GameState.day:
+					show_toast("♨️ วันนี้คุณแช่บ่อน้ำพุร้อนไปแล้ว พรุ่งนี้มาพักผ่อนใหม่ได้นะ!")
+					return
+				GameState.landmark_used_day[lmid] = GameState.day
 				GameState.stamina = GameState.get_max_stamina()
 				AudioManager.play_sfx("sparkle")
-				show_toast("♨️ แช่บ่อน้ำพุร้อนรากไม้! ฟื้นพลังงานเต็ม 100%")
+				show_toast("♨️ แช่บ่อน้ำพุร้อนรากไม้! ฟื้นพลังงานเต็ม 100% (วันละ 1 ครั้ง)")
 		"forage":
 			var sp: Dictionary = ctx["spot"]
 			sp["collected"] = true
@@ -686,12 +734,22 @@ func _execute_interaction() -> void:
 			uni_modal.open_craft_modal()
 		"decor_act":
 			var act := str(ctx["act"])
+			var did := str(ctx.get("did", act))
 			if act == "mirror": uni_modal.open_protagonist_creator("wardrobe")
 			elif act == "music": mg_modal.start_minigame("rhythm_stage", "concert", null)
 			else:
-				GameState.stamina = mini(GameState.get_max_stamina(), GameState.stamina + 12)
-				AudioManager.play_sfx("sparkle")
-				show_toast("ผ่อนคลายกับเฟอร์นิเจอร์ในบ้าน (+12 พลังงาน!)")
+				if int(GameState.decor_used_day.get(did, -1)) == GameState.day:
+					show_toast("วันนี้ใช้งานเฟอร์นิเจอร์ชิ้นนี้รับโบนัสไปแล้ว พรุ่งนี้ค่อยมาใช้ใหม่นะ!")
+					return
+				GameState.decor_used_day[did] = GameState.day
+				if act == "stargaze":
+					GameState.add_stat_xp({"wisdom": 8})
+					AudioManager.play_sfx("sparkle")
+					show_toast("🔭 ส่องกล้องดูดาวริมระเบียง! (+8 ปัญญา)")
+				else:
+					GameState.stamina = mini(GameState.get_max_stamina(), GameState.stamina + 12)
+					AudioManager.play_sfx("sparkle")
+					show_toast("🐠 ผ่อนคลายชมตู้ปลาในบ้าน (+12 พลังงาน!)")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not GameState.started: return
@@ -772,7 +830,7 @@ func _process(delta: float) -> void:
 		elif world.has_click_target:
 			var to_click := world.click_target - world.player_actor.position
 			if to_click.length() < 8.0:
-				world.clear_click_move()
+				world.advance_click_waypoint()
 			else:
 				dir = to_click.normalized()
 

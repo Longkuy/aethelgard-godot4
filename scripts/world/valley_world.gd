@@ -47,10 +47,19 @@ var hover_tile: Vector2i = Vector2i(8, 6)
 
 var has_click_target: bool = false
 var click_target: Vector2 = Vector2.ZERO
+var click_path: Array[Vector2] = []
+var _astar: AStarGrid2D
 var _pulse_timer: float = 0.0
 var _pulse_origin: Vector2 = Vector2.ZERO
 var _wisp_cd: float = 0.0
+var _boss_wave_timer: float = 3.2
+var _boss_waves: Array = [] # {"origin": Vector2, "rad": float, "max_rad": float}
 var _particles: Array = []
+
+var _ysort_props: Array[Node2D] = []
+var _world_tree_sprite: Sprite2D
+var _landmark_sprites: Dictionary = {}
+var _tree_sprites: Array[Sprite2D] = []
 
 var _tileset_tex: Texture2D
 var _props_tex: Texture2D
@@ -62,6 +71,7 @@ func _ready() -> void:
 	_world_tree_tex = GameData.get_tex("world_sprites/world_tree_states_2x1_512x256.png")
 
 	_build_valley_grids()
+	_setup_astar()
 	for i in range(68):
 		_particles.append({
 			"seed": float(i) * 19.37,
@@ -77,6 +87,8 @@ func _ready() -> void:
 	entities_root = Node2D.new()
 	entities_root.y_sort_enabled = true
 	add_child(entities_root)
+
+	_spawn_ysorted_outdoor_props()
 
 	player_actor = CharacterActor.new()
 	player_actor.is_player = true
@@ -98,13 +110,117 @@ func _ready() -> void:
 	_spawn_npcs()
 	sync_npc_schedules()
 
+func _setup_astar() -> void:
+	_astar = AStarGrid2D.new()
+	_astar.region = Rect2i(0, 0, MAP_W, MAP_H)
+	_astar.cell_size = Vector2(TILE, TILE)
+	_astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+	_astar.update()
+	for y in range(MAP_H):
+		for x in range(MAP_W):
+			if solid_grid[_idx(x, y)] == 1:
+				_astar.set_point_solid(Vector2i(x, y), true)
+
+func _spawn_ysorted_outdoor_props() -> void:
+	# World Tree (Y-sorted at base y = 28.4 * TILE so player can walk behind canopy!)
+	if _world_tree_tex:
+		_world_tree_sprite = Sprite2D.new()
+		_world_tree_sprite.texture = _world_tree_tex
+		_world_tree_sprite.region_enabled = true
+		_world_tree_sprite.region_rect = Rect2(0, 0, 256, 256)
+		_world_tree_sprite.scale = Vector2(232.0 / 256.0, 220.0 / 256.0)
+		_world_tree_sprite.position = Vector2(42.0 * TILE, 28.4 * TILE)
+		_world_tree_sprite.offset = Vector2(0, -108)
+		entities_root.add_child(_world_tree_sprite)
+		_ysort_props.append(_world_tree_sprite)
+
+	# 6 Town Buildings (Y-sorted at doorway base)
+	for b in BUILDINGS:
+		var btex := GameData.get_building_tex(str(b["id"]))
+		if btex == null: continue
+		var sp := Sprite2D.new()
+		sp.texture = btex
+		var bw := float(b["w"]) * TILE + 16.0
+		var bh := float(b["h"]) * TILE + 26.0
+		sp.scale = Vector2(bw / maxf(1.0, float(btex.get_width())), bh / maxf(1.0, float(btex.get_height())))
+		sp.position = Vector2((float(b["x"]) + float(b["w"]) * 0.5) * TILE, (float(b["y"]) + float(b["h"]) - 0.15) * TILE)
+		sp.offset = Vector2(0, -float(btex.get_height()) * 0.44)
+		entities_root.add_child(sp)
+		_ysort_props.append(sp)
+
+	# 5 Restorable Landmarks (Y-sorted)
+	for lm in GameData.landmarks:
+		var lmid := str(lm["id"])
+		var ltex := GameData.get_landmark_tex(lmid, false)
+		if ltex == null: continue
+		var sp2 := Sprite2D.new()
+		sp2.texture = ltex
+		var lw := float(lm["w"]) * TILE + 12.0
+		var lh := float(lm["h"]) * TILE + 20.0
+		sp2.scale = Vector2(lw / maxf(1.0, float(ltex.get_width())), lh / maxf(1.0, float(ltex.get_height())))
+		sp2.position = Vector2((float(lm["tx"]) + float(lm["w"]) * 0.5) * TILE, (float(lm["ty"]) + float(lm["h"]) - 0.2) * TILE)
+		sp2.offset = Vector2(0, -float(ltex.get_height()) * 0.44)
+		entities_root.add_child(sp2)
+		_landmark_sprites[lmid] = sp2
+		_ysort_props.append(sp2)
+
+	# 70 Seasonal Trees (Y-sorted at trunk base)
+	if _props_tex:
+		for tr in tree_tiles:
+			var ts := Sprite2D.new()
+			ts.texture = _props_tex
+			ts.region_enabled = true
+			ts.region_rect = Rect2(0, 0, 64, 96)
+			ts.scale = Vector2(1.0, 86.0 / 96.0)
+			ts.position = Vector2((float(tr.x) + 0.5) * TILE, (float(tr.y) + 0.85) * TILE)
+			ts.offset = Vector2(0, -38)
+			entities_root.add_child(ts)
+			_tree_sprites.append(ts)
+			_ysort_props.append(ts)
+
+func _sync_ysorted_props() -> void:
+	var is_out := (GameState.current_scene == "outdoor")
+	for p in _ysort_props:
+		p.visible = is_out
+	if not is_out:
+		return
+	var finale := GameState.chronicles_done.has("main_ch5") or GameState.spouse_id != ""
+	if _world_tree_sprite:
+		_world_tree_sprite.region_rect = Rect2(256 if finale else 0, 0, 256, 256)
+	var s_idx := GameState.get_season_index()
+	for ts in _tree_sprites:
+		ts.region_rect = Rect2(s_idx * 64, 0, 64, 96)
+	for lmid in _landmark_sprites.keys():
+		var sp: Sprite2D = _landmark_sprites[lmid]
+		var t := GameData.get_landmark_tex(str(lmid), GameState.landmarks_built.has(str(lmid)))
+		if t and sp.texture != t:
+			sp.texture = t
+
 func set_click_move_target(world_pos: Vector2) -> void:
-	if not is_point_blocked(world_pos):
-		click_target = world_pos
-		has_click_target = true
+	if is_point_blocked(world_pos):
+		return
+	click_path.clear()
+	if GameState.current_scene == "outdoor" and _astar != null:
+		var from_t := Vector2i(clampi(int(floor(player_actor.position.x / TILE)), 0, MAP_W - 1), clampi(int(floor(player_actor.position.y / TILE)), 0, MAP_H - 1))
+		var to_t := Vector2i(clampi(int(floor(world_pos.x / TILE)), 0, MAP_W - 1), clampi(int(floor(world_pos.y / TILE)), 0, MAP_H - 1))
+		var pts := _astar.get_id_path(from_t, to_t)
+		for i in range(1, pts.size()):
+			click_path.append((Vector2(pts[i]) + Vector2(0.5, 0.5)) * TILE)
+	if click_path.is_empty():
+		click_path.append(world_pos)
+	click_target = click_path[0]
+	has_click_target = true
+
+func advance_click_waypoint() -> void:
+	if click_path.size() > 1:
+		click_path.remove_at(0)
+		click_target = click_path[0]
+	else:
+		clear_click_move()
 
 func clear_click_move() -> void:
 	has_click_target = false
+	click_path.clear()
 
 func trigger_sacred_pulse() -> void:
 	_pulse_origin = player_actor.position
@@ -120,6 +236,9 @@ func trigger_sacred_pulse() -> void:
 			GameState.night_lantern_steps += 1
 
 	if GameData.RUINS_FLOORS.has(sc):
+		# Dispel active Boss Shadow Waves!
+		if not _boss_waves.is_empty():
+			_boss_waves.clear()
 		var fl: Dictionary = GameData.RUINS_FLOORS[sc]
 		var wlist: Array = fl.get("wisps", [])
 		var now_s := Time.get_ticks_msec() / 1000.0
@@ -226,7 +345,8 @@ func _build_valley_grids() -> void:
 	for i in range(70):
 		var tx := 5 + int(fposmod(sin(i * 43.1 + 9.0) * 10000.0, 1.0) * (MAP_W - 10))
 		var ty := 5 + int(fposmod(sin(i * 19.7 + 3.0) * 10000.0, 1.0) * (MAP_H - 10))
-		if map_grid[_idx(tx, ty)] in [0, 8] and solid_grid[_idx(tx, ty)] == 0 and abs(tx - 42) + abs(ty - 29) > 9:
+		var in_garden := (tx >= 20 and tx <= 27 and ty >= 10 and ty <= 15)
+		if not in_garden and map_grid[_idx(tx, ty)] in [0, 8] and solid_grid[_idx(tx, ty)] == 0 and abs(tx - 42) + abs(ty - 29) > 9:
 			var near_door := false
 			for b in BUILDINGS:
 				var dr: Vector2i = b["door"]
@@ -248,6 +368,7 @@ func _spawn_npcs() -> void:
 		npc_states[cid] = {"scene": "outdoor", "activity": "เดินเล่นในเมือง", "home_pos": Vector2(38 * TILE, 30 * TILE)}
 
 func sync_npc_schedules() -> void:
+	_sync_ysorted_props()
 	var mode := "rainy" if GameState.weather == "rainy" else "default"
 	var hr := GameState.time_min / 60.0
 	var idx := 0
@@ -296,6 +417,7 @@ func sync_npc_schedules() -> void:
 		child_actor.refresh_child()
 
 func update_world(delta: float, cutscene_freeze: bool = false) -> void:
+	_sync_ysorted_props()
 	if _pulse_timer > 0.0:
 		_pulse_timer = maxf(0.0, _pulse_timer - delta)
 	if _wisp_cd > 0.0:
@@ -326,23 +448,46 @@ func update_world(delta: float, cutscene_freeze: bool = false) -> void:
 				actor.dir_row = 2
 			actor.update_actor(delta, moving, false)
 
-	# Shadow Wisp cozy collision check in Ruins B1..B4
+	# Shadow Wisp cozy collision + Floor B4 Active Boss Miasma Waves!
 	var sc := GameState.current_scene
-	if not cutscene_freeze and GameData.RUINS_FLOORS.has(sc) and _wisp_cd <= 0.0:
-		var fl: Dictionary = GameData.RUINS_FLOORS[sc]
-		var wlist: Array = fl.get("wisps", [])
-		var pmap: Dictionary = GameState.purified_wisps_floor.get(sc, {})
-		var now_s := Time.get_ticks_msec() / 1000.0
-		for wi in range(wlist.size()):
-			if pmap.has(str(wi)):
-				continue
-			var wp := _get_wisp_pos(wlist[wi], now_s, wi)
-			if wp.distance_to(player_actor.position) < 22.0:
-				_wisp_cd = 1.6
-				GameState.stamina = maxi(5, GameState.stamina - 4)
-				AudioManager.play_sfx("miss")
-				GameState.toast_requested.emit("👾 สัมผัสหมอกเงามืด (-4⚡)! กด [F] ปล่อยคลื่นแสงชำระล้างได้นะ!")
-				break
+	if not cutscene_freeze and GameData.RUINS_FLOORS.has(sc):
+		if sc == "ruins_b4" and not GameState.boss_purified:
+			_boss_wave_timer -= delta
+			if _boss_wave_timer <= 0.0:
+				_boss_wave_timer = 3.6
+				var bt: Vector2i = GameData.RUINS_FLOORS["ruins_b4"].get("boss_tile", Vector2i(11, 6))
+				_boss_waves.append({"origin": Vector2((bt.x + 0.5) * TILE, (bt.y + 0.5) * TILE), "rad": 26.0, "max_rad": 210.0})
+			for wi in range(_boss_waves.size() - 1, -1, -1):
+				var bw: Dictionary = _boss_waves[wi]
+				bw["rad"] = float(bw["rad"]) + 74.0 * delta
+				var dist_p: float = player_actor.position.distance_to(bw["origin"])
+				if _wisp_cd <= 0.0 and absf(dist_p - float(bw["rad"])) < 12.0:
+					_wisp_cd = 1.6
+					GameState.stamina = maxi(5, GameState.stamina - 5)
+					AudioManager.play_sfx("miss")
+					GameState.toast_requested.emit("🌊 โดนคลื่นหมอกเงาของบอส (-5⚡)! หลบหรือกด [F] สลายคลื่นได้!")
+				if float(bw["rad"]) >= float(bw["max_rad"]):
+					_boss_waves.remove_at(wi)
+		else:
+			_boss_waves.clear()
+
+		if _wisp_cd <= 0.0:
+			var fl: Dictionary = GameData.RUINS_FLOORS[sc]
+			var wlist: Array = fl.get("wisps", [])
+			var pmap: Dictionary = GameState.purified_wisps_floor.get(sc, {})
+			var now_s := Time.get_ticks_msec() / 1000.0
+			for wi in range(wlist.size()):
+				if pmap.has(str(wi)):
+					continue
+				var wp := _get_wisp_pos(wlist[wi], now_s, wi)
+				if wp.distance_to(player_actor.position) < 22.0:
+					_wisp_cd = 1.6
+					GameState.stamina = maxi(5, GameState.stamina - 4)
+					AudioManager.play_sfx("miss")
+					GameState.toast_requested.emit("👾 สัมผัสหมอกเงามืด (-4⚡)! กด [F] ปล่อยคลื่นแสงชำระล้างได้นะ!")
+					break
+	else:
+		_boss_waves.clear()
 
 	pet_actor.follow_target(player_actor.position, delta)
 	if child_actor:
@@ -450,13 +595,39 @@ func _draw_ground_and_props() -> void:
 			if it_tex:
 				ground_drawer.draw_texture_rect(it_tex, Rect2(fp.x - 12, fp.y - 14 + sin(now_sec * 3.5) * 2.0, 24, 24), false)
 
-		# World Tree + 8 Seals + Ruins Portal Archway
+		# 18-Tile Mana Garden Farm Plots beside Farmhouse (x=21..26, y=11..13)!
+		ground_drawer.draw_rect(Rect2(21 * TILE - 4, 11 * TILE - 4, 6 * TILE + 8, 3 * TILE + 8), Color("#5c3312"), false, 3.0)
+		if font:
+			ground_drawer.draw_string(font, Vector2(21 * TILE, 11 * TILE - 8), "🌱 สวนมานา [E] พรวน/ปลูก/รดน้ำ", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#fef08a"))
+		for fy in range(11, 14):
+			for fx in range(21, 27):
+				var fkey := "%d,%d" % [fx, fy]
+				var pl: Dictionary = GameState.farm_plots.get(fkey, {})
+				var fr := Rect2(fx * TILE + 2, fy * TILE + 2, TILE - 4, TILE - 4)
+				var soil_col := Color("#3b1e0a") if bool(pl.get("watered", false)) else (Color("#784421") if bool(pl.get("tilled", false)) else Color("#92623a"))
+				ground_drawer.draw_rect(fr, soil_col)
+				ground_drawer.draw_rect(fr, Color(0, 0, 0, 0.25), false, 1.0)
+				var cid := str(pl.get("crop_id", ""))
+				if cid != "":
+					var cdef := GameData.get_crop_def(cid)
+					var days := int(pl.get("days", 0))
+					var need := int(cdef["grow_days"])
+					var pc := fr.position + fr.size * 0.5
+					if days >= need:
+						ground_drawer.draw_circle(pc, 11.0 + sin(now_sec * 5.0) * 2.0, Color(1.0, 0.94, 0.4, 0.35))
+						var ctex := GameData.get_item_icon(str(cdef["harvest_item"]), false)
+						if ctex:
+							ground_drawer.draw_texture_rect(ctex, Rect2(pc.x - 10, pc.y - 12, 20, 20), false)
+					elif days >= 1:
+						ground_drawer.draw_circle(pc, 6.0, Color("#16a34a"))
+						ground_drawer.draw_circle(pc + Vector2(0, -3), 4.0, Color(str(cdef["color"])))
+					else:
+						ground_drawer.draw_circle(pc, 4.0, Color("#4ade80"))
+
+		# World Tree Aura + Ruins Portal Archway (World Tree, Buildings, Landmarks & Trees are now Y-sorted inside entities_root!)
 		var wtc := Vector2(42.0 * TILE, 27.5 * TILE)
-		var finale := GameState.chronicles_done.has("main_ch5") or GameState.spouse_id != ""
 		var seals := GameState.get_awakened_seal_count()
 		ground_drawer.draw_circle(wtc + Vector2(0, -34), 128.0, Color(1.0, 0.9, 0.35, 0.16 + seals * 0.03))
-		if _world_tree_tex:
-			ground_drawer.draw_texture_rect_region(_world_tree_tex, Rect2(wtc.x - 116, wtc.y - 190, 232, 220), Rect2(256 if finale else 0, 0, 256, 256))
 		var rpos := Vector2((RUINS_PORTAL_TILE.x + 0.5) * TILE, (RUINS_PORTAL_TILE.y + 0.5) * TILE)
 		ground_drawer.draw_rect(Rect2(rpos.x - 15, rpos.y - 24, 30, 28), Color("#1e293b"))
 		ground_drawer.draw_rect(Rect2(rpos.x - 15, rpos.y - 24, 30, 28), Color("#38bdf8"), false, 2.5)
@@ -464,38 +635,8 @@ func _draw_ground_and_props() -> void:
 		if font:
 			ground_drawer.draw_string(font, rpos + Vector2(-36, -28), "โบราณสถาน", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#e0f2fe"))
 
-		# Buildings (World_Sprites_25D/buildings!)
-		for b in BUILDINGS:
-			var bx := float(b["x"]) * TILE
-			var by := float(b["y"]) * TILE
-			var bw := float(b["w"]) * TILE
-			var bh := float(b["h"]) * TILE
-			var btex := GameData.get_building_tex(str(b["id"]))
-			if btex:
-				ground_drawer.draw_texture_rect(btex, Rect2(bx - 8, by - 22, bw + 16, bh + 26), false)
-			if b["id"] == "farmhouse" and GameState.house_level >= 2:
-				ground_drawer.draw_rect(Rect2(bx + bw * 0.5 - 22, by - 24, 44, 20), Color("#312e81"))
-				ground_drawer.draw_rect(Rect2(bx + bw * 0.5 - 22, by - 24, 44, 20), Color("#fde047"), false, 2.0)
-			if font:
-				var title := GameState.cottage_name if b["id"] == "farmhouse" else str(b["name_th"])
-				ground_drawer.draw_rect(Rect2(bx + bw * 0.5 - 46, by + 4, 92, 16), Color("#fbf0d9"))
-				ground_drawer.draw_string(font, Vector2(bx + bw * 0.5 - 42, by + 16), title.left(12), HORIZONTAL_ALIGNMENT_LEFT, 86, 10, Color("#3f1d0b"))
-
-		# 5 Restorable Landmarks (World_Sprites_25D/landmarks!)
-		for lm in GameData.landmarks:
-			var lx := float(lm["tx"]) * TILE
-			var ly := float(lm["ty"]) * TILE
-			var lw := float(lm["w"]) * TILE
-			var lh := float(lm["h"]) * TILE
-			var built := GameState.landmarks_built.has(lm["id"])
-			var ltex := GameData.get_landmark_tex(str(lm["id"]), built)
-			if ltex:
-				ground_drawer.draw_texture_rect(ltex, Rect2(lx - 6, ly - 16, lw + 12, lh + 20), false)
-
-		# Seasonal Trees & Props (props_and_trees_8x2_512x192.png!)
+		# Mailbox & Bulletin Board Props
 		if _props_tex:
-			for tr in tree_tiles:
-				ground_drawer.draw_texture_rect_region(_props_tex, Rect2(tr.x * TILE - 16, tr.y * TILE - 54, 64, 86), Rect2(s_idx * 64, 0, 64, 96))
 			ground_drawer.draw_texture_rect_region(_props_tex, Rect2(MAILBOX_TILE.x * TILE - 8, MAILBOX_TILE.y * TILE - 32, 48, 64), Rect2(6 * 64, 0, 64, 96))
 			ground_drawer.draw_texture_rect_region(_props_tex, Rect2(BULLETIN_TILE.x * TILE - 8, BULLETIN_TILE.y * TILE - 32, 48, 64), Rect2(7 * 64, 0, 64, 96))
 
@@ -596,12 +737,15 @@ func _draw_ground_and_props() -> void:
 				var shield_up := not bool(rs["solved"])
 				if shield_up:
 					ground_drawer.draw_arc(bp, 42.0 + sin(now_sec * 5.0) * 3.0, 0.0, TAU, 32, Color(0.58, 0.2, 0.92, 0.85), 4.0)
+				# Animated shadow tendrils
+				for k in range(6):
+					var ang := now_sec * 1.4 + float(k) * (TAU / 6.0)
+					ground_drawer.draw_line(bp, bp + Vector2(cos(ang), sin(ang)) * (32.0 + sin(now_sec * 4.0 + k) * 5.0), Color("#6b21a8"), 3.5)
 				ground_drawer.draw_circle(bp, 28.0, Color("#3b0764"))
 				ground_drawer.draw_rect(Rect2(bp.x - 20, bp.y - 24, 40, 42), Color("#4c1d95"))
 				ground_drawer.draw_rect(Rect2(bp.x - 20, bp.y - 24, 40, 42), Color("#f43f5e" if shield_up else "#fde047"), false, 2.5)
 				ground_drawer.draw_circle(bp + Vector2(-7, -6), 4.0, Color("#ef4444"))
 				ground_drawer.draw_circle(bp + Vector2(7, -6), 4.0, Color("#ef4444"))
-				# Boss HP Bar
 				var ratio := float(GameState.boss_hp) / float(maxi(1, GameState.boss_max_hp))
 				ground_drawer.draw_rect(Rect2(bp.x - 32, bp.y - 40, 64, 8), Color("#0f172a"))
 				ground_drawer.draw_rect(Rect2(bp.x - 30, bp.y - 38, 60.0 * ratio, 4), Color("#ec4899"))
@@ -610,7 +754,7 @@ func _draw_ground_and_props() -> void:
 					ground_drawer.draw_string(font, bp + Vector2(-70, -46), hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#fde047"))
 
 	else:
-		# Indoor Room + 2nd Floor Starlight Loft + Grid Furniture Placement!
+		# Indoor Room + 2nd Floor Starlight Loft + Detailed Cozy Furniture Art!
 		var rm: Dictionary = INDOORS.get(sc, INDOORS["farmhouse"])
 		var rw := int(rm["w"]) * TILE
 		var rh := int(rm["h"]) * TILE
@@ -625,28 +769,41 @@ func _draw_ground_and_props() -> void:
 				ground_drawer.draw_rect(Rect2(x * TILE, y * TILE, TILE, TILE), Color(str(rm["floor"])))
 				ground_drawer.draw_rect(Rect2(x * TILE, y * TILE, TILE, TILE), Color(1, 1, 1, 0.35) if GameState.home_edit_mode else Color(0, 0, 0, 0.14), false, 1.0)
 		ground_drawer.draw_rect(Rect2(4 * TILE, 5 * TILE, 6 * TILE, 3 * TILE), Color(str(rm["rug"])))
+		ground_drawer.draw_rect(Rect2(4 * TILE + 6, 5 * TILE + 6, 6 * TILE - 12, 3 * TILE - 12), Color("#fde68a"), false, 1.5)
 		var ex: Vector2i = rm["exit"]
 		ground_drawer.draw_rect(Rect2(ex.x * TILE, ex.y * TILE + 6, TILE, TILE - 8), Color("#dc2626"))
 
 		if sc == "farmhouse":
-			ground_drawer.draw_rect(Rect2(2 * TILE, 3 * TILE, 2 * TILE, 3 * TILE), Color("#db2777" if GameState.spouse_id != "" else "#2563eb"))
-			ground_drawer.draw_rect(Rect2(5 * TILE, 8 * TILE, 2 * TILE, 2 * TILE), Color("#92400e")) # Craft table
+			# Detailed Cozy Bed with pillows & quilt
+			var bed_r := Rect2(2 * TILE, 3 * TILE, 2 * TILE, 3 * TILE)
+			ground_drawer.draw_rect(bed_r, Color("#78350f"))
+			ground_drawer.draw_rect(Rect2(bed_r.position + Vector2(4, 24), Vector2(bed_r.size.x - 8, bed_r.size.y - 28)), Color("#db2777" if GameState.spouse_id != "" else "#2563eb"))
+			ground_drawer.draw_rect(Rect2(bed_r.position + Vector2(6, 6), Vector2(bed_r.size.x - 12, 16)), Color("#fffbeb"))
+			# Craft Workbench with anvil & wood trim
+			ground_drawer.draw_rect(Rect2(5 * TILE, 8 * TILE, 2 * TILE, 2 * TILE), Color("#92400e"))
+			ground_drawer.draw_rect(Rect2(5 * TILE + 6, 8 * TILE + 6, 2 * TILE - 12, 2 * TILE - 12), Color("#b45309"))
+			ground_drawer.draw_rect(Rect2(5 * TILE + 18, 8 * TILE + 16, 28, 16), Color("#475569"))
 			if GameState.house_level >= 2:
 				ground_drawer.draw_rect(Rect2(13 * TILE, 2 * TILE, 2 * TILE, 2 * TILE), Color("#d97706"))
+				for stp in range(4):
+					ground_drawer.draw_line(Vector2(13 * TILE, 2 * TILE + stp * 14 + 8), Vector2(15 * TILE, 2 * TILE + stp * 14 + 8), Color("#78350f"), 2.0)
 				if font:
 					ground_drawer.draw_string(font, Vector2(13 * TILE + 4, 2 * TILE + 20), "ขึ้นชั้น 2", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#fffbeb"))
 		elif sc == "farmhouse_upstairs":
-			ground_drawer.draw_rect(Rect2(2 * TILE, 3 * TILE, 3 * TILE, 3 * TILE), Color("#e11d48"))
+			var lbed := Rect2(2 * TILE, 3 * TILE, 3 * TILE, 3 * TILE)
+			ground_drawer.draw_rect(lbed, Color("#78350f"))
+			ground_drawer.draw_rect(Rect2(lbed.position + Vector2(5, 24), Vector2(lbed.size.x - 10, lbed.size.y - 30)), Color("#e11d48"))
+			ground_drawer.draw_rect(Rect2(lbed.position + Vector2(8, 6), Vector2(lbed.size.x - 16, 16)), Color("#fef3c7"))
 
 		if sc in ["farmhouse", "farmhouse_upstairs"]:
 			for p in GameState.decor_placed:
 				if str(p["scene"]) != sc: continue
-				var d := GameState.get_decor_def(str(p["id"]))
+				var did := str(p["id"])
+				var d := GameState.get_decor_def(did)
 				var r := Rect2(int(p["x"]) * TILE + 2, int(p["y"]) * TILE + 2, int(p["w"]) * TILE - 4, int(p["h"]) * TILE - 4)
-				ground_drawer.draw_rect(r, Color(str(d.get("color", "#78350f"))))
-				ground_drawer.draw_rect(r, Color("#fde68a"), false, 2.0)
+				_draw_detailed_furniture(did, r, Color(str(d.get("color", "#78350f"))), now_sec)
 				if font:
-					ground_drawer.draw_string(font, r.position + Vector2(4, 18), str(d.get("label", "")).left(8), HORIZONTAL_ALIGNMENT_LEFT, r.size.x - 4, 10, Color.WHITE)
+					ground_drawer.draw_string(font, r.position + Vector2(4, r.size.y - 4), str(d.get("label", "")).left(8), HORIZONTAL_ALIGNMENT_LEFT, r.size.x - 4, 9, Color("#fffbeb"))
 
 			if GameState.home_edit_mode and GameState.selected_decor_id != "":
 				var sd := GameState.get_decor_def(GameState.selected_decor_id)
@@ -658,13 +815,41 @@ func _draw_ground_and_props() -> void:
 					ground_drawer.draw_rect(gr, Color(0.15, 0.85, 0.35, 0.45) if ok else Color(0.95, 0.25, 0.25, 0.45))
 					ground_drawer.draw_rect(gr, Color.GREEN if ok else Color.RED, false, 2.5)
 
+func _draw_detailed_furniture(did: String, r: Rect2, base_col: Color, now_s: float) -> void:
+	ground_drawer.draw_rect(r, base_col)
+	ground_drawer.draw_rect(r, Color("#fde68a"), false, 2.0)
+	match did:
+		"decor_bookshelf":
+			for i in range(5):
+				var bx := r.position.x + 6 + i * ((r.size.x - 12) / 5.0)
+				ground_drawer.draw_rect(Rect2(bx, r.position.y + 4, 6, r.size.y * 0.45), [Color("#ef4444"), Color("#38bdf8"), Color("#22c55e"), Color("#facc15"), Color("#c084fc")][i])
+		"decor_aquarium":
+			ground_drawer.draw_rect(Rect2(r.position + Vector2(4, 4), r.size - Vector2(8, 8)), Color("#0369a1"))
+			var fx := r.position.x + r.size.x * 0.5 + sin(now_s * 2.4) * (r.size.x * 0.28)
+			ground_drawer.draw_circle(Vector2(fx, r.position.y + r.size.y * 0.48), 4.5, Color("#fde047"))
+		"decor_mirror":
+			ground_drawer.draw_rect(Rect2(r.position + Vector2(5, 5), r.size - Vector2(10, 14)), Color("#bae6fd"))
+			ground_drawer.draw_line(r.position + Vector2(8, 12), r.position + Vector2(r.size.x - 10, 22), Color.WHITE, 2.0)
+		"decor_tea_set":
+			var c := r.position + r.size * 0.5
+			ground_drawer.draw_circle(c, minf(r.size.x, r.size.y) * 0.32, Color("#fef3c7"))
+			ground_drawer.draw_circle(c + Vector2(-7, -4), 4.0, Color("#10b981"))
+			ground_drawer.draw_circle(c + Vector2(7, 4), 4.0, Color("#10b981"))
+		"decor_bonsai":
+			var bc := r.position + r.size * 0.5
+			ground_drawer.draw_rect(Rect2(bc.x - 6, bc.y + 2, 12, 6), Color("#78350f"))
+			ground_drawer.draw_circle(bc + Vector2(0, -4), 8.0, Color("#4ade80"))
+
 func _draw_atmosphere_and_fx() -> void:
 	var now_s := Time.get_ticks_msec() / 1000.0
 	var sc := GameState.current_scene
+	var font := GameData.font_bold
 
-	# Click-to-move ring
+	# A* Pathfinding Breadcrumbs & Target Ring
 	if has_click_target:
-		fx_drawer.draw_arc(click_target, 10.0 + sin(now_s * 7.0) * 2.5, 0.0, TAU, 20, Color(0.99, 0.88, 0.28, 0.85), 2.2)
+		for pt in click_path:
+			fx_drawer.draw_circle(pt, 3.0, Color(0.99, 0.88, 0.28, 0.55))
+		fx_drawer.draw_arc(click_path[click_path.size() - 1] if not click_path.is_empty() else click_target, 10.0 + sin(now_s * 7.0) * 2.5, 0.0, TAU, 20, Color(0.99, 0.88, 0.28, 0.85), 2.2)
 
 	# [F] Sacred Light Pulse golden shockwave!
 	if _pulse_timer > 0.0:
@@ -673,8 +858,55 @@ func _draw_atmosphere_and_fx() -> void:
 		fx_drawer.draw_arc(_pulse_origin, rad, 0.0, TAU, 36, Color(1.0, 0.92, 0.38, (1.0 - prog) * 0.92), 5.0)
 		fx_drawer.draw_circle(_pulse_origin, rad * 0.65, Color(1.0, 0.96, 0.65, (1.0 - prog) * 0.22))
 
+	# Floor B4 Active Boss Shadow Miasma Waves!
+	for bw in _boss_waves:
+		var br := float(bw["rad"])
+		var alpha := clampf(1.0 - (br / float(bw["max_rad"])), 0.15, 0.85)
+		fx_drawer.draw_arc(bw["origin"], br, 0.0, TAU, 36, Color(0.66, 0.16, 0.92, alpha), 4.5)
+
+	# REAL NPC COMPASS ARROW around Player!
+	if GameState.compass_npc_id != "" and npc_actors.has(GameState.compass_npc_id):
+		var target_cid := GameState.compass_npc_id
+		var t_actor: CharacterActor = npc_actors[target_cid]
+		var t_st: Dictionary = npc_states[target_cid]
+		var t_name := str(GameData.char_by_id.get(target_cid, {}).get("name_th", target_cid)).split(" ")[0]
+		var t_scene := str(t_st["scene"])
+		var target_pos := t_actor.position
+		if t_scene != sc and sc == "outdoor":
+			for b in BUILDINGS:
+				if str(b["id"]) == t_scene:
+					target_pos = (Vector2(b["door"]) + Vector2(0.5, 0.5)) * TILE
+					break
+		var diff := target_pos - player_actor.position
+		if diff.length() < 56.0 and t_scene == sc:
+			GameState.compass_npc_id = ""
+		else:
+			var ang := diff.angle()
+			var base_p := player_actor.position + Vector2(0, -16) + Vector2(cos(ang), sin(ang)) * (36.0 + sin(now_s * 6.0) * 3.0)
+			var tip := base_p + Vector2(cos(ang), sin(ang)) * 12.0
+			var left_p := base_p + Vector2(cos(ang + 2.4), sin(ang + 2.4)) * 7.0
+			var right_p := base_p + Vector2(cos(ang - 2.4), sin(ang - 2.4)) * 7.0
+			fx_drawer.draw_colored_polygon(PackedVector2Array([tip, left_p, right_p]), Color("#fde047"))
+			if font:
+				var dist_m := int(diff.length() / TILE)
+				var loc_hint := ("%s (%dm)" % [t_name, dist_m]) if t_scene == sc else ("%s [ใน%s]" % [t_name, str(INDOORS.get(t_scene, {}).get("name_th", t_scene)).left(8)])
+				fx_drawer.draw_string(font, base_p + Vector2(-34, -10), "🧭 " + loc_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#fef08a"))
+
 	if sc != "outdoor":
 		return
+
+	# Floating Building Signs above Y-sorted Roofs
+	if font:
+		for b in BUILDINGS:
+			var bx := float(b["x"]) * TILE
+			var by := float(b["y"]) * TILE
+			var bw := float(b["w"]) * TILE
+			if b["id"] == "farmhouse" and GameState.house_level >= 2:
+				fx_drawer.draw_rect(Rect2(bx + bw * 0.5 - 22, by - 26, 44, 18), Color("#312e81"))
+				fx_drawer.draw_rect(Rect2(bx + bw * 0.5 - 22, by - 26, 44, 18), Color("#fde047"), false, 2.0)
+			var title := GameState.cottage_name if b["id"] == "farmhouse" else str(b["name_th"])
+			fx_drawer.draw_rect(Rect2(bx + bw * 0.5 - 48, by - 4, 96, 16), Color("#fbf0d9"))
+			fx_drawer.draw_string(font, Vector2(bx + bw * 0.5 - 44, by + 8), title.left(12), HORIZONTAL_ALIGNMENT_LEFT, 88, 10, Color("#3f1d0b"))
 
 	var hr := GameState.time_min / 60.0
 	var is_night := (hr >= 18.0 or hr < 6.0)
@@ -709,7 +941,6 @@ func _draw_atmosphere_and_fx() -> void:
 			var ry := cam_center.y - span.y * 0.5 + fposmod(float(pt["y"]) * span.y + now_s * 340.0 * spd, span.y)
 			fx_drawer.draw_line(Vector2(rx, ry), Vector2(rx - 5.0, ry + 15.0), Color(0.68, 0.85, 1.0, 0.52), 1.6)
 		elif is_night:
-			# Night fireflies
 			var fx := cam_center.x - span.x * 0.5 + fposmod(float(pt["x"]) * span.x + sin(now_s + float(pt["seed"])) * 24.0, span.x)
 			var fy := cam_center.y - span.y * 0.5 + fposmod(float(pt["y"]) * span.y + cos(now_s * 0.8 + float(pt["seed"])) * 18.0, span.y)
 			var a := 0.25 + 0.45 * absf(sin(now_s * 2.6 + float(pt["seed"])))

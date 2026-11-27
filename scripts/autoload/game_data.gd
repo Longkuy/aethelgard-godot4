@@ -95,6 +95,14 @@ const ACHIEVEMENTS := [
 	{"id": "ach_chronicle", "title_th": "ผู้จารึกพงศาวดาร", "desc_th": "เล่นเนื้อเรื่องพงศาวดารต้นไม้โลกผ่าน 5 บท"}
 ]
 
+const CROPS := [
+	{"id": "crop_sunwheat", "name_th": "ข้าวสาลีสุริยัน", "seed_price": 25, "grow_days": 2, "harvest_item": "item_sunfruit", "color": "#facc15", "desc_th": "โตไวใน 2 วัน เก็บเกี่ยวได้ผลไม้สุริยันหอมหวาน"},
+	{"id": "crop_rootdew", "name_th": "ดอกน้ำค้างรากไม้", "seed_price": 35, "grow_days": 2, "harvest_item": "item_rootdew_flower", "color": "#38bdf8", "desc_th": "โตใน 2 วัน ใช้ปรุงยาสมุนไพรและจัดช่อดอกไม้"},
+	{"id": "crop_moonbloom", "name_th": "ดอกไม้จันทร์เรืองแสง", "seed_price": 45, "grow_days": 3, "harvest_item": "item_moonbloom", "color": "#c084fc", "desc_th": "โตใน 3 วัน เปล่งแสงสีม่วงเงินยามค่ำคืน"},
+	{"id": "crop_waterlily", "name_th": "บัวมรกตสายน้ำ", "seed_price": 40, "grow_days": 3, "harvest_item": "item_water_lily", "color": "#34d399", "desc_th": "โตใน 3 วัน ของโปรดของเผ่าเงือกและเอลฟ์"},
+	{"id": "crop_starflower", "name_th": "บุปผาผลึกดาวตก", "seed_price": 90, "grow_days": 4, "harvest_item": "item_starfall_crystal", "color": "#fde047", "desc_th": "โตใน 4 วัน เก็บเกี่ยวเป็นผลึกดาวตกล้ำค่า!"}
+]
+
 const RACE_PERKS := {
 	"human": {"icon": "🧑", "name_th": "มนุษย์ (Human)", "perk_th": "XP สเตตัสทั้ง 4 แกน +10% ทุกกิจกรรม"},
 	"elf": {"icon": "🌿", "name_th": "เอลฟ์ (Elf)", "perk_th": "เก็บของป่ามีโอกาส 35% ได้ x2 ชิ้น!"},
@@ -369,6 +377,12 @@ func get_outfit_def(out_id: String) -> Dictionary:
 		if str(o["id"]) == out_id:
 			return o
 	return OUTFIT_THEMES[0]
+
+func get_crop_def(crop_id: String) -> Dictionary:
+	for cr in CROPS:
+		if str(cr["id"]) == crop_id:
+			return cr
+	return CROPS[0]
 
 func is_npc_birthday(cid: String, season_idx: int, day_of_season: int) -> bool:
 	if not NPC_BIRTHDAYS.has(cid):
