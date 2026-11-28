@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Aethelgard: Echoes of the World Tree"
 config/description="2.5D HD-2D Cozy Fantasy Town Life-Sim & Relationships RPG (8 Races, 16 Characters, 6 Minigames, Marriage, Grid Home Decor & 2nd Floor, Under-Root Light Ruins, 3 Save Slots)"
-config/version="8.0.0"
+config/version="9.0.0"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://icon.svg"

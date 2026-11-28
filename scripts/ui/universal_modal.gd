@@ -306,16 +306,17 @@ func open_save_slots_modal() -> void:
 		"สลับ HD/Classic",
 		func():
 			GameData.use_hd_sprites = not GameData.use_hd_sprites
+			GameState.save_settings()
 			hero_customized.emit()
 			open_save_slots_modal()
 	)
 	var vol_box := VBoxContainer.new()
 	var bgm_l := Label.new(); bgm_l.text = "🎵 ระดับเสียงเพลง BGM: %d%%" % int(AudioManager.bgm_volume * 100.0)
 	var bgm_s := HSlider.new(); bgm_s.min_value = 0.0; bgm_s.max_value = 100.0; bgm_s.value = AudioManager.bgm_volume * 100.0
-	bgm_s.value_changed.connect(func(v: float): AudioManager.bgm_volume = v / 100.0; bgm_l.text = "🎵 ระดับเสียงเพลง BGM: %d%%" % int(v))
+	bgm_s.value_changed.connect(func(v: float): AudioManager.bgm_volume = v / 100.0; bgm_l.text = "🎵 ระดับเสียงเพลง BGM: %d%%" % int(v); GameState.save_settings())
 	var sfx_l := Label.new(); sfx_l.text = "🔊 ระดับเสียงเอฟเฟกต์/บรรยากาศ (SFX): %d%%" % int(AudioManager.sfx_volume * 100.0)
 	var sfx_s := HSlider.new(); sfx_s.min_value = 0.0; sfx_s.max_value = 100.0; sfx_s.value = AudioManager.sfx_volume * 100.0
-	sfx_s.value_changed.connect(func(v: float): AudioManager.sfx_volume = v / 100.0; sfx_l.text = "🔊 ระดับเสียงเอฟเฟกต์/บรรยากาศ (SFX): %d%%" % int(v))
+	sfx_s.value_changed.connect(func(v: float): AudioManager.sfx_volume = v / 100.0; sfx_l.text = "🔊 ระดับเสียงเอฟเฟกต์/บรรยากาศ (SFX): %d%%" % int(v); GameState.save_settings())
 	vol_box.add_child(bgm_l); vol_box.add_child(bgm_s); vol_box.add_child(sfx_l); vol_box.add_child(sfx_s)
 	list_vb.add_child(vol_box)
 	for n in [1, 2, 3]:
@@ -355,7 +356,7 @@ func open_jobs_modal() -> void:
 func open_shop_modal(tab: String = "bag") -> void:
 	_clear()
 	title_lbl.text = "ร้านค้า กระเป๋า เมล็ดพันธุ์ ตลาดกลางคืน & แต่งบ้าน (มีเงิน %d G)" % GameState.gold
-	var tabs := [["bag", "กระเป๋า"], ["seeds", "🌱 เมล็ดพันธุ์"], ["decor", "แต่งบ้าน & ชั้น 2"], ["nightmarket", "🏮 ตลาดกลางคืน"], ["shop", "ร้านชำ"], ["bakery", "ขนมปัง"], ["tavern", "โรงเตี๊ยม"], ["cottage", "สมุนไพร"], ["smithy", "ตีเหล็ก"]]
+	var tabs := [["bag", "กระเป๋า"], ["seeds", "🌱 ฟาร์ม & ไอเทมระดับตำนาน"], ["decor", "แต่งบ้าน & ชั้น 2"], ["nightmarket", "🏮 ตลาดกลางคืน"], ["shop", "ร้านชำ"], ["bakery", "ขนมปัง"], ["tavern", "โรงเตี๊ยม"], ["cottage", "สมุนไพร"], ["smithy", "ตีเหล็ก"]]
 	for t in tabs:
 		var b := Button.new(); b.text = t[1]
 		b.pressed.connect(func(): open_shop_modal(t[0]))
@@ -363,8 +364,72 @@ func open_shop_modal(tab: String = "bag") -> void:
 
 	if tab == "seeds":
 		_add_row(
-			"🌱 แปลงสวนมานาข้างบ้านพัก (18 แปลง)",
-			"เดินไปกด [E] ที่แปลงดินข้างบ้านเพื่อ พรวนดิน -> ปลูกเมล็ดที่เลือก -> รดน้ำ (วันฝนตกรดให้อัตโนมัติ!) -> เก็บเกี่ยวผลผลิต!"
+			"🌱 แปลงสวนมานาข้างบ้านพัก (18 แปลง) • กด [Q] สลับเมล็ดพันธุ์ด่วน!",
+			"เดินไปกด [E] ที่แปลงดินข้างบ้านเพื่อ พรวนดิน -> ปลูกเมล็ดที่เลือก -> รดน้ำ -> เก็บเกี่ยวผลผลิต!"
+		)
+		_add_row(
+			"🚿 บัวรดน้ำทองคำ Lv.2 (รดน้ำกว้าง 3×3 ช่อง!) %s" % ("[มีแล้ว!]" if GameState.water_can_level >= 2 else ""),
+			"อัปเกรดบัวรดน้ำให้รดน้ำพืชได้พร้อมกัน 3×3 แปลงในครั้งเดียว!",
+			"ใช้งานอยู่" if GameState.water_can_level >= 2 else "ซื้อ 350G",
+			func():
+				if GameState.gold < 350:
+					GameState.toast_requested.emit("เงินไม่พอซื้อบัวรดน้ำทองคำ (350 G)!")
+					return
+				GameState.gold -= 350
+				GameState.water_can_level = 2
+				AudioManager.play_sfx("quest")
+				GameState.save_slot(GameState.active_slot, true)
+				open_shop_modal("seeds"),
+			GameState.water_can_level < 2
+		)
+		_add_row(
+			"💎 คริสตัลสปริงเกลอร์มานา (รดน้ำอัตโนมัติทั้ง 18 แปลงทุกเช้า!) %s" % ("[ติดตั้งแล้ว!]" if GameState.has_mana_sprinkler else ""),
+			"ติดตั้งคริสตัลเวทมนตร์กลางสวนมานา รดน้ำให้ทุกแปลงอัตโนมัติทุกเช้าทันที!",
+			"ติดตั้งแล้ว" if GameState.has_mana_sprinkler else "ซื้อ 450G",
+			func():
+				if GameState.gold < 450:
+					GameState.toast_requested.emit("เงินไม่พอซื้อคริสตัลสปริงเกลอร์ (450 G)!")
+					return
+				GameState.gold -= 450
+				GameState.has_mana_sprinkler = true
+				AudioManager.play_sfx("quest")
+				GameState.save_slot(GameState.active_slot, true)
+				open_shop_modal("seeds"),
+			not GameState.has_mana_sprinkler
+		)
+		_add_row(
+			"🦄 อาชาแสงดารา (Starlight Mount — กด [V] ขี่กลางแจ้งเร็วขึ้น +45%!) %s" % ("[เป็นเจ้าของแล้ว!]" if GameState.has_starlight_mount else ""),
+			"สัตว์ขี่ในตำนานแห่งหุบเขาเอเธลการ์ด เปล่งประกายสีทองและวิ่งเร็วขึ้น +45% ทั่วแผนที่!",
+			"พร้อมขี่ [V]" if GameState.has_starlight_mount else "ซื้อ 2,500G",
+			func():
+				if GameState.gold < 2500:
+					GameState.toast_requested.emit("เงินไม่พอซื้ออาชาแสงดารา (2,500 G)!")
+					return
+				GameState.gold -= 2500
+				GameState.has_starlight_mount = true
+				GameState.mount_active = true
+				AudioManager.play_sfx("quest")
+				GameState.check_achievements()
+				GameState.save_slot(GameState.active_slot, true)
+				hero_customized.emit()
+				open_shop_modal("seeds"),
+			not GameState.has_starlight_mount
+		)
+		_add_row(
+			"🏆 อนุสาวรีย์ทองคำ 8 เผ่าพันธุ์ (Golden Monument — โบนัส XP สเตตัส +15% ถาวร!) %s" % ("[สร้างเสร็จแล้ว!]" if GameState.monument_built else ""),
+			"สร้างอนุสาวรีย์ทองคำกลางจัตุรัสต้นไม้โลก รับโบนัส XP สเตตัสชีวิตทั้ง 4 ด้าน +15% ถาวร & ปลดล็อกรางวัลระดับตำนาน!",
+			"สร้างแล้ว" if GameState.monument_built else "สร้าง 5,000G",
+			func():
+				if GameState.gold < 5000:
+					GameState.toast_requested.emit("เงินไม่พอสร้างอนุสาวรีย์ทองคำ (5,000 G)!")
+					return
+				GameState.gold -= 5000
+				GameState.monument_built = true
+				AudioManager.play_sfx("quest")
+				GameState.check_achievements()
+				GameState.save_slot(GameState.active_slot, true)
+				open_shop_modal("seeds"),
+			not GameState.monument_built
 		)
 		for cr in GameData.CROPS:
 			var cid := str(cr["id"])
@@ -608,7 +673,7 @@ func open_quests_and_town_modal(tab: String = "quests") -> void:
 		["museum", "พิพิธภัณฑ์ (12)"],
 		["ruins", "ดันเจี้ยน & บอส B4"],
 		["calendar", "📅 ปฏิทิน/เทศกาล"],
-		["achieve", "🏆 รางวัล (24)"],
+		["achieve", "🏆 รางวัล (26)"],
 		["theater", "🎬 โรงละครคัตซีน (75)"]
 	]
 	for t in all_tabs:

@@ -1,7 +1,7 @@
 extends PanelContainer
 class_name WorldMapModal
-## Full-Screen Interactive Stardew-Style Valley Map ([M]) with Click-to-Warp
-## to all 6 Houses, 5 Landmarks, Under-Root Ancient Ruins, and Live NPC Tracking!
+## Full-Screen Interactive Stardew-Style Valley Map ([M]) with Cached Map Texture,
+## Click-to-Warp to all 6 Houses, 5 Landmarks, Under-Root Ancient Ruins (B1–B4), and Live NPC Tracking!
 
 signal warp_requested(scene_id: String, tile: Vector2i, label: String)
 
@@ -9,6 +9,7 @@ var world_ref: ValleyWorld
 var map_canvas: Control
 var info_lbl: Label
 var pins: Array[Dictionary] = []
+var _map_tex: ImageTexture
 
 func _ready() -> void:
 	visible = false
@@ -43,10 +44,28 @@ func _ready() -> void:
 
 func open_map(world: ValleyWorld) -> void:
 	world_ref = world
+	if _map_tex == null:
+		_bake_map_texture()
 	_rebuild_pins()
 	visible = true
 	AudioManager.play_sfx("talk")
 	map_canvas.queue_redraw()
+
+func _bake_map_texture() -> void:
+	if not world_ref:
+		return
+	var img := Image.create(84, 64, false, Image.FORMAT_RGB8)
+	for y in range(64):
+		for x in range(84):
+			var t := world_ref.map_grid[y * 84 + x]
+			var col := Color("#65a34e")
+			if t == 8: col = Color("#2d5a27")
+			elif t == 1: col = Color("#e2cfa8")
+			elif t == 2: col = Color("#c99a5b")
+			elif t == 3: col = Color("#2563eb")
+			elif t == 4: col = Color("#9a5520")
+			img.set_pixel(x, y, col)
+	_map_tex = ImageTexture.create_from_image(img)
 
 func _tile_to_px(tx: float, ty: float) -> Vector2:
 	var sz := map_canvas.size if map_canvas.size.x > 10 else Vector2(840, 470)
@@ -63,7 +82,7 @@ func _rebuild_pins() -> void:
 		})
 	pins.append({
 		"kind": "warp", "scene": "ruins_b1", "tile": Vector2i(10, 11),
-		"pos": _tile_to_px(39.0, 27.0), "label": "โบราณสถานใต้รากไม้โลก (B1-B3)", "color": Color("#38bdf8")
+		"pos": _tile_to_px(39.0, 27.0), "label": "โบราณสถานใต้รากไม้โลก (B1–B4)", "color": Color("#38bdf8")
 	})
 	pins.append({
 		"kind": "warp", "scene": "outdoor", "tile": Vector2i(42, 46),
@@ -88,13 +107,11 @@ func _rebuild_pins() -> void:
 
 func _on_map_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		_rebuild_pins()
 		for p in pins:
 			if p["pos"].distance_to(event.position) < 20.0:
 				info_lbl.text = "เป้าหมาย: %s (คลิกซ้ายเพื่อเดินทาง/นำทาง)" % p["label"]
 				return
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_rebuild_pins()
 		for p in pins:
 			if p["pos"].distance_to(event.position) < 22.0:
 				visible = false
@@ -108,19 +125,8 @@ func _on_map_input(event: InputEvent) -> void:
 func _draw_map() -> void:
 	if not world_ref: return
 	var sz := map_canvas.size
-	var cw := sz.x / 84.0
-	var ch := sz.y / 64.0
-	for y in range(64):
-		for x in range(84):
-			var t := world_ref.map_grid[y * 84 + x]
-			var col := Color("#65a34e")
-			if t == 8: col = Color("#2d5a27")
-			elif t == 1: col = Color("#e2cfa8")
-			elif t == 2: col = Color("#c99a5b")
-			elif t == 3: col = Color("#2563eb")
-			elif t == 4: col = Color("#9a5520")
-			map_canvas.draw_rect(Rect2(x * cw, y * ch, ceilf(cw), ceilf(ch)), col)
-	_rebuild_pins()
+	if _map_tex:
+		map_canvas.draw_texture_rect(_map_tex, Rect2(Vector2.ZERO, sz), false)
 	var font := GameData.font_bold
 	for p in pins:
 		var r := 7.0 if p["kind"] == "npc" else 12.0

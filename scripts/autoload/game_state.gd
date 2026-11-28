@@ -86,6 +86,11 @@ var forage_spots: Array = []
 var farm_plots: Dictionary = {} # "x,y" -> {"tilled": bool, "crop_id": String, "days": int, "watered": bool}
 var seeds: Dictionary = {}
 var selected_seed_id: String = "crop_sunwheat"
+var has_mana_sprinkler: bool = false
+var water_can_level: int = 1
+var has_starlight_mount: bool = false
+var mount_active: bool = false
+var monument_built: bool = false
 
 var night_lantern_on: bool = false
 var night_lantern_steps: int = 0
@@ -102,10 +107,29 @@ var crops_harvested: int = 0
 var compass_npc_id: String = ""
 var daily_log: Dictionary = {"gold": 0, "hearts": 0, "stats": 0, "items": 0}
 
+const SETTINGS_PATH := "user://aethelgard_settings.cfg"
+
 func _ready() -> void:
+	load_settings()
 	reset_to_new_game()
 	if has_save_slot(1):
 		load_slot(1, false)
+
+func save_settings() -> void:
+	var cfg := ConfigFile.new()
+	cfg.set_value("audio", "enabled", AudioManager.audio_enabled)
+	cfg.set_value("audio", "bgm_volume", AudioManager.bgm_volume)
+	cfg.set_value("audio", "sfx_volume", AudioManager.sfx_volume)
+	cfg.set_value("graphics", "use_hd_sprites", GameData.use_hd_sprites)
+	cfg.save(SETTINGS_PATH)
+
+func load_settings() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(SETTINGS_PATH) == OK:
+		AudioManager.audio_enabled = bool(cfg.get_value("audio", "enabled", true))
+		AudioManager.bgm_volume = float(cfg.get_value("audio", "bgm_volume", 0.75))
+		AudioManager.sfx_volume = float(cfg.get_value("audio", "sfx_volume", 0.85))
+		GameData.use_hd_sprites = bool(cfg.get_value("graphics", "use_hd_sprites", false))
 
 func reset_to_new_game() -> void:
 	day = 1
@@ -115,6 +139,11 @@ func reset_to_new_game() -> void:
 	player_name = "อาริน"
 	cottage_name = "กระท่อมรากไม้ทอง"
 	fav_thing = "ครัวซองต์น้ำผึ้ง"
+	has_mana_sprinkler = false
+	water_can_level = 1
+	has_starlight_mount = false
+	mount_active = false
+	monument_built = false
 	hero_custom = {"base_id": "01_ren", "race_key": "human", "hue": 0.0, "sat": 100.0, "val": 100.0, "skin": "none"}
 	owned_accessories = {"acc_none": true, "acc_straw_hat": true}
 	equipped_accessory = "acc_straw_hat"
@@ -260,6 +289,8 @@ func save_slot(slot_num: int = active_slot, silent: bool = false) -> void:
 		"night_lantern_steps": night_lantern_steps, "visited_tavern_night": visited_tavern_night,
 		"festival_joined_day": festival_joined_day,
 		"farm_plots": farm_plots, "seeds": seeds, "selected_seed_id": selected_seed_id,
+		"has_mana_sprinkler": has_mana_sprinkler, "water_can_level": water_can_level,
+		"has_starlight_mount": has_starlight_mount, "monument_built": monument_built,
 		"crops_harvested": crops_harvested, "delivered_mail_ids": delivered_mail_ids,
 		"decor_used_day": decor_used_day, "landmark_used_day": landmark_used_day,
 		"mailbox": mailbox, "total_shifts": total_shifts, "s_rank_jobs": s_rank_jobs,
@@ -333,6 +364,10 @@ func load_slot(slot_num: int, announce: bool = true) -> bool:
 	if d.has("farm_plots"): farm_plots.merge(d["farm_plots"], true)
 	if d.has("seeds"): seeds = d["seeds"].duplicate(true)
 	selected_seed_id = str(d.get("selected_seed_id", "crop_sunwheat"))
+	has_mana_sprinkler = bool(d.get("has_mana_sprinkler", false))
+	water_can_level = int(d.get("water_can_level", 1))
+	has_starlight_mount = bool(d.get("has_starlight_mount", false))
+	monument_built = bool(d.get("monument_built", false))
 	crops_harvested = int(d.get("crops_harvested", 0))
 	if d.has("delivered_mail_ids"): delivered_mail_ids.merge(d["delivered_mail_ids"], true)
 	night_lantern_steps = int(d.get("night_lantern_steps", 0))
@@ -422,6 +457,8 @@ func add_item(item_id: String, qty: int = 1) -> void:
 
 func add_stat_xp(gains: Dictionary) -> void:
 	var mult := 1.1 if str(hero_custom.get("race_key", "human")) == "human" else 1.0
+	if monument_built:
+		mult *= 1.15
 	for k in gains.keys():
 		var g := maxi(1, int(round(float(gains[k]) * mult)))
 		stats[k] = int(stats.get(k, 0)) + g
@@ -910,7 +947,9 @@ func check_achievements() -> void:
 		"ach_ruins_b1": bool(ruins_state.get("ruins_b1", {}).get("solved", false)),
 		"ach_ruins_b3": bool(ruins_state.get("ruins_b3", {}).get("solved", false)),
 		"ach_boss_b4": boss_purified,
-		"ach_chronicle": chronicles_done.size() >= 5
+		"ach_chronicle": chronicles_done.size() >= 5,
+		"ach_farmer": crops_harvested >= 6,
+		"ach_endgame": has_starlight_mount or monument_built
 	}
 	for a in GameData.ACHIEVEMENTS:
 		var aid := str(a["id"])
@@ -919,7 +958,21 @@ func check_achievements() -> void:
 			AudioManager.play_sfx("quest")
 			toast_requested.emit("🏆 ปลดล็อกความสำเร็จ: %s!" % str(a["title_th"]))
 
-# --- MANA GARDEN FARMING SYSTEM (18-TILE PLOT BESIDE FARMHOUSE) ---
+func cycle_selected_seed() -> String:
+	var owned: Array[String] = []
+	for cr in GameData.CROPS:
+		var cid := str(cr["id"])
+		if int(seeds.get(cid, 0)) > 0:
+			owned.append(cid)
+	if owned.is_empty():
+		return "ไม่มีเมล็ดพันธุ์ในกระเป๋า! ซื้อเพิ่มได้ที่แท็บ '🌱 เมล็ดพันธุ์'"
+	var idx := owned.find(selected_seed_id)
+	selected_seed_id = owned[(idx + 1) % owned.size()]
+	var cdef := GameData.get_crop_def(selected_seed_id)
+	AudioManager.play_sfx("talk")
+	return "🌱 เปลี่ยนเมล็ดในมือเป็น: %s (เหลือ %d เมล็ด)" % [str(cdef["name_th"]), int(seeds[selected_seed_id])]
+
+# --- MANA GARDEN FARMING SYSTEM (18-TILE PLOT + 3x3 GOLDEN CAN + CRYSTAL SPRINKLER) ---
 func interact_farm_plot(tx: int, ty: int) -> String:
 	var key := "%d,%d" % [tx, ty]
 	if not farm_plots.has(key):
@@ -945,6 +998,17 @@ func interact_farm_plot(tx: int, ty: int) -> String:
 			if stamina < cost:
 				return "พลังงานไม่พอรดน้ำ!"
 			stamina -= cost
+			if water_can_level >= 2:
+				var cnt := 0
+				for dy in range(-1, 2):
+					for dx in range(-1, 2):
+						var nk := "%d,%d" % [tx + dx, ty + dy]
+						if farm_plots.has(nk):
+							farm_plots[nk]["watered"] = true
+							cnt += 1
+				AudioManager.play_sfx("splash")
+				hud_updated.emit()
+				return "💧 บัวทองคำรดน้ำ 3×3 สำเร็จ (%d แปลง)!" % cnt
 			pl["watered"] = true
 			AudioManager.play_sfx("splash")
 			hud_updated.emit()
@@ -958,8 +1022,7 @@ func interact_farm_plot(tx: int, ty: int) -> String:
 		pl["tilled"] = true
 		AudioManager.play_sfx("door")
 		hud_updated.emit()
-		return "⛏️ พรวนดินแปลงสวนมานาเรียบร้อย! กด [E] อีกครั้งเพื่อหว่านเมล็ด"
-	# Plant selected seed (or auto-pick any owned seed)
+		return "⛏️ พรวนดินแปลงสวนมานาเรียบร้อย! กด [E] อีกครั้งเพื่อหว่านเมล็ด (กด [Q] สลับเมล็ด)"
 	var use_seed := selected_seed_id
 	if int(seeds.get(use_seed, 0)) <= 0:
 		use_seed = ""
@@ -975,10 +1038,10 @@ func interact_farm_plot(tx: int, ty: int) -> String:
 		seeds.erase(use_seed)
 	pl["crop_id"] = use_seed
 	pl["days"] = 0
-	pl["watered"] = (weather == "rainy")
+	pl["watered"] = (weather == "rainy" or has_mana_sprinkler)
 	AudioManager.play_sfx("sparkle")
 	hud_updated.emit()
-	return "🌱 ปลูกเมล็ด '%s' แล้ว! %s" % [str(GameData.get_crop_def(use_seed)["name_th"]), "(ฝนตกรดน้ำให้แล้ว!)" if bool(pl["watered"]) else "(กด [E] รดน้ำได้เลย)"]
+	return "🌱 ปลูกเมล็ด '%s' แล้ว! %s" % [str(GameData.get_crop_def(use_seed)["name_th"]), "(รดน้ำอัตโนมัติแล้ว!)" if bool(pl["watered"]) else "(กด [E] รดน้ำได้เลย)"]
 
 func _deliver_scheduled_mail() -> void:
 	var scheduled := [
@@ -1016,13 +1079,12 @@ func start_next_morning() -> void:
 	for k in relations.keys():
 		relations[k]["talked_today"] = false
 		relations[k]["gifted_today"] = false
-	# Grow watered Mana Garden crops & auto-water on rainy mornings!
+	# Grow watered Mana Garden crops & auto-water on rainy mornings or with Crystal Sprinkler!
 	for fkey in farm_plots.keys():
 		var pl: Dictionary = farm_plots[fkey]
-		if str(pl.get("crop_id", "")) != "":
-			if bool(pl.get("watered", false)):
-				pl["days"] = int(pl.get("days", 0)) + 1
-			pl["watered"] = (weather == "rainy")
+		if str(pl.get("crop_id", "")) != "" and bool(pl.get("watered", false)):
+			pl["days"] = int(pl.get("days", 0)) + 1
+		pl["watered"] = (weather == "rainy" or has_mana_sprinkler)
 	daily_log = {"gold": 0, "hearts": 0, "stats": 0, "items": 0}
 	spawn_daily_forage()
 	_deliver_scheduled_mail()

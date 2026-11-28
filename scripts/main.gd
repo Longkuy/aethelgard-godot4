@@ -101,6 +101,7 @@ func _build_hud_and_modals() -> void:
 	var b_cust := Button.new(); b_cust.text = "👒 แต่งตัว/ชุด"; b_cust.pressed.connect(func(): uni_modal.open_protagonist_creator("hero"))
 	var b_aud := Button.new(); b_aud.text = "เสียง BGM"; b_aud.pressed.connect(func():
 		AudioManager.audio_enabled = not AudioManager.audio_enabled
+		GameState.save_settings()
 		show_toast("เสียงเพลง BGM: %s" % ("เปิด" if AudioManager.audio_enabled else "ปิด"))
 	)
 	var b_save := Button.new(); b_save.text = "เซฟ 3 ช่อง"; b_save.pressed.connect(func(): uni_modal.open_save_slots_modal())
@@ -221,7 +222,7 @@ func _build_hud_and_modals() -> void:
 	t_card.add_child(t_vb)
 
 	var t_head := Label.new()
-	t_head.text = "AETHELGARD: ECHOES OF THE WORLD TREE\nGodot 4 Complete Edition (v7.0 — 284 Sprites • All Systems • 75 Cutscenes)"
+	t_head.text = "AETHELGARD: ECHOES OF THE WORLD TREE\nGodot 4 Complete Edition (v9.0 — 284 Sprites • 26 Achievements • 75 Cutscenes)"
 	t_head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	t_head.add_theme_font_size_override("font_size", 22)
 	t_vb.add_child(t_head)
@@ -416,6 +417,8 @@ func _change_scene(scene_id: String, spawn_tile: Vector2i, save_return: bool = f
 		GameState.return_outdoor_pos = world.player_actor.position + Vector2(0, 18)
 	GameState.home_edit_mode = false
 	home_edit_bar.visible = false
+	if scene_id != "outdoor":
+		GameState.mount_active = false
 	world.clear_click_move()
 	GameState.current_scene = scene_id
 	world.player_actor.position = (Vector2(spawn_tile) + Vector2(0.5, 0.5)) * TILE
@@ -625,12 +628,18 @@ func _find_interaction() -> Dictionary:
 					var dc := Vector2((float(pl["x"]) + float(pl["w"]) * 0.5) * TILE, (float(pl["y"]) + float(pl["h"]) * 0.5) * TILE)
 					if p.distance_to(dc) < 52.0:
 						return {"kind": "decor_act", "act": act, "did": str(pl["id"]), "label": "กด [E] ใช้งาน " + str(d["label"])}
+		elif sc in ["shop", "bakery", "tavern", "smithy", "cottage"]:
+			var counter_p := Vector2(float(rm["w"]) * 0.5 * TILE, 4.0 * TILE)
+			if p.distance_to(counter_p) < 76.0:
+				return {"kind": "shop_counter", "shop_id": sc, "label": "กด [E] 🛒 ซื้อสินค้าที่เคาน์เตอร์ " + str(rm["name_th"])}
 	return {}
 
 func _execute_interaction() -> void:
 	var ctx := _find_interaction()
 	if ctx.is_empty(): return
 	match str(ctx["kind"]):
+		"shop_counter":
+			uni_modal.open_shop_modal(str(ctx["shop_id"]))
 		"farm_plot":
 			var fmsg := GameState.interact_farm_plot(int(ctx["tx"]), int(ctx["ty"]))
 			if fmsg != "": show_toast(fmsg)
@@ -787,6 +796,19 @@ func _unhandled_input(event: InputEvent) -> void:
 			world.trigger_sacred_pulse()
 		elif event.is_action_pressed("toggle_lantern"):
 			_toggle_lantern()
+		elif event.is_action_pressed("cycle_seed"):
+			var smsg := GameState.cycle_selected_seed()
+			if smsg != "": show_toast(smsg)
+		elif event.is_action_pressed("toggle_mount"):
+			if not GameState.has_starlight_mount:
+				show_toast("🦄 ซื้อ 'อาชาแสงดารา' ได้ที่เมนู [2.ร้านค้า -> ฟาร์ม & ไอเทมระดับตำนาน] (2,500 G)!")
+			elif GameState.current_scene != "outdoor":
+				show_toast("🦄 ขี่อาชาแสงดาราได้เฉพาะพื้นที่กลางแจ้งเท่านั้นนะ!")
+			else:
+				GameState.mount_active = not GameState.mount_active
+				AudioManager.play_sfx("sparkle")
+				world.player_actor.play_hop()
+				show_toast("🦄 เรียกขี่อาชาแสงดารา! (ความเร็ว +45%)" if GameState.mount_active else "🦄 ลงจากหลังอาชาแสงดาราแล้ว")
 		elif event.is_action_pressed("interact"):
 			_execute_interaction()
 
@@ -817,7 +839,7 @@ func _process(delta: float) -> void:
 
 	if GameState.started and not _is_ui_blocking() and not GameState.home_edit_mode:
 		var prev_hr := int(GameState.time_min) / 60
-		GameState.time_min += delta * 1.5
+		GameState.time_min += delta * 1.15
 		if GameState.time_min >= 24.0 * 60.0:
 			_open_day_summary()
 		elif int(GameState.time_min) / 60 != prev_hr:
@@ -839,7 +861,8 @@ func _process(delta: float) -> void:
 		if moving:
 			dir = dir.normalized()
 			var avian_mult := 1.12 if str(GameState.hero_custom.get("race_key", "")) == "avian" else 1.0
-			var spd := (205.0 if sprinting else 135.0) * avian_mult * delta
+			var mount_mult := 1.45 if (GameState.mount_active and GameState.current_scene == "outdoor") else 1.0
+			var spd := (205.0 if sprinting else 135.0) * avian_mult * mount_mult * delta
 			var nx := Vector2(world.player_actor.position.x + dir.x * spd, world.player_actor.position.y)
 			var ny := Vector2(world.player_actor.position.x, world.player_actor.position.y + dir.y * spd)
 			var moved_ok := false

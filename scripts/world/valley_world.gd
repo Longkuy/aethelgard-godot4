@@ -200,10 +200,36 @@ func set_click_move_target(world_pos: Vector2) -> void:
 	if is_point_blocked(world_pos):
 		return
 	click_path.clear()
-	if GameState.current_scene == "outdoor" and _astar != null:
+	var sc := GameState.current_scene
+	if sc == "outdoor" and _astar != null:
 		var from_t := Vector2i(clampi(int(floor(player_actor.position.x / TILE)), 0, MAP_W - 1), clampi(int(floor(player_actor.position.y / TILE)), 0, MAP_H - 1))
 		var to_t := Vector2i(clampi(int(floor(world_pos.x / TILE)), 0, MAP_W - 1), clampi(int(floor(world_pos.y / TILE)), 0, MAP_H - 1))
 		var pts := _astar.get_id_path(from_t, to_t)
+		for i in range(1, pts.size()):
+			click_path.append((Vector2(pts[i]) + Vector2(0.5, 0.5)) * TILE)
+	else:
+		var rw := 14
+		var rh := 11
+		if GameData.RUINS_FLOORS.has(sc):
+			rw = int(GameData.RUINS_FLOORS[sc]["w"])
+			rh = int(GameData.RUINS_FLOORS[sc]["h"])
+		elif INDOORS.has(sc):
+			rw = int(INDOORS[sc]["w"])
+			rh = int(INDOORS[sc]["h"])
+		var local_astar := AStarGrid2D.new()
+		local_astar.region = Rect2i(0, 0, rw, rh)
+		local_astar.cell_size = Vector2(TILE, TILE)
+		local_astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+		local_astar.update()
+		for y in range(rh):
+			for x in range(rw):
+				if is_point_blocked(Vector2((x + 0.5) * TILE, (y + 0.5) * TILE)):
+					local_astar.set_point_solid(Vector2i(x, y), true)
+		var from_t := Vector2i(clampi(int(floor(player_actor.position.x / TILE)), 0, rw - 1), clampi(int(floor(player_actor.position.y / TILE)), 0, rh - 1))
+		var to_t := Vector2i(clampi(int(floor(world_pos.x / TILE)), 0, rw - 1), clampi(int(floor(world_pos.y / TILE)), 0, rh - 1))
+		local_astar.set_point_solid(from_t, false)
+		local_astar.set_point_solid(to_t, false)
+		var pts := local_astar.get_id_path(from_t, to_t)
 		for i in range(1, pts.size()):
 			click_path.append((Vector2(pts[i]) + Vector2(0.5, 0.5)) * TILE)
 	if click_path.is_empty():
@@ -566,8 +592,14 @@ func _draw_ground_and_props() -> void:
 
 	if sc == "outdoor":
 		var s_idx := GameState.get_season_index()
-		for y in range(MAP_H):
-			for x in range(MAP_W):
+		var ptx := int(floor(player_actor.position.x / TILE))
+		var pty := int(floor(player_actor.position.y / TILE))
+		var y0 := maxi(0, pty - 12)
+		var y1 := mini(MAP_H, pty + 13)
+		var x0 := maxi(0, ptx - 18)
+		var x1 := mini(MAP_W, ptx + 19)
+		for y in range(y0, y1):
+			for x in range(x0, x1):
 				var t := map_grid[_idx(x, y)]
 				var dest := Rect2(x * TILE, y * TILE, TILE, TILE)
 				match t:
@@ -598,7 +630,7 @@ func _draw_ground_and_props() -> void:
 		# 18-Tile Mana Garden Farm Plots beside Farmhouse (x=21..26, y=11..13)!
 		ground_drawer.draw_rect(Rect2(21 * TILE - 4, 11 * TILE - 4, 6 * TILE + 8, 3 * TILE + 8), Color("#5c3312"), false, 3.0)
 		if font:
-			ground_drawer.draw_string(font, Vector2(21 * TILE, 11 * TILE - 8), "🌱 สวนมานา [E] พรวน/ปลูก/รดน้ำ", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#fef08a"))
+			ground_drawer.draw_string(font, Vector2(21 * TILE, 11 * TILE - 8), "🌱 สวนมานา [E] ทำสวน • [Q] สลับเมล็ด", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#fef08a"))
 		for fy in range(11, 14):
 			for fx in range(21, 27):
 				var fkey := "%d,%d" % [fx, fy]
@@ -623,11 +655,24 @@ func _draw_ground_and_props() -> void:
 						ground_drawer.draw_circle(pc + Vector2(0, -3), 4.0, Color(str(cdef["color"])))
 					else:
 						ground_drawer.draw_circle(pc, 4.0, Color("#4ade80"))
+		if GameState.has_mana_sprinkler:
+			var spc := Vector2(24.0 * TILE, 12.5 * TILE)
+			ground_drawer.draw_arc(spc, 18.0 + sin(now_sec * 6.0) * 4.0, 0.0, TAU, 24, Color(0.22, 0.74, 0.97, 0.48), 2.5)
+			ground_drawer.draw_circle(spc, 8.0, Color("#0284c7"))
+			ground_drawer.draw_circle(spc, 4.5, Color("#bae6fd"))
 
-		# World Tree Aura + Ruins Portal Archway (World Tree, Buildings, Landmarks & Trees are now Y-sorted inside entities_root!)
+		# World Tree Aura + Ruins Portal Archway + Golden Eight-Tribes Monument!
 		var wtc := Vector2(42.0 * TILE, 27.5 * TILE)
 		var seals := GameState.get_awakened_seal_count()
 		ground_drawer.draw_circle(wtc + Vector2(0, -34), 128.0, Color(1.0, 0.9, 0.35, 0.16 + seals * 0.03))
+		if GameState.monument_built:
+			var mp := Vector2(46.5 * TILE, 26.5 * TILE)
+			ground_drawer.draw_circle(mp, 36.0 + sin(now_sec * 3.0) * 4.0, Color(1.0, 0.88, 0.25, 0.28))
+			ground_drawer.draw_rect(Rect2(mp.x - 14, mp.y - 6, 28, 14), Color("#78350f"))
+			ground_drawer.draw_colored_polygon(PackedVector2Array([Vector2(mp.x - 9, mp.y - 6), Vector2(mp.x + 9, mp.y - 6), Vector2(mp.x + 5, mp.y - 36), Vector2(mp.x, mp.y - 46), Vector2(mp.x - 5, mp.y - 36)]), Color("#facc15"))
+			ground_drawer.draw_circle(mp + Vector2(0, -28), 5.0, Color("#fef9c3"))
+			if font:
+				ground_drawer.draw_string(font, mp + Vector2(-46, -50), "🏆 อนุสาวรีย์ 8 เผ่า (+15% XP)", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#fde047"))
 		var rpos := Vector2((RUINS_PORTAL_TILE.x + 0.5) * TILE, (RUINS_PORTAL_TILE.y + 0.5) * TILE)
 		ground_drawer.draw_rect(Rect2(rpos.x - 15, rpos.y - 24, 30, 28), Color("#1e293b"))
 		ground_drawer.draw_rect(Rect2(rpos.x - 15, rpos.y - 24, 30, 28), Color("#38bdf8"), false, 2.5)
@@ -794,6 +839,55 @@ func _draw_ground_and_props() -> void:
 			ground_drawer.draw_rect(lbed, Color("#78350f"))
 			ground_drawer.draw_rect(Rect2(lbed.position + Vector2(5, 24), Vector2(lbed.size.x - 10, lbed.size.y - 30)), Color("#e11d48"))
 			ground_drawer.draw_rect(Rect2(lbed.position + Vector2(8, 6), Vector2(lbed.size.x - 16, 16)), Color("#fef3c7"))
+		elif sc in ["shop", "bakery", "tavern", "smithy", "cottage"]:
+			# Shared Shop Counter at top-center (interactive via [E]!)
+			var cx := rw * 0.5
+			ground_drawer.draw_rect(Rect2(cx - 88, 2.6 * TILE, 176, 30), Color("#78350f"))
+			ground_drawer.draw_rect(Rect2(cx - 84, 2.6 * TILE + 4, 168, 22), Color("#b45309"))
+			ground_drawer.draw_rect(Rect2(cx - 88, 2.6 * TILE, 176, 30), Color("#fde68a"), false, 2.0)
+			if font:
+				ground_drawer.draw_string(font, Vector2(cx - 56, 2.6 * TILE + 19), "🛒 เคาน์เตอร์ร้าน [E]", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#fffbeb"))
+			match sc:
+				"shop":
+					for sx in [2, 10]:
+						ground_drawer.draw_rect(Rect2(sx * TILE, 3.2 * TILE, 2 * TILE, 3.5 * TILE), Color("#92400e"))
+						for r_i in range(4):
+							ground_drawer.draw_rect(Rect2(sx * TILE + 6, 3.4 * TILE + r_i * 24, 2 * TILE - 12, 10), [Color("#ef4444"), Color("#22c55e"), Color("#38bdf8"), Color("#facc15")][r_i])
+				"bakery":
+					# Warm Brick Oven + Bread Display Case
+					ground_drawer.draw_rect(Rect2(1.5 * TILE, 2.4 * TILE, 2.5 * TILE, 2.2 * TILE), Color("#9a3412"))
+					ground_drawer.draw_circle(Vector2(2.75 * TILE, 3.7 * TILE), 18.0 + sin(now_sec * 6.0) * 2.0, Color("#f97316"))
+					ground_drawer.draw_circle(Vector2(2.75 * TILE, 3.7 * TILE), 10.0, Color("#fef08a"))
+					ground_drawer.draw_rect(Rect2(9.5 * TILE, 4.5 * TILE, 2.8 * TILE, 1.8 * TILE), Color("#fde68a"))
+					for bi in range(4):
+						ground_drawer.draw_circle(Vector2(10.0 * TILE + bi * 18, 5.4 * TILE), 7.0, Color("#d97706"))
+				"tavern":
+					# Cozy Oak Tables + Cider Barrels
+					for tx in [2.5, 11.5]:
+						ground_drawer.draw_circle(Vector2(tx * TILE, 6.2 * TILE), 22.0, Color("#78350f"))
+						ground_drawer.draw_circle(Vector2(tx * TILE, 6.2 * TILE), 18.0, Color("#92400e"))
+						ground_drawer.draw_circle(Vector2(tx * TILE + 4, 6.0 * TILE), 4.0, Color("#fde047"))
+					for bx in [1.8, 3.0, 12.2]:
+						ground_drawer.draw_circle(Vector2(bx * TILE, 3.2 * TILE), 13.0, Color("#5c3312"))
+						ground_drawer.draw_arc(Vector2(bx * TILE, 3.2 * TILE), 13.0, 0.0, TAU, 16, Color("#94a3b8"), 2.0)
+				"smithy":
+					# Glowing Forge Hearth + Iron Anvil + Weapon Rack
+					ground_drawer.draw_rect(Rect2(1.5 * TILE, 2.3 * TILE, 2.6 * TILE, 2.2 * TILE), Color("#334155"))
+					ground_drawer.draw_circle(Vector2(2.8 * TILE, 3.5 * TILE), 19.0 + sin(now_sec * 8.0) * 3.0, Color("#ef4444"))
+					ground_drawer.draw_circle(Vector2(2.8 * TILE, 3.5 * TILE), 11.0, Color("#fde047"))
+					ground_drawer.draw_rect(Rect2(2.2 * TILE, 5.8 * TILE, 1.5 * TILE, 1.0 * TILE), Color("#475569"))
+					ground_drawer.draw_rect(Rect2(10.2 * TILE, 3.2 * TILE, 1.8 * TILE, 3.0 * TILE), Color("#451a03"))
+					ground_drawer.draw_line(Vector2(10.6 * TILE, 3.6 * TILE), Vector2(10.6 * TILE, 5.8 * TILE), Color("#cbd5e1"), 3.0)
+					ground_drawer.draw_line(Vector2(11.4 * TILE, 3.6 * TILE), Vector2(11.4 * TILE, 5.8 * TILE), Color("#38bdf8"), 3.0)
+				"cottage":
+					# Bubbling Emerald Alchemy Cauldron + Herb Racks
+					var cap := Vector2(2.8 * TILE, 4.6 * TILE)
+					ground_drawer.draw_circle(cap, 20.0, Color("#1e293b"))
+					ground_drawer.draw_circle(cap, 14.0, Color("#10b981"))
+					ground_drawer.draw_circle(cap + Vector2(sin(now_sec * 3.0) * 4.0, -4.0), 4.0, Color("#a7f3d0"))
+					ground_drawer.draw_rect(Rect2(9.2 * TILE, 3.2 * TILE, 2.2 * TILE, 3.2 * TILE), Color("#3f6212"))
+					for hi in range(3):
+						ground_drawer.draw_circle(Vector2(10.3 * TILE, 3.8 * TILE + hi * 24), 8.0, [Color("#c084fc"), Color("#38bdf8"), Color("#4ade80")][hi])
 
 		if sc in ["farmhouse", "farmhouse_upstairs"]:
 			for p in GameState.decor_placed:

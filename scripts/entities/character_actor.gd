@@ -121,11 +121,13 @@ func update_actor(delta: float, moving: bool, sprinting: bool = false) -> void:
 			anim_mode = "idle"
 		anim_t += delta * 4.5
 
+	var mounted := is_player and GameState.mount_active and GameState.current_scene == "outdoor"
 	var hop_y := -absf(sin((_hop_t / 0.36) * PI)) * 12.0 if _hop_t > 0.0 else 0.0
+	var mount_y := (-8.0 + sin(anim_t * 2.4) * 2.0) if mounted else 0.0
 	if sprite:
-		sprite.position.y = -22.0 + hop_y
+		sprite.position.y = -22.0 + hop_y + mount_y
 	if overlay_drawer:
-		overlay_drawer.position.y = hop_y
+		overlay_drawer.position.y = hop_y + mount_y
 		overlay_drawer.queue_redraw()
 
 	if badge_label:
@@ -168,6 +170,17 @@ func _draw() -> void:
 	draw_circle(Vector2(0, 3), 11.0, Color(0, 0, 0, 0.26))
 	if is_player:
 		var now_s := Time.get_ticks_msec() / 1000.0
+		if GameState.mount_active and GameState.current_scene == "outdoor":
+			var face := -1.0 if dir_row == 1 else 1.0
+			var gallop := sin(now_s * 14.0) * 3.0 if anim_mode == "walk" else 0.0
+			draw_circle(Vector2(0, -4), 22.0 + sin(now_s * 5.0) * 2.0, Color(1.0, 0.92, 0.42, 0.22))
+			draw_rect(Rect2(-15, -15, 30, 13), Color("#fef3c7"))
+			draw_rect(Rect2(-15, -15, 30, 13), Color("#f59e0b"), false, 1.8)
+			draw_circle(Vector2(face * 15.0, -19.0), 6.5, Color("#fffbeb"))
+			draw_line(Vector2(face * 17.0, -24.0), Vector2(face * 23.0, -31.0), Color("#fde047"), 2.5)
+			draw_line(Vector2(-10, -2), Vector2(-10 + gallop, 6), Color("#d97706"), 3.0)
+			draw_line(Vector2(10, -2), Vector2(10 - gallop, 6), Color("#d97706"), 3.0)
+			draw_line(Vector2(-face * 15.0, -11.0), Vector2(-face * 22.0, -6.0 + gallop * 0.5), Color("#facc15"), 3.0)
 		if GameState.night_lantern_on:
 			draw_circle(Vector2(0, -14), 56.0 + sin(now_s * 4.5) * 4.0, Color(1.0, 0.85, 0.35, 0.16))
 			draw_circle(Vector2(10, -16), 5.0, Color(1.0, 0.94, 0.55, 0.9))

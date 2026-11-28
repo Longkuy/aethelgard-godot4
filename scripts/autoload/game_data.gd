@@ -92,7 +92,9 @@ const ACHIEVEMENTS := [
 	{"id": "ach_ruins_b1", "title_th": "ผู้ไขปริศนาเสาแสง", "desc_th": "ปลดผนึกเสาปริซึมโบราณสถานชั้น B1 สำเร็จ"},
 	{"id": "ach_ruins_b3", "title_th": "ผู้ค้นพบแหวนบรรพกาล", "desc_th": "ปลดผนึกชั้น B3 โถงหัวใจบรรพกาลสำเร็จ"},
 	{"id": "ach_boss_b4", "title_th": "ผู้ชำระล้างรากไม้ต้องสาป", "desc_th": "ปราบหมอกมืดและชำระล้างบอสผู้พิทักษ์ชั้น B4 สำเร็จ!"},
-	{"id": "ach_chronicle", "title_th": "ผู้จารึกพงศาวดาร", "desc_th": "เล่นเนื้อเรื่องพงศาวดารต้นไม้โลกผ่าน 5 บท"}
+	{"id": "ach_chronicle", "title_th": "ผู้จารึกพงศาวดาร", "desc_th": "เล่นเนื้อเรื่องพงศาวดารต้นไม้โลกผ่าน 5 บท"},
+	{"id": "ach_farmer", "title_th": "เกษตรกรสวนมานา", "desc_th": "ปลูกและเก็บเกี่ยวพืชมานาข้างบ้านครบ 6 ต้น"},
+	{"id": "ach_endgame", "title_th": "ตำนานนิรันดร์แห่งเอเธลการ์ด", "desc_th": "ปลดล็อกพาหนะแสงดาว [V] หรือสร้างอนุสาวรีย์ทองคำ 8 เผ่า!"}
 ]
 
 const CROPS := [
@@ -243,7 +245,9 @@ func _setup_input_actions() -> void:
 		"rotate_decor": [KEY_R],
 		"sacred_pulse": [KEY_F],
 		"toggle_lantern": [KEY_9],
-		"skip_cutscene": [KEY_TAB]
+		"skip_cutscene": [KEY_TAB],
+		"cycle_seed": [KEY_Q],
+		"toggle_mount": [KEY_V]
 	}
 	for action in bindings.keys():
 		if not InputMap.has_action(action):
