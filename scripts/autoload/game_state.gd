@@ -5,6 +5,7 @@ extends Node
 
 signal hud_updated
 signal toast_requested(msg: String)
+signal floating_text_requested(text: String, col: Color)
 signal scene_change_requested(scene_id: String, spawn_tile: Vector2i)
 signal day_summary_requested
 signal cutscene_requested(cs_id: String)
@@ -23,12 +24,16 @@ var player_name: String = "อาริน"
 var cottage_name: String = "กระท่อมรากไม้ทอง"
 var fav_thing: String = "ครัวซองต์น้ำผึ้ง"
 var hero_custom: Dictionary = {
-	"base_id": "01_ren",
 	"race_key": "human",
-	"hue": 0.0,
-	"sat": 100.0,
-	"val": 100.0,
-	"skin": "none"
+	"build": "normal",
+	"skin_hex": "#fde2cf",
+	"hair_style": "short_spiky",
+	"hair_hex": "#6b3e26",
+	"eye_style": "round",
+	"eye_hex": "#0284c7",
+	"outfit_style": "adventurer",
+	"shirt_hex": "#15803d",
+	"pants_hex": "#5c3312"
 }
 var owned_accessories: Dictionary = {"acc_none": true, "acc_straw_hat": true}
 var equipped_accessory: String = "acc_straw_hat"
@@ -47,6 +52,7 @@ var stamina: int = 100
 var stats: Dictionary = {"charm": 10, "craft": 10, "wisdom": 10, "courage": 10}
 var inventory: Dictionary = {}
 var relations: Dictionary = {}
+var hangout_today: Dictionary = {}
 var partners: Dictionary = {}
 var spouse_id: String = ""
 var wedding_day: int = 0
@@ -83,11 +89,11 @@ var talked_ever: Dictionary = {}
 var mailbox: Array = []
 var delivered_mail_ids: Dictionary = {}
 var forage_spots: Array = []
-var farm_plots: Dictionary = {} # "x,y" -> {"tilled": bool, "crop_id": String, "days": int, "watered": bool}
-var seeds: Dictionary = {}
-var selected_seed_id: String = "crop_sunwheat"
-var has_mana_sprinkler: bool = false
-var water_can_level: int = 1
+var guild_xp: int = 0
+var guild_completed: int = 0
+var guild_bounties_state: Dictionary = {}
+var guild_bounty_prog: Dictionary = {}
+var has_guild_charm: bool = false
 var has_starlight_mount: bool = false
 var mount_active: bool = false
 var monument_built: bool = false
@@ -103,7 +109,6 @@ var s_rank_jobs: int = 0
 var fish_caught: int = 0
 var foraged_count: int = 0
 var crafted_count: int = 0
-var crops_harvested: int = 0
 var compass_npc_id: String = ""
 var daily_log: Dictionary = {"gold": 0, "hearts": 0, "stats": 0, "items": 0}
 
@@ -139,12 +144,29 @@ func reset_to_new_game() -> void:
 	player_name = "อาริน"
 	cottage_name = "กระท่อมรากไม้ทอง"
 	fav_thing = "ครัวซองต์น้ำผึ้ง"
-	has_mana_sprinkler = false
-	water_can_level = 1
+	guild_xp = 0
+	guild_completed = 0
+	guild_bounties_state.clear()
+	guild_bounty_prog.clear()
+	for gb in GameData.GUILD_BOUNTIES:
+		guild_bounties_state[str(gb["id"])] = "open"
+	guild_bounties_state["gb_patrol_town"] = "accepted"
+	has_guild_charm = false
 	has_starlight_mount = false
 	mount_active = false
 	monument_built = false
-	hero_custom = {"base_id": "01_ren", "race_key": "human", "hue": 0.0, "sat": 100.0, "val": 100.0, "skin": "none"}
+	hero_custom = {
+		"race_key": "human",
+		"build": "normal",
+		"skin_hex": "#fde2cf",
+		"hair_style": "short_spiky",
+		"hair_hex": "#6b3e26",
+		"eye_style": "round",
+		"eye_hex": "#0284c7",
+		"outfit_style": "adventurer",
+		"shirt_hex": "#15803d",
+		"pants_hex": "#5c3312"
+	}
 	owned_accessories = {"acc_none": true, "acc_straw_hat": true}
 	equipped_accessory = "acc_straw_hat"
 	owned_outfits = {"outfit_traveler": true}
@@ -160,16 +182,7 @@ func reset_to_new_game() -> void:
 		"item_emerald_tea": 1,
 		"item_hard_oak": 1
 	}
-	seeds = {
-		"crop_sunwheat": 4,
-		"crop_rootdew": 3,
-		"crop_moonbloom": 2
-	}
-	selected_seed_id = "crop_sunwheat"
-	farm_plots.clear()
-	for fy in range(11, 14):
-		for fx in range(21, 27):
-			farm_plots["%d,%d" % [fx, fy]] = {"tilled": false, "crop_id": "", "days": 0, "watered": false}
+	hangout_today.clear()
 	relations.clear()
 	for c in GameData.characters:
 		relations[c["id"]] = {"xp": 120, "talked_today": false, "gifted_today": false}
@@ -211,13 +224,12 @@ func reset_to_new_game() -> void:
 	visited_tavern_night = false
 	meteor_shower_tonight = false
 	festival_joined_day = 0
-	crops_harvested = 0
 	mailbox = [
 		{
 			"id": "mail_d1",
 			"sender": "คุณปู่บราม (โรงเตี๊ยมตะเกียงมอส)",
 			"title": "ยินดีต้อนรับสู่กระท่อมหลังใหม่!",
-			"body": "ฮ่าๆๆ ยินดีต้อนรับสู่หุบเขาต้นไม้โลกนะ! ข้างบ้านมีแปลงสวนมานาให้ปลูกพืชรดน้ำด้วย ลองกด [E] ปลูกเมล็ด หรือกด [H] แต่งบ้านบนตารางได้เลย!",
+			"body": "ฮ่าๆๆ ยินดีต้อนรับสู่หุบเขาต้นไม้โลกนะ! ข้างบ้านมีป้ายกิลด์นักผจญภัยให้รับภารกิจเลื่อนขั้นแรงก์ F–S ด้วย ลองกด [Q] รับภารกิจ หรือกด [H] แต่งบ้านบนตารางได้เลย!",
 			"gift_id": "item_honey_bread",
 			"gold": 80,
 			"claimed": false
@@ -264,9 +276,8 @@ func read_slot_summary(slot_num: int) -> Dictionary:
 
 func save_slot(slot_num: int = active_slot, silent: bool = false) -> void:
 	active_slot = slot_num
-	hero_custom["race_key"] = GameData.get_char_race_key(str(hero_custom.get("base_id", "01_ren")))
 	var payload := {
-		"version": "7.0",
+		"version": "10.0",
 		"day": day, "time_min": time_min, "weather": weather,
 		"gold": gold, "stamina": stamina,
 		"player_name": player_name, "cottage_name": cottage_name, "fav_thing": fav_thing,
@@ -274,7 +285,7 @@ func save_slot(slot_num: int = active_slot, silent: bool = false) -> void:
 		"owned_accessories": owned_accessories, "equipped_accessory": equipped_accessory,
 		"owned_outfits": owned_outfits, "equipped_outfit": equipped_outfit,
 		"pet_kind": pet_kind,
-		"stats": stats, "inventory": inventory, "relations": relations,
+		"stats": stats, "inventory": inventory, "relations": relations, "hangout_today": hangout_today,
 		"partners": partners, "spouse_id": spouse_id, "wedding_day": wedding_day,
 		"spouse_cared_day": spouse_cared_day, "spouse_dated_day": spouse_dated_day,
 		"child_data": child_data,
@@ -288,10 +299,11 @@ func save_slot(slot_num: int = active_slot, silent: bool = false) -> void:
 		"achievements_unlocked": achievements_unlocked, "talked_ever": talked_ever,
 		"night_lantern_steps": night_lantern_steps, "visited_tavern_night": visited_tavern_night,
 		"festival_joined_day": festival_joined_day,
-		"farm_plots": farm_plots, "seeds": seeds, "selected_seed_id": selected_seed_id,
-		"has_mana_sprinkler": has_mana_sprinkler, "water_can_level": water_can_level,
+		"guild_xp": guild_xp, "guild_completed": guild_completed,
+		"guild_bounties_state": guild_bounties_state, "guild_bounty_prog": guild_bounty_prog,
+		"has_guild_charm": has_guild_charm,
 		"has_starlight_mount": has_starlight_mount, "monument_built": monument_built,
-		"crops_harvested": crops_harvested, "delivered_mail_ids": delivered_mail_ids,
+		"delivered_mail_ids": delivered_mail_ids,
 		"decor_used_day": decor_used_day, "landmark_used_day": landmark_used_day,
 		"mailbox": mailbox, "total_shifts": total_shifts, "s_rank_jobs": s_rank_jobs,
 		"fish_caught": fish_caught, "foraged_count": foraged_count, "crafted_count": crafted_count
@@ -324,7 +336,8 @@ func load_slot(slot_num: int, announce: bool = true) -> bool:
 	fav_thing = str(d.get("fav_thing", "ครัวซองต์น้ำผึ้ง"))
 	if d.has("hero_custom"):
 		hero_custom.merge(d["hero_custom"], true)
-	hero_custom["race_key"] = GameData.get_char_race_key(str(hero_custom.get("base_id", "01_ren")))
+	if not GameData.RACE_PERKS.has(str(hero_custom.get("race_key", "human"))):
+		hero_custom["race_key"] = "human"
 	if d.has("owned_accessories"): owned_accessories.merge(d["owned_accessories"], true)
 	equipped_accessory = str(d.get("equipped_accessory", "acc_straw_hat"))
 	if d.has("owned_outfits"): owned_outfits.merge(d["owned_outfits"], true)
@@ -333,6 +346,7 @@ func load_slot(slot_num: int, announce: bool = true) -> bool:
 	if d.has("stats"): stats.merge(d["stats"], true)
 	if d.has("inventory"): inventory = d["inventory"].duplicate(true)
 	if d.has("relations"): relations.merge(d["relations"], true)
+	if d.has("hangout_today"): hangout_today = d["hangout_today"].duplicate(true)
 	if d.has("partners"): partners = d["partners"].duplicate(true)
 	spouse_id = str(d.get("spouse_id", ""))
 	wedding_day = int(d.get("wedding_day", 0))
@@ -361,14 +375,13 @@ func load_slot(slot_num: int, announce: bool = true) -> bool:
 	if d.has("watched_cutscenes"): watched_cutscenes = d["watched_cutscenes"].duplicate(true)
 	if d.has("achievements_unlocked"): achievements_unlocked = d["achievements_unlocked"].duplicate(true)
 	if d.has("talked_ever"): talked_ever = d["talked_ever"].duplicate(true)
-	if d.has("farm_plots"): farm_plots.merge(d["farm_plots"], true)
-	if d.has("seeds"): seeds = d["seeds"].duplicate(true)
-	selected_seed_id = str(d.get("selected_seed_id", "crop_sunwheat"))
-	has_mana_sprinkler = bool(d.get("has_mana_sprinkler", false))
-	water_can_level = int(d.get("water_can_level", 1))
+	guild_xp = int(d.get("guild_xp", 0))
+	guild_completed = int(d.get("guild_completed", 0))
+	if d.has("guild_bounties_state"): guild_bounties_state.merge(d["guild_bounties_state"], true)
+	if d.has("guild_bounty_prog"): guild_bounty_prog.merge(d["guild_bounty_prog"], true)
+	has_guild_charm = bool(d.get("has_guild_charm", false))
 	has_starlight_mount = bool(d.get("has_starlight_mount", false))
 	monument_built = bool(d.get("monument_built", false))
-	crops_harvested = int(d.get("crops_harvested", 0))
 	if d.has("delivered_mail_ids"): delivered_mail_ids.merge(d["delivered_mail_ids"], true)
 	night_lantern_steps = int(d.get("night_lantern_steps", 0))
 	visited_tavern_night = bool(d.get("visited_tavern_night", false))
@@ -443,6 +456,7 @@ func add_gold(amount: int) -> void:
 	gold += amount
 	if amount > 0:
 		daily_log["gold"] = int(daily_log["gold"]) + amount
+		floating_text_requested.emit("+%d G" % amount, Color("#fde047"))
 	hud_updated.emit()
 
 func add_item(item_id: String, qty: int = 1) -> void:
@@ -948,7 +962,7 @@ func check_achievements() -> void:
 		"ach_ruins_b3": bool(ruins_state.get("ruins_b3", {}).get("solved", false)),
 		"ach_boss_b4": boss_purified,
 		"ach_chronicle": chronicles_done.size() >= 5,
-		"ach_farmer": crops_harvested >= 6,
+		"ach_guild_master": guild_completed >= 5,
 		"ach_endgame": has_starlight_mount or monument_built
 	}
 	for a in GameData.ACHIEVEMENTS:
@@ -957,97 +971,121 @@ func check_achievements() -> void:
 			achievements_unlocked[aid] = true
 			AudioManager.play_sfx("quest")
 			toast_requested.emit("🏆 ปลดล็อกความสำเร็จ: %s!" % str(a["title_th"]))
+			floating_text_requested.emit("🏆 " + str(a["title_th"]), Color("#fde047"))
 
-func cycle_selected_seed() -> String:
-	var owned: Array[String] = []
-	for cr in GameData.CROPS:
-		var cid := str(cr["id"])
-		if int(seeds.get(cid, 0)) > 0:
-			owned.append(cid)
-	if owned.is_empty():
-		return "ไม่มีเมล็ดพันธุ์ในกระเป๋า! ซื้อเพิ่มได้ที่แท็บ '🌱 เมล็ดพันธุ์'"
-	var idx := owned.find(selected_seed_id)
-	selected_seed_id = owned[(idx + 1) % owned.size()]
-	var cdef := GameData.get_crop_def(selected_seed_id)
-	AudioManager.play_sfx("talk")
-	return "🌱 เปลี่ยนเมล็ดในมือเป็น: %s (เหลือ %d เมล็ด)" % [str(cdef["name_th"]), int(seeds[selected_seed_id])]
+func get_achievement_progress(aid: String) -> String:
+	var max_h := 0
+	for c in GameData.characters:
+		max_h = maxi(max_h, get_hearts(str(c["id"])))
+	match aid:
+		"ach_welcome": return "(%d/5 คน)" % mini(5, talked_ever.size())
+		"ach_social_all": return "(%d/16 คน)" % mini(16, talked_ever.size())
+		"ach_first_job": return "(%d/1 กะ)" % mini(1, total_shifts)
+		"ach_s_rank": return "(%d/3 ครั้ง)" % mini(3, s_rank_jobs)
+		"ach_angler": return "(%d/5 ตัว)" % mini(5, fish_caught)
+		"ach_forager": return "(%d/10 ชิ้น)" % mini(10, foraged_count)
+		"ach_chef": return "(%d/5 ชิ้น)" % mini(5, crafted_count)
+		"ach_rich": return "(%d/2000 G)" % mini(2000, gold)
+		"ach_loft": return "(ชั้น %d/2)" % mini(2, house_level)
+		"ach_decorator": return "(%d/4 ชิ้น)" % mini(4, decor_placed.size())
+		"ach_fashion": return "(%d/5 ชิ้น)" % mini(5, owned_accessories.size() + owned_outfits.size())
+		"ach_bestie": return "(%d/5 ❤️)" % mini(5, max_h)
+		"ach_landmark_1": return "(%d/1 แห่ง)" % mini(1, landmarks_built.size())
+		"ach_landmark_all": return "(%d/5 แห่ง)" % mini(5, landmarks_built.size())
+		"ach_museum_half": return "(%d/6 ชิ้น)" % mini(6, museum_donated.size())
+		"ach_museum_all": return "(%d/12 ชิ้น)" % mini(12, museum_donated.size())
+		"ach_chronicle": return "(%d/5 บท)" % mini(5, chronicles_done.size())
+		"ach_guild_master": return "(%d/5 ภารกิจ)" % mini(5, guild_completed)
+	return "✓ สำเร็จแล้ว" if achievements_unlocked.has(aid) else "ยังไม่สำเร็จ"
 
-# --- MANA GARDEN FARMING SYSTEM (18-TILE PLOT + 3x3 GOLDEN CAN + CRYSTAL SPRINKLER) ---
-func interact_farm_plot(tx: int, ty: int) -> String:
-	var key := "%d,%d" % [tx, ty]
-	if not farm_plots.has(key):
-		return ""
-	var pl: Dictionary = farm_plots[key]
-	var cid := str(pl.get("crop_id", ""))
-	if cid != "":
-		var cdef := GameData.get_crop_def(cid)
-		if int(pl.get("days", 0)) >= int(cdef["grow_days"]):
-			var qty := 2 if (str(hero_custom.get("race_key", "")) == "elf" and randf() < 0.4) else 1
-			add_item(str(cdef["harvest_item"]), qty)
-			crops_harvested += qty
-			pl["crop_id"] = ""
-			pl["days"] = 0
-			pl["watered"] = false
-			add_stat_xp({"craft": 5, "wisdom": 3})
-			AudioManager.play_sfx("sparkle")
-			check_achievements()
-			save_slot(active_slot, true)
-			return "🌾 เก็บเกี่ยว '%s' x%d สำเร็จ!" % [str(cdef["name_th"]), qty]
-		elif not bool(pl.get("watered", false)):
-			var cost := get_stamina_cost(2)
-			if stamina < cost:
-				return "พลังงานไม่พอรดน้ำ!"
-			stamina -= cost
-			if water_can_level >= 2:
-				var cnt := 0
-				for dy in range(-1, 2):
-					for dx in range(-1, 2):
-						var nk := "%d,%d" % [tx + dx, ty + dy]
-						if farm_plots.has(nk):
-							farm_plots[nk]["watered"] = true
-							cnt += 1
-				AudioManager.play_sfx("splash")
-				hud_updated.emit()
-				return "💧 บัวทองคำรดน้ำ 3×3 สำเร็จ (%d แปลง)!" % cnt
-			pl["watered"] = true
-			AudioManager.play_sfx("splash")
-			hud_updated.emit()
-			return "💧 รดน้ำแปลง '%s' แล้ว! (%d/%d วัน)" % [str(cdef["name_th"]), int(pl["days"]), int(cdef["grow_days"])]
-		return "🌱 '%s' รดน้ำแล้ว รอโตในวันพรุ่งนี้ (%d/%d วัน)" % [str(cdef["name_th"]), int(pl["days"]), int(cdef["grow_days"])]
-	if not bool(pl.get("tilled", false)):
-		var cost2 := get_stamina_cost(2)
-		if stamina < cost2:
-			return "พลังงานไม่พอพรวนดิน!"
-		stamina -= cost2
-		pl["tilled"] = true
-		AudioManager.play_sfx("door")
+# --- ADVENTURER'S GUILD BOUNTY SYSTEM ---
+func record_guild_action(act_type: String, amount: int = 1) -> void:
+	var changed := false
+	for gb in GameData.GUILD_BOUNTIES:
+		var bid := str(gb["id"])
+		if str(guild_bounties_state.get(bid, "open")) != "accepted":
+			continue
+		if str(gb["type"]) == act_type:
+			var cur := int(guild_bounty_prog.get(bid, 0)) + amount
+			var tgt := int(gb["target"])
+			guild_bounty_prog[bid] = mini(tgt, cur)
+			changed = true
+			if cur >= tgt:
+				toast_requested.emit("⚔️ ภารกิจกิลด์ '%s' ครบเงื่อนไขแล้ว! กด [Q] เพื่อส่งรับรางวัล!" % str(gb["title_th"]))
+	if changed:
 		hud_updated.emit()
-		return "⛏️ พรวนดินแปลงสวนมานาเรียบร้อย! กด [E] อีกครั้งเพื่อหว่านเมล็ด (กด [Q] สลับเมล็ด)"
-	var use_seed := selected_seed_id
-	if int(seeds.get(use_seed, 0)) <= 0:
-		use_seed = ""
-		for sk in seeds.keys():
-			if int(seeds[sk]) > 0:
-				use_seed = str(sk)
-				selected_seed_id = use_seed
-				break
-	if use_seed == "":
-		return "ไม่มีเมล็ดพันธุ์ในกระเป๋า! ซื้อเมล็ดได้ที่แท็บ '🌱 เมล็ดพันธุ์' ในเมนูร้านค้า"
-	seeds[use_seed] = int(seeds[use_seed]) - 1
-	if int(seeds[use_seed]) <= 0:
-		seeds.erase(use_seed)
-	pl["crop_id"] = use_seed
-	pl["days"] = 0
-	pl["watered"] = (weather == "rainy" or has_mana_sprinkler)
-	AudioManager.play_sfx("sparkle")
+
+func get_guild_bounty_progress(gb: Dictionary) -> Dictionary:
+	var bid := str(gb["id"])
+	var btype := str(gb["type"])
+	var tgt := int(gb["target"])
+	match btype:
+		"deliver_item":
+			var iid := str(gb["item_id"])
+			var have := int(inventory.get(iid, 0))
+			var iname := str(GameData.item_by_id.get(iid, {}).get("name_th", iid))
+			return {"done": have >= tgt, "text": "ส่ง %s %d/%d" % [iname, mini(have, tgt), tgt]}
+		"clear_floor":
+			var fid := str(gb["floor_id"])
+			var solved := bool(ruins_state.get(fid, {}).get("solved", false))
+			return {"done": solved, "text": "ปลดผนึกแล้ว!" if solved else "ยังไม่ปลดผนึก"}
+		"purify_boss":
+			return {"done": boss_purified, "text": "ชำระล้างบอสแล้ว!" if boss_purified else "ยังไม่สำเร็จ"}
+		_:
+			var cur := int(guild_bounty_prog.get(bid, 0))
+			return {"done": cur >= tgt, "text": "ความคืบหน้า %d/%d" % [mini(cur, tgt), tgt]}
+
+func accept_guild_bounty(bid: String) -> bool:
+	if str(guild_bounties_state.get(bid, "open")) != "open":
+		return false
+	guild_bounties_state[bid] = "accepted"
+	guild_bounty_prog[bid] = 0
+	AudioManager.play_sfx("talk")
+	var gb := GameData.get_guild_bounty_def(bid)
+	toast_requested.emit("⚔️ รับภารกิจกิลด์: %s!" % str(gb.get("title_th", bid)))
 	hud_updated.emit()
-	return "🌱 ปลูกเมล็ด '%s' แล้ว! %s" % [str(GameData.get_crop_def(use_seed)["name_th"]), "(รดน้ำอัตโนมัติแล้ว!)" if bool(pl["watered"]) else "(กด [E] รดน้ำได้เลย)"]
+	return true
+
+func claim_guild_bounty(bid: String) -> bool:
+	if str(guild_bounties_state.get(bid, "open")) != "accepted":
+		return false
+	var gb := GameData.get_guild_bounty_def(bid)
+	if gb.is_empty():
+		return false
+	var prog := get_guild_bounty_progress(gb)
+	if not bool(prog["done"]):
+		toast_requested.emit("ยังไม่ครบเงื่อนไขภารกิจ: " + str(prog["text"]))
+		return false
+	if str(gb["type"]) == "deliver_item":
+		add_item(str(gb["item_id"]), -int(gb["target"]))
+	var prev_rank := str(GameData.get_guild_rank_info(guild_xp)["rank"])
+	guild_bounties_state[bid] = "completed"
+	guild_completed += 1
+	var gxp_gain := int(gb["guild_xp"])
+	guild_xp += gxp_gain
+	var rinfo := GameData.get_guild_rank_info(guild_xp)
+	var bonus_pct := int(rinfo["gold_bonus_pct"]) + (20 if has_guild_charm else 0)
+	var pay := int(round(float(gb["gold"]) * (1.0 + float(bonus_pct) / 100.0)))
+	add_gold(pay)
+	if gb.has("stat"):
+		add_stat_xp(gb["stat"])
+	AudioManager.play_sfx("quest")
+	var new_rank := str(rinfo["rank"])
+	if new_rank != prev_rank:
+		toast_requested.emit("🎖️ เลื่อนขั้นกิลด์นักผจญภัยสู่ Rank %s (%s)! (+%d G, +%d Guild XP)" % [new_rank, str(rinfo["title_th"]), pay, gxp_gain])
+		floating_text_requested.emit("🎖️ RANK %s!" % new_rank, Color("#38bdf8"))
+	else:
+		toast_requested.emit("⚔️ ส่งภารกิจ '%s' สำเร็จ! (+%d G, +%d Guild XP)" % [str(gb["title_th"]), pay, gxp_gain])
+	check_achievements()
+	save_slot(active_slot, true)
+	hud_updated.emit()
+	return true
 
 func _deliver_scheduled_mail() -> void:
 	var scheduled := [
-		{"id": "mail_d2", "cond": day >= 2, "sender": "พิป โกลด์ลีฟ (ร้านชำ Goldleaf)", "title": "คูปองต้อนรับลูกค้าประจำ!", "body": "ฮิฮิ แวะมาอุดหนุนเมล็ดพันธุ์หรือของขวัญที่ร้านพิปได้ทุกวันนะ ส่งเงินขวัญถุงและเมล็ดพันธุ์มาให้ทดลองปลูกด้วย!", "gift_id": "item_sunfruit", "gold": 120},
-		{"id": "mail_d3", "cond": day >= 3, "sender": "คาเอล ทอร์น (หน่วยสำรวจ)", "title": "เบาะแสโบราณสถานใต้รากไม้โลก", "body": "ทางเข้าโบราณสถานอยู่ฝั่งซ้ายของต้นไม้โลก ข้างในมีปริศนาเสาแสงและบอสผู้พิทักษ์ชั้น B4 พกอาหารเติมพลังไปด้วยล่ะ!", "gift_id": "item_honey_croissant", "gold": 100},
-		{"id": "mail_d5", "cond": day >= 5, "sender": "เซร่า (Elderbark Bakery)", "title": "ครัวซองต์สูตรใหม่เพิ่งอบเสร็จเมี้ยว~", "body": "เซร่าแอบแบ่งครัวซองต์อุ่นๆ มาฝาก {player} ทานก่อนออกไปทำงานนะเมี้ยว!", "gift_id": "item_honey_croissant", "gold": 60},
+		{"id": "mail_d2", "cond": day >= 2, "sender": "กิลด์นักผจญภัยเอเธลการ์ด", "title": "ประกาศภารกิจใหม่ & เบี้ยเลี้ยงนักผจญภัย!", "body": "ยินดีต้อนรับสู่กิลด์นักผจญภัย! แวะมาที่ป้ายกิลด์ข้างบ้านหรือกด [Q] เพื่อรับภารกิจล่าหมอกเงา ขุดแร่ และเลื่อนขั้นแรงก์ F -> S ได้ทุกวันนะ!", "gift_id": "item_sunfruit", "gold": 120},
+		{"id": "mail_d3", "cond": day >= 3, "sender": "คาเอล ทอร์น (หัวหน้าหน่วยสำรวจ)", "title": "เบาะแสโบราณสถานใต้รากไม้โลก", "body": "ทางเข้าโบราณสถานอยู่ฝั่งซ้ายของต้นไม้โลก ข้างในมีปริศนาเสาแสงและบอสผู้พิทักษ์ชั้น B4 พกอาหารเติมพลังไปด้วยล่ะ!", "gift_id": "item_honey_croissant", "gold": 100},
+		{"id": "mail_d5", "cond": day >= 5, "sender": "เซร่า (Elderbark Bakery)", "title": "ครัวซองต์สูตรใหม่เพิ่งอบเสร็จเมี้ยว~", "body": "เซร่าแอบแบ่งครัวซองต์อุ่นๆ มาฝาก {player} ทานก่อนออกไปทำภารกิจกิลด์นะเมี้ยว!", "gift_id": "item_honey_croissant", "gold": 60},
 		{"id": "mail_fest_eve", "cond": get_day_of_season() in [6, 13, 20, 27], "sender": "สภาเมืองแปดเผ่าพันธุ์", "title": "แจ้งเตือน: พรุ่งนี้มีเทศกาลประจำฤดู!", "body": "พรุ่งนี้ชาวเมืองทั้ง 8 เผ่าจะมารวมตัวจัดเทศกาลใหญ่กลางจัตุรัส อย่าลืมแวะมากด [E] เข้าร่วมรับรางวัลและชมคัตซีนพิเศษนะ!", "gift_id": "item_wild_honey", "gold": 90}
 	]
 	for sm in scheduled:
@@ -1075,16 +1113,17 @@ func start_next_morning() -> void:
 	stamina = get_max_stamina()
 	pet_petted_today = false
 	worked_today.clear()
+	hangout_today.clear()
 	purified_wisps_floor.clear()
 	for k in relations.keys():
 		relations[k]["talked_today"] = false
 		relations[k]["gifted_today"] = false
-	# Grow watered Mana Garden crops & auto-water on rainy mornings or with Crystal Sprinkler!
-	for fkey in farm_plots.keys():
-		var pl: Dictionary = farm_plots[fkey]
-		if str(pl.get("crop_id", "")) != "" and bool(pl.get("watered", false)):
-			pl["days"] = int(pl.get("days", 0)) + 1
-		pl["watered"] = (weather == "rainy" or has_mana_sprinkler)
+	# Refresh repeatable Adventurer's Guild bounties every morning!
+	for gb in GameData.GUILD_BOUNTIES:
+		var bid := str(gb["id"])
+		if str(guild_bounties_state.get(bid, "open")) == "completed" and str(gb["type"]) in ["deliver_item", "purify_wisps", "mine_ores", "catch_fish", "talk_npcs"]:
+			guild_bounties_state[bid] = "open"
+			guild_bounty_prog[bid] = 0
 	daily_log = {"gold": 0, "hearts": 0, "stats": 0, "items": 0}
 	spawn_daily_forage()
 	_deliver_scheduled_mail()
@@ -1120,5 +1159,5 @@ func start_next_morning() -> void:
 	check_achievements()
 	save_slot(active_slot, true)
 	hud_updated.emit()
-	toast_requested.emit("เช้า%s วันที่ %d %s! พลังงานฟื้นเต็ม %d" % [get_weekday_name(), dos, get_season_name(), stamina])
+	toast_requested.emit("เช้า%s วันที่ %d %s! พลังงานฟื้นเต็ม %d • บอร์ดกิลด์รีเฟรชแล้ว!" % [get_weekday_name(), dos, get_season_name(), stamina])
 

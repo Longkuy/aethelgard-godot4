@@ -177,73 +177,87 @@ func _ready() -> void:
 	assert(GameState.boss_purified == true and int(GameState.child_data["stage"]) == 3, "Save Slot 3 must persist Boss & Child v7 state")
 	GameState.delete_slot(3)
 
-	# 11. v8.0 Polish Fixes: Mana Garden Farming, A* Pathfinding, Y-Sorted 2.5D Props, Daily Mail & Audio Volumes!
+	# 11. v10.0 True Character Creator + Adventurer's Guild + All 6 Bugfixes Verification!
 	assert(main_inst.world._ysort_props.size() >= 40, "Outdoor World Tree, Buildings, Landmarks & Trees must be Y-sorted inside entities_root")
 	main_inst.world.set_click_move_target(Vector2(45.5 * 32.0, 31.5 * 32.0))
 	assert(main_inst.world.has_click_target and main_inst.world.click_path.size() >= 1, "AStarGrid2D pathfinding must compute valid waypoints")
 	main_inst.world.clear_click_move()
 
 	GameState.reset_to_new_game()
-	assert(GameState.farm_plots.size() == 18, "Mana Garden must have 18 farmable plots")
-	assert(GameState.interact_farm_plot(22, 12).contains("พรวนดิน"), "1st [E] must till soil")
-	assert(GameState.interact_farm_plot(22, 12).contains("ปลูกเมล็ด"), "2nd [E] must plant seed")
-	GameState.interact_farm_plot(22, 12) # water
+	# True Modular Character Creator (NOT NPC sprite sheet!)
+	assert(main_inst.world.player_actor.sprite.visible == false, "Player must render custom procedural character, not NPC sprite")
+	GameState.hero_custom["race_key"] = "avian"
+	GameState.hero_custom["hair_style"] = "twin_tails"
+	GameState.hero_custom["hair_hex"] = "#f472b6"
+	GameState.hero_custom["outfit_style"] = "knight"
+	main_inst.world.player_actor.refresh_appearance()
+	main_inst.world.player_actor.update_actor(0.1, true, false)
+	main_inst.uni_modal.open_protagonist_creator("hero")
+	assert(main_inst.uni_modal._preview_canvas != null, "True Character Creator must render live procedural preview canvas")
+	main_inst.uni_modal.visible = false
+
+	# Adventurer's Guild Bounties & Rank Up!
+	assert(GameData.GUILD_BOUNTIES.size() == 12, "Expected 12 Adventurer's Guild bounties")
+	assert(GameState.accept_guild_bounty("gb_honey_supply") == true, "Must accept Guild bounty")
+	GameState.add_item("item_wild_honey", 2)
+	assert(GameState.claim_guild_bounty("gb_honey_supply") == true, "Must claim Guild bounty & earn Guild XP")
+	assert(GameState.guild_completed == 1 and GameState.guild_xp >= 40, "Guild completed count & XP must increment")
+	assert(GameState.accept_guild_bounty("gb_wisp_b1") == true, "Must accept wisp hunt bounty")
+	GameState.record_guild_action("purify_wisps", 2)
+	assert(GameState.claim_guild_bounty("gb_wisp_b1") == true, "Must claim wisp hunt bounty & rank up to Rank E")
+	assert(str(GameData.get_guild_rank_info(GameState.guild_xp)["rank"]) == "E", "Must promote to Adventurer Rank E at 100 Guild XP")
 	GameState.start_next_morning()
-	GameState.farm_plots["22,12"]["watered"] = true
-	GameState.start_next_morning()
-	assert(GameState.interact_farm_plot(22, 12).contains("เก็บเกี่ยว"), "After 2 watered days Sunwheat must be harvestable")
-	assert(GameState.crops_harvested >= 1, "Harvest counter must increment")
-	assert(GameState.mailbox.size() >= 3, "Scheduled daily mailbox letters must deliver automatically (Day 2 & Day 3)")
+	assert(str(GameState.guild_bounties_state["gb_honey_supply"]) == "open", "Repeatable Guild bounties must refresh every morning")
+	assert(GameState.mailbox.size() >= 2, "Scheduled daily mailbox letters must deliver automatically")
 
-	AudioManager.bgm_volume = 0.6
-	AudioManager.sfx_volume = 0.8
-	AudioManager.play_voice("07_sera")
+	# Bugfix 1: Theater Replay-Only Guard (zero duplicate rewards!)
+	var gold_before_replay := GameState.gold
+	main_inst.cutscene_dir.play_cutscene_dict(GameData.chapters[0], "chronicle", main_inst.world, true, true)
+	main_inst.cutscene_dir.skip_cutscene()
+	assert(GameState.gold == gold_before_replay, "Theater replay mode must NEVER grant duplicate gold or rewards")
 
-	print("v8.0 Fixes verified: 18-tile Mana Garden, Y-Sort 2.5D Props, AStarGrid2D, Daily Mail & Audio Volumes!")
+	# Bugfix 2: Daily Gift Limit!
+	GameState.add_item("item_honey_croissant", 2)
+	main_inst.dlg_panel.open_npc_dialogue("01_ren")
+	main_inst.dlg_panel.show_gift_reaction("01_ren", "item_honey_croissant")
+	assert(main_inst.dlg_panel.btn_gift.disabled == true, "Gift button must disable after giving 1 gift today")
+	main_inst.dlg_panel.close_panel()
 
-	# 12. v9.0 Production Polish & Endgame Checks!
-	assert(GameData.ACHIEVEMENTS.size() == 26, "Expected 26 total achievements including ach_farmer & ach_endgame")
+	# Bugfix 3: Indoor Counter & Farmhouse Workbench Collision!
+	GameState.current_scene = "farmhouse"
+	assert(main_inst.world.is_point_blocked(Vector2(5.5 * 32.0, 8.5 * 32.0)) == true, "Farmhouse workbench must block player")
+	GameState.current_scene = "shop"
+	assert(main_inst.world.is_point_blocked(Vector2(7.0 * 32.0, 3.0 * 32.0)) == true, "Shop counter must block player")
+	assert(main_inst.world.is_point_blocked(Vector2(7.0 * 32.0, 4.5 * 32.0)) == false, "Tile in front of shop counter must remain walkable for [E]")
+	main_inst.world.player_actor.position = Vector2(7.0 * 32.0, 8.0 * 32.0)
+	main_inst.world.set_click_move_target(Vector2(7.0 * 32.0, 4.5 * 32.0))
+	assert(main_inst.world.has_click_target and main_inst.world.click_path.size() >= 1, "Indoor AStarGrid2D must compute waypoints")
+
+	# Bugfix 4 & 5 & 6: Global Settings.cfg, Achievement Progress, Floating Text, Mount & Monument!
+	assert(GameData.ACHIEVEMENTS.size() == 26, "Expected 26 total achievements including ach_guild_master & ach_endgame")
+	assert(GameState.get_achievement_progress("ach_guild_master").contains("/5"), "Achievement progress must format counters")
 	AudioManager.bgm_volume = 0.55
-	AudioManager.sfx_volume = 0.72
 	GameState.save_settings()
 	AudioManager.bgm_volume = 0.1
 	GameState.load_settings()
 	assert(absf(AudioManager.bgm_volume - 0.55) < 0.01, "Global settings.cfg must persist BGM volume")
 
-	var prev_seed := GameState.selected_seed_id
-	assert(GameState.cycle_selected_seed() != "", "[Q] Quick Seed Switcher must cycle seeds")
-	assert(GameState.selected_seed_id != prev_seed, "[Q] Seed ID must change when cycling")
-
-	GameState.water_can_level = 2
-	GameState.interact_farm_plot(23, 12) # till
-	GameState.interact_farm_plot(23, 12) # plant
-	GameState.interact_farm_plot(23, 12) # 3x3 water!
-	assert(bool(GameState.farm_plots["22,11"]["watered"]) == true and bool(GameState.farm_plots["24,13"]["watered"]) == true, "Watering Can Lv.2 must water 3x3 plots")
-
-	GameState.has_mana_sprinkler = true
-	GameState.start_next_morning()
-	assert(bool(GameState.farm_plots["26,13"]["watered"]) == true, "Crystal Sprinkler must auto-water all 18 plots every morning")
-
 	GameState.has_starlight_mount = true
 	GameState.mount_active = true
 	GameState.monument_built = true
 	var before_w := int(GameState.stats["wisdom"])
-	GameState.hero_custom["race_key"] = "elf" # neutral XP race
+	GameState.hero_custom["race_key"] = "elf"
 	GameState.add_stat_xp({"wisdom": 100})
 	assert(int(GameState.stats["wisdom"]) - before_w == 115, "Golden Monument must grant +15% permanent XP bonus")
 	GameState.check_achievements()
 	assert(GameState.achievements_unlocked.has("ach_endgame"), "Mount + Monument must unlock ach_endgame")
-
-	# Indoor & Ruins A* Pathfinding + WorldMapModal cached texture!
-	GameState.current_scene = "shop"
-	main_inst.world.player_actor.position = Vector2(7.0 * 32.0, 8.0 * 32.0)
-	main_inst.world.set_click_move_target(Vector2(7.0 * 32.0, 4.0 * 32.0))
-	assert(main_inst.world.has_click_target and main_inst.world.click_path.size() >= 1, "Indoor AStarGrid2D must compute waypoints")
+	main_inst.world.spawn_floating_text(Vector2(100, 100), "+150 G", Color.YELLOW)
+	assert(main_inst.world._floating_texts.size() >= 1, "Floating world texts must spawn")
 	main_inst.wm_modal.open_map(main_inst.world)
 	assert(main_inst.wm_modal._map_tex != null, "WorldMapModal must bake cached ImageTexture")
 	main_inst.wm_modal.visible = false
 
-	print("v9.0 Production Polish & Endgame verified: Settings.cfg, Tile Culling, Cached Map, Shop Counters, 3x3 Can, Sprinkler, Mount & Monument!")
+	print("v10.0 Verified: True Procedural Character Creator, Adventurer's Guild (Rank F-S), Theater Replay Guard, Daily Gift Limit, Indoor Counter Collision, Achievement Progress & Floating Texts!")
 	print("Achievements unlocked during test run: %d / %d" % [GameState.achievements_unlocked.size(), GameData.ACHIEVEMENTS.size()])
-	print("=== [ALL GODOT 4 v9.0 CHECKS & 75 CUTSCENES PASSED 100% WITH ZERO ERRORS!] ===")
+	print("=== [ALL GODOT 4 v10.0 CHECKS & 75 CUTSCENES PASSED 100% WITH ZERO ERRORS!] ===")
 	get_tree().quit(0)

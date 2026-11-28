@@ -1,8 +1,10 @@
 extends Node2D
 class_name CharacterActor
-## Reusable 2.5D HD-2D Character Sprite Actor for Player & all 16 Town NPCs.
-## Supports walk_9x4, idle_6x4, interact_8x4, HD/Classic sheets, GPU Protagonist Recolor Shader,
-## Visible Layered Accessories (Hats/Crowns/Veil/Wings/Cape), Outfit Aura, and Cutscene Emotes/Hops!
+## Reusable 2.5D HD-2D Character Actor:
+## - For all 16 Town NPCs: Renders their authentic 284-file Sprite Sheets (walk_9x4, idle_6x4, interact_8x4).
+## - For the Player: True Modular Procedural Character Creator Renderer (8 Races with Anatomy,
+##   3 Body Builds, 8 Skin Tones, 8 Hairstyles x 10 Colors, 4 Eye Styles x 8 Colors, 6 Outfit Styles,
+##   8 Layered Accessories, Outfit Auras & Starlight Mount [V])!
 
 var char_id: String = "01_ren"
 var display_name: String = ""
@@ -17,28 +19,16 @@ var emote_timer: float = 0.0
 var _hop_t: float = 0.0
 
 var sprite: Sprite2D
-var overlay_drawer: Node2D
 var name_label: Label
 var badge_label: Label
 var emote_label: Label
-var _shader_mat: ShaderMaterial
 
 func _ready() -> void:
 	sprite = Sprite2D.new()
 	sprite.centered = true
 	sprite.position = Vector2(0, -22)
+	sprite.visible = not is_player
 	add_child(sprite)
-
-	overlay_drawer = Node2D.new()
-	overlay_drawer.draw.connect(_draw_head_accessory)
-	add_child(overlay_drawer)
-
-	if is_player:
-		var sh := load("res://shaders/protagonist_recolor.gdshader") as Shader
-		if sh:
-			_shader_mat = ShaderMaterial.new()
-			_shader_mat.shader = sh
-			sprite.material = _shader_mat
 
 	if not is_player:
 		name_label = Label.new()
@@ -80,23 +70,15 @@ func play_hop() -> void:
 
 func refresh_appearance() -> void:
 	if is_player:
-		var hc: Dictionary = GameState.hero_custom
-		char_id = str(hc.get("base_id", "01_ren"))
-		var out_def: Dictionary = GameData.get_outfit_def(GameState.equipped_outfit)
-		var hue_off := float(out_def.get("hue", 0.0)) if GameState.equipped_outfit != "outfit_traveler" else 0.0
-		var sat_mul := (float(hc.get("sat", 100.0)) / 100.0) * (float(out_def.get("sat", 100.0)) / 100.0)
-		var val_mul := (float(hc.get("val", 100.0)) / 100.0) * (float(out_def.get("val", 100.0)) / 100.0)
-		if _shader_mat:
-			_shader_mat.set_shader_parameter("hue_shift_deg", float(hc.get("hue", 0.0)) + hue_off)
-			_shader_mat.set_shader_parameter("sat_mult", sat_mul)
-			_shader_mat.set_shader_parameter("val_mult", val_mul)
-			_shader_mat.set_shader_parameter("skin_mode", int(GameState.SKIN_MODES.get(str(hc.get("skin", "none")), 0)))
-	elif name_label:
-		name_label.text = display_name
-	_apply_frame()
+		if sprite:
+			sprite.visible = false
+	else:
+		if sprite:
+			sprite.visible = true
+		if name_label:
+			name_label.text = display_name
+		_apply_frame()
 	queue_redraw()
-	if overlay_drawer:
-		overlay_drawer.queue_redraw()
 
 func update_actor(delta: float, moving: bool, sprinting: bool = false) -> void:
 	if _hop_t > 0.0:
@@ -121,24 +103,19 @@ func update_actor(delta: float, moving: bool, sprinting: bool = false) -> void:
 			anim_mode = "idle"
 		anim_t += delta * 4.5
 
-	var mounted := is_player and GameState.mount_active and GameState.current_scene == "outdoor"
 	var hop_y := -absf(sin((_hop_t / 0.36) * PI)) * 12.0 if _hop_t > 0.0 else 0.0
-	var mount_y := (-8.0 + sin(anim_t * 2.4) * 2.0) if mounted else 0.0
-	if sprite:
-		sprite.position.y = -22.0 + hop_y + mount_y
-	if overlay_drawer:
-		overlay_drawer.position.y = hop_y + mount_y
-		overlay_drawer.queue_redraw()
-
-	if badge_label:
-		var bday := GameData.is_npc_birthday(char_id, GameState.get_season_index(), GameState.get_day_of_season())
-		badge_label.text = ("🎂" + badge_text) if bday else badge_text
-		badge_label.position.y = -84.0 + sin(Time.get_ticks_msec() / 240.0 + position.x) * 2.5
-	_apply_frame()
+	if not is_player:
+		if sprite:
+			sprite.position.y = -22.0 + hop_y
+		if badge_label:
+			var bday := GameData.is_npc_birthday(char_id, GameState.get_season_index(), GameState.get_day_of_season())
+			badge_label.text = ("🎂" + badge_text) if bday else badge_text
+			badge_label.position.y = -84.0 + sin(Time.get_ticks_msec() / 240.0 + position.x) * 2.5
+		_apply_frame()
 	queue_redraw()
 
 func _apply_frame() -> void:
-	if not sprite:
+	if not sprite or is_player:
 		return
 	var tex: Texture2D
 	var cols := 6
@@ -149,7 +126,7 @@ func _apply_frame() -> void:
 	elif anim_mode == "interact":
 		tex = GameData.get_interact_sheet(char_id)
 		cols = 8
-		row = 1 if is_player else 2
+		row = 2
 	else:
 		tex = GameData.get_idle_sheet(char_id)
 		cols = 6
@@ -168,69 +145,238 @@ func _apply_frame() -> void:
 
 func _draw() -> void:
 	draw_circle(Vector2(0, 3), 11.0, Color(0, 0, 0, 0.26))
-	if is_player:
-		var now_s := Time.get_ticks_msec() / 1000.0
-		if GameState.mount_active and GameState.current_scene == "outdoor":
-			var face := -1.0 if dir_row == 1 else 1.0
-			var gallop := sin(now_s * 14.0) * 3.0 if anim_mode == "walk" else 0.0
-			draw_circle(Vector2(0, -4), 22.0 + sin(now_s * 5.0) * 2.0, Color(1.0, 0.92, 0.42, 0.22))
-			draw_rect(Rect2(-15, -15, 30, 13), Color("#fef3c7"))
-			draw_rect(Rect2(-15, -15, 30, 13), Color("#f59e0b"), false, 1.8)
-			draw_circle(Vector2(face * 15.0, -19.0), 6.5, Color("#fffbeb"))
-			draw_line(Vector2(face * 17.0, -24.0), Vector2(face * 23.0, -31.0), Color("#fde047"), 2.5)
-			draw_line(Vector2(-10, -2), Vector2(-10 + gallop, 6), Color("#d97706"), 3.0)
-			draw_line(Vector2(10, -2), Vector2(10 - gallop, 6), Color("#d97706"), 3.0)
-			draw_line(Vector2(-face * 15.0, -11.0), Vector2(-face * 22.0, -6.0 + gallop * 0.5), Color("#facc15"), 3.0)
-		if GameState.night_lantern_on:
-			draw_circle(Vector2(0, -14), 56.0 + sin(now_s * 4.5) * 4.0, Color(1.0, 0.85, 0.35, 0.16))
-			draw_circle(Vector2(10, -16), 5.0, Color(1.0, 0.94, 0.55, 0.9))
-		var out_def: Dictionary = GameData.get_outfit_def(GameState.equipped_outfit)
-		var aura_hex := str(out_def.get("aura", ""))
-		if aura_hex != "":
-			var ac := Color(aura_hex)
-			ac.a = 0.22 + sin(now_s * 3.2) * 0.06
-			draw_arc(Vector2(0, 2), 14.0, 0.0, TAU, 24, ac, 2.2)
-		var acc := GameState.equipped_accessory
-		if acc == "acc_fairy_wings":
-			var flap := sin(now_s * 9.0) * 4.0
-			draw_colored_polygon(PackedVector2Array([Vector2(-2, -24), Vector2(-20 - flap, -36), Vector2(-16 - flap * 0.5, -14)]), Color(0.55, 0.92, 1.0, 0.72))
-			draw_colored_polygon(PackedVector2Array([Vector2(2, -24), Vector2(20 + flap, -36), Vector2(16 + flap * 0.5, -14)]), Color(0.55, 0.92, 1.0, 0.72))
-			draw_colored_polygon(PackedVector2Array([Vector2(-2, -22), Vector2(-14, -30), Vector2(-11, -17)]), Color(1.0, 0.95, 0.55, 0.55))
-			draw_colored_polygon(PackedVector2Array([Vector2(2, -22), Vector2(14, -30), Vector2(11, -17)]), Color(1.0, 0.95, 0.55, 0.55))
-		elif acc == "acc_crimson_cape":
-			var sway := sin(now_s * 4.5) * 3.0
-			draw_colored_polygon(PackedVector2Array([Vector2(-7, -28), Vector2(7, -28), Vector2(12 + sway, -6), Vector2(-12 + sway, -6)]), Color("#991b1b"))
-			draw_line(Vector2(-7, -28), Vector2(7, -28), Color("#fde047"), 2.0)
-
-func _draw_head_accessory() -> void:
 	if not is_player:
 		return
-	var acc := GameState.equipped_accessory
-	if acc in ["", "acc_none", "acc_fairy_wings", "acc_crimson_cape"]:
-		return
-	var bob := sin(anim_t * 2.0) * 1.2 if anim_mode == "walk" else 0.0
-	var hy := -46.0 + bob
-	match acc:
+	var now_s := Time.get_ticks_msec() / 1000.0
+	var mounted := GameState.mount_active and GameState.current_scene == "outdoor"
+	if mounted:
+		var face := -1.0 if dir_row == 1 else 1.0
+		var gallop := sin(now_s * 14.0) * 3.0 if anim_mode == "walk" else 0.0
+		draw_circle(Vector2(0, -4), 22.0 + sin(now_s * 5.0) * 2.0, Color(1.0, 0.92, 0.42, 0.22))
+		draw_rect(Rect2(-15, -15, 30, 13), Color("#fef3c7"))
+		draw_rect(Rect2(-15, -15, 30, 13), Color("#f59e0b"), false, 1.8)
+		draw_circle(Vector2(face * 15.0, -19.0), 6.5, Color("#fffbeb"))
+		draw_line(Vector2(face * 17.0, -24.0), Vector2(face * 23.0, -31.0), Color("#fde047"), 2.5)
+		draw_line(Vector2(-10, -2), Vector2(-10 + gallop, 6), Color("#d97706"), 3.0)
+		draw_line(Vector2(10, -2), Vector2(10 - gallop, 6), Color("#d97706"), 3.0)
+		draw_line(Vector2(-face * 15.0, -11.0), Vector2(-face * 22.0, -6.0 + gallop * 0.5), Color("#facc15"), 3.0)
+	if GameState.night_lantern_on:
+		draw_circle(Vector2(0, -14), 56.0 + sin(now_s * 4.5) * 4.0, Color(1.0, 0.85, 0.35, 0.16))
+		draw_circle(Vector2(10, -16), 5.0, Color(1.0, 0.94, 0.55, 0.9))
+
+	var hop_y := -absf(sin((_hop_t / 0.36) * PI)) * 12.0 if _hop_t > 0.0 else 0.0
+	var mount_y := (-8.0 + sin(anim_t * 2.4) * 2.0) if mounted else 0.0
+	draw_custom_character(self, GameState.hero_custom, dir_row, anim_mode, anim_t, hop_y + mount_y, GameState.equipped_accessory, GameState.equipped_outfit)
+
+static func draw_custom_character(canvas: CanvasItem, hc: Dictionary, d_row: int, mode: String, at: float, off_y: float, acc_id: String, outfit_id: String) -> void:
+	var now_s := Time.get_ticks_msec() / 1000.0
+	var rk := str(hc.get("race_key", "human"))
+	var build := str(hc.get("build", "normal"))
+	var skin := Color(str(hc.get("skin_hex", "#fde2cf")))
+	var hair := Color(str(hc.get("hair_hex", "#6b3e26")))
+	var hair_hi := hair.lightened(0.22)
+	var hair_style := str(hc.get("hair_style", "short_spiky"))
+	var eye_col := Color(str(hc.get("eye_hex", "#0284c7")))
+	var eye_style := str(hc.get("eye_style", "round"))
+	var outfit_style := str(hc.get("outfit_style", "adventurer"))
+	var shirt := Color(str(hc.get("shirt_hex", "#15803d")))
+	var pants := Color(str(hc.get("pants_hex", "#5c3312")))
+	var outline := Color("#1e1b4b")
+
+	var bw := 0.86 if build == "slim" else (1.16 if build == "sturdy" else 1.0)
+	if rk == "dwarf":
+		bw *= 1.12
+	var stride := sin(at * 1.4) * 4.0 if mode == "walk" else 0.0
+	var bob := absf(sin(at * 1.4)) * -2.2 if mode == "walk" else sin(at * 0.7) * 0.8
+	var oy := off_y + bob
+	var face_x := -1.0 if d_row == 1 else (1.0 if d_row == 3 else 0.0)
+
+	# 1. Outfit Aura Ring
+	var out_def: Dictionary = GameData.get_outfit_def(outfit_id)
+	var aura_hex := str(out_def.get("aura", ""))
+	if aura_hex != "":
+		var ac := Color(aura_hex)
+		ac.a = 0.25 + sin(now_s * 3.2) * 0.07
+		canvas.draw_arc(Vector2(0, 1 + off_y), 15.0, 0.0, TAU, 24, ac, 2.2)
+
+	# 2. Race Back Features (Avian Wings / Beastkin Tail) + Back Accessories
+	if rk == "avian":
+		var wf := sin(now_s * 6.5) * 3.5
+		canvas.draw_colored_polygon(PackedVector2Array([Vector2(-3, -24 + oy), Vector2(-21, -34 + oy - wf), Vector2(-18, -14 + oy)]), Color("#f8fafc"))
+		canvas.draw_colored_polygon(PackedVector2Array([Vector2(3, -24 + oy), Vector2(21, -34 + oy - wf), Vector2(18, -14 + oy)]), Color("#f8fafc"))
+	elif rk == "beastkin":
+		var sway := sin(now_s * 5.0 + stride * 0.4) * 4.0
+		canvas.draw_line(Vector2(-face_x * 4.0, -11 + oy), Vector2(-face_x * 13.0 + sway, -18 + oy), hair, 4.5)
+		canvas.draw_circle(Vector2(-face_x * 13.0 + sway, -18 + oy), 3.2, hair_hi)
+
+	if acc_id == "acc_fairy_wings":
+		var flap := sin(now_s * 9.0) * 4.0
+		canvas.draw_colored_polygon(PackedVector2Array([Vector2(-2, -24 + oy), Vector2(-20 - flap, -36 + oy), Vector2(-16 - flap * 0.5, -14 + oy)]), Color(0.55, 0.92, 1.0, 0.72))
+		canvas.draw_colored_polygon(PackedVector2Array([Vector2(2, -24 + oy), Vector2(20 + flap, -36 + oy), Vector2(16 + flap * 0.5, -14 + oy)]), Color(0.55, 0.92, 1.0, 0.72))
+	elif acc_id == "acc_crimson_cape":
+		var sway2 := sin(now_s * 4.5) * 3.0
+		canvas.draw_colored_polygon(PackedVector2Array([Vector2(-8 * bw, -28 + oy), Vector2(8 * bw, -28 + oy), Vector2(13 + sway2, -6 + oy), Vector2(-13 + sway2, -6 + oy)]), Color("#991b1b"))
+		canvas.draw_line(Vector2(-8 * bw, -28 + oy), Vector2(8 * bw, -28 + oy), Color("#fde047"), 2.0)
+
+	# 3. Back Long Hair Layer
+	if hair_style in ["long_flow", "wild_mane", "braid"]:
+		canvas.draw_rect(Rect2(-10, -40 + oy, 20, 24), hair)
+	elif hair_style == "ponytail":
+		canvas.draw_circle(Vector2(-face_x * 9.0, -34 + oy), 5.5, hair)
+		canvas.draw_rect(Rect2(-face_x * 10.0 - 3, -34 + oy, 6, 14), hair)
+	elif hair_style == "twin_tails":
+		canvas.draw_rect(Rect2(-14, -37 + oy, 5, 17), hair)
+		canvas.draw_rect(Rect2(9, -37 + oy, 5, 17), hair)
+
+	# 4. Legs & Boots
+	var lx1 := -4.5 * bw + (stride * 0.5 if d_row in [1, 3] else 0.0)
+	var lx2 := 4.5 * bw - (stride * 0.5 if d_row in [1, 3] else 0.0)
+	var ly1 := -10.0 + oy + (stride * 0.4 if d_row in [0, 2] else 0.0)
+	var ly2 := -10.0 + oy - (stride * 0.4 if d_row in [0, 2] else 0.0)
+	canvas.draw_rect(Rect2(lx1 - 2.6, ly1, 5.2, 9.0), pants)
+	canvas.draw_rect(Rect2(lx2 - 2.6, ly2, 5.2, 9.0), pants)
+	canvas.draw_rect(Rect2(lx1 - 3.0, ly1 + 6.5, 6.0, 3.8), Color("#3b1e0a"))
+	canvas.draw_rect(Rect2(lx2 - 3.0, ly2 + 6.5, 6.0, 3.8), Color("#3b1e0a"))
+
+	# 5. Torso & Custom Outfit Style
+	var tw := 15.0 * bw
+	var th := 16.0
+	var torso_r := Rect2(-tw * 0.5, -26.0 + oy, tw, th)
+	canvas.draw_rect(torso_r, shirt)
+	canvas.draw_rect(torso_r, outline, false, 1.2)
+	match outfit_style:
+		"adventurer":
+			canvas.draw_rect(Rect2(-tw * 0.5, -14.0 + oy, tw, 3.0), Color("#78350f"))
+			canvas.draw_rect(Rect2(-2.0, -14.5 + oy, 4.0, 4.0), Color("#facc15"))
+			canvas.draw_line(Vector2(-tw * 0.45, -25.0 + oy), Vector2(tw * 0.45, -13.0 + oy), Color("#92400e"), 2.0)
+		"knight":
+			canvas.draw_rect(Rect2(-tw * 0.45, -25.0 + oy, tw * 0.9, 10.0), Color("#cbd5e1"))
+			canvas.draw_rect(Rect2(-tw * 0.55, -26.5 + oy, 5.0, 5.0), Color("#94a3b8"))
+			canvas.draw_rect(Rect2(tw * 0.55 - 5.0, -26.5 + oy, 5.0, 5.0), Color("#94a3b8"))
+		"mage":
+			canvas.draw_rect(Rect2(-tw * 0.55, -13.0 + oy, tw * 1.1, 7.0), shirt.darkened(0.15))
+			canvas.draw_line(Vector2(0, -25.0 + oy), Vector2(0, -7.0 + oy), Color("#fde047"), 2.2)
+		"bard":
+			canvas.draw_line(Vector2(-tw * 0.5, -24.0 + oy), Vector2(tw * 0.5, -24.0 + oy), Color("#f43f5e"), 3.2)
+			canvas.draw_line(Vector2(3.0, -23.0 + oy), Vector2(6.0, -14.0 + oy), Color("#f43f5e"), 2.5)
+		"royal":
+			canvas.draw_rect(Rect2(-tw * 0.5, -25.0 + oy, tw, 3.0), Color("#fde047"))
+			canvas.draw_circle(Vector2(0, -20.0 + oy), 2.8, Color("#ef4444"))
+		_:
+			canvas.draw_rect(Rect2(-tw * 0.25, -26.0 + oy, tw * 0.5, 4.0), Color("#fef3c7"))
+	if rk == "vampire":
+		canvas.draw_colored_polygon(PackedVector2Array([Vector2(-9 * bw, -26 + oy), Vector2(-12 * bw, -33 + oy), Vector2(-4 * bw, -27 + oy)]), Color("#1e1b4b"))
+		canvas.draw_colored_polygon(PackedVector2Array([Vector2(9 * bw, -26 + oy), Vector2(12 * bw, -33 + oy), Vector2(4 * bw, -27 + oy)]), Color("#1e1b4b"))
+
+	# 6. Arms & Hands
+	var arm_swing := -stride * 0.55 if mode == "walk" else (sin(at * 2.5) * 5.0 if mode == "interact" else 0.0)
+	canvas.draw_rect(Rect2(-tw * 0.5 - 3.6, -24.5 + oy + arm_swing, 3.8, 10.5), shirt.darkened(0.1))
+	canvas.draw_rect(Rect2(tw * 0.5 - 0.2, -24.5 + oy - arm_swing, 3.8, 10.5), shirt.darkened(0.1))
+	canvas.draw_circle(Vector2(-tw * 0.5 - 1.8, -13.5 + oy + arm_swing), 2.3, skin)
+	canvas.draw_circle(Vector2(tw * 0.5 + 1.8, -13.5 + oy - arm_swing), 2.3, skin)
+
+	# 7. Head + Race Ears / Beard
+	var head_c := Vector2(0, -35.5 + oy)
+	if rk == "elf":
+		canvas.draw_colored_polygon(PackedVector2Array([head_c + Vector2(-9, -1), head_c + Vector2(-16, -4), head_c + Vector2(-9, 3)]), skin)
+		canvas.draw_colored_polygon(PackedVector2Array([head_c + Vector2(9, -1), head_c + Vector2(16, -4), head_c + Vector2(9, 3)]), skin)
+	elif rk == "goblin":
+		canvas.draw_colored_polygon(PackedVector2Array([head_c + Vector2(-9, 0), head_c + Vector2(-17, 2), head_c + Vector2(-9, 4)]), skin)
+		canvas.draw_colored_polygon(PackedVector2Array([head_c + Vector2(9, 0), head_c + Vector2(17, 2), head_c + Vector2(9, 4)]), skin)
+	elif rk == "merfolk":
+		canvas.draw_colored_polygon(PackedVector2Array([head_c + Vector2(-9, -2), head_c + Vector2(-15, -5), head_c + Vector2(-14, 3), head_c + Vector2(-9, 3)]), Color("#38bdf8"))
+		canvas.draw_colored_polygon(PackedVector2Array([head_c + Vector2(9, -2), head_c + Vector2(15, -5), head_c + Vector2(14, 3), head_c + Vector2(9, 3)]), Color("#38bdf8"))
+
+	canvas.draw_circle(head_c, 10.2, skin)
+	canvas.draw_arc(head_c, 10.2, 0.0, TAU, 20, outline, 1.1)
+
+	if rk == "beastkin":
+		canvas.draw_colored_polygon(PackedVector2Array([head_c + Vector2(-8, -7), head_c + Vector2(-11, -16), head_c + Vector2(-2, -10)]), hair)
+		canvas.draw_colored_polygon(PackedVector2Array([head_c + Vector2(8, -7), head_c + Vector2(11, -16), head_c + Vector2(2, -10)]), hair)
+		canvas.draw_colored_polygon(PackedVector2Array([head_c + Vector2(-7, -8), head_c + Vector2(-9, -13), head_c + Vector2(-4, -10)]), Color("#fda4af"))
+		canvas.draw_colored_polygon(PackedVector2Array([head_c + Vector2(7, -8), head_c + Vector2(9, -13), head_c + Vector2(4, -10)]), Color("#fda4af"))
+
+	# 8. Facial Features (Front/Left/Right)
+	if d_row != 0:
+		var ex_off := face_x * 2.8
+		var e_l := head_c + Vector2(-3.8 + ex_off, 0.2)
+		var e_r := head_c + Vector2(3.8 + ex_off, 0.2)
+		match eye_style:
+			"round":
+				canvas.draw_circle(e_l, 2.3, eye_col); canvas.draw_circle(e_r, 2.3, eye_col)
+				canvas.draw_circle(e_l + Vector2(-0.6, -0.7), 0.8, Color.WHITE)
+				canvas.draw_circle(e_r + Vector2(-0.6, -0.7), 0.8, Color.WHITE)
+			"sharp":
+				canvas.draw_rect(Rect2(e_l.x - 2.3, e_l.y - 1.3, 4.6, 2.6), eye_col)
+				canvas.draw_rect(Rect2(e_r.x - 2.3, e_r.y - 1.3, 4.6, 2.6), eye_col)
+				canvas.draw_line(e_l + Vector2(-2.6, -1.8), e_l + Vector2(2.4, -0.8), outline, 1.3)
+				canvas.draw_line(e_r + Vector2(-2.4, -0.8), e_r + Vector2(2.6, -1.8), outline, 1.3)
+			"gentle":
+				canvas.draw_circle(e_l, 2.0, eye_col); canvas.draw_circle(e_r, 2.0, eye_col)
+				canvas.draw_arc(e_l, 2.5, PI, TAU, 8, outline, 1.1)
+				canvas.draw_arc(e_r, 2.5, PI, TAU, 8, outline, 1.1)
+			"mystic":
+				canvas.draw_circle(e_l, 2.4, eye_col); canvas.draw_circle(e_r, 2.4, eye_col)
+				canvas.draw_circle(e_l, 1.0, Color("#fef08a"))
+				canvas.draw_circle(e_r, 1.0, Color("#fef08a"))
+		# Blush & Smile
+		canvas.draw_circle(head_c + Vector2(-6.0 + ex_off, 3.0), 1.6, Color(0.98, 0.55, 0.62, 0.45))
+		canvas.draw_circle(head_c + Vector2(6.0 + ex_off, 3.0), 1.6, Color(0.98, 0.55, 0.62, 0.45))
+		canvas.draw_line(head_c + Vector2(-2.0 + ex_off, 5.2), head_c + Vector2(2.0 + ex_off, 5.2), Color("#9a3412"), 1.2)
+		if rk == "dwarf":
+			canvas.draw_colored_polygon(PackedVector2Array([head_c + Vector2(-7, 4), head_c + Vector2(7, 4), head_c + Vector2(5, 13), head_c + Vector2(0, 15), head_c + Vector2(-5, 13)]), hair)
+
+	# 9. Front Hair Styles (8 distinct silhouettes)
+	var htop := head_c + Vector2(0, -5.0)
+	canvas.draw_arc(head_c, 10.6, PI, TAU, 16, hair, 5.5)
+	match hair_style:
+		"short_spiky":
+			for sx in [-6, -2, 2, 6]:
+				canvas.draw_colored_polygon(PackedVector2Array([htop + Vector2(sx - 3, 1), htop + Vector2(sx, -8), htop + Vector2(sx + 3, 1)]), hair)
+		"long_flow":
+			canvas.draw_rect(Rect2(head_c.x - 11.2, head_c.y - 6.0, 3.8, 16.0), hair)
+			canvas.draw_rect(Rect2(head_c.x + 7.4, head_c.y - 6.0, 3.8, 16.0), hair)
+			canvas.draw_rect(Rect2(head_c.x - 8.0, head_c.y - 9.5, 16.0, 5.0), hair)
+		"bob_cut":
+			canvas.draw_rect(Rect2(head_c.x - 11.5, head_c.y - 5.0, 4.2, 12.0), hair)
+			canvas.draw_rect(Rect2(head_c.x + 7.3, head_c.y - 5.0, 4.2, 12.0), hair)
+			canvas.draw_rect(Rect2(head_c.x - 8.5, head_c.y - 9.5, 17.0, 5.2), hair)
+		"braid":
+			canvas.draw_rect(Rect2(head_c.x - 9.0, head_c.y - 9.5, 18.0, 5.0), hair)
+			for bi in range(4):
+				canvas.draw_circle(head_c + Vector2(8.5, 2.0 + bi * 4.2), 2.8, hair)
+		"wild_mane":
+			for sx in [-8, -4, 0, 4, 8]:
+				canvas.draw_colored_polygon(PackedVector2Array([htop + Vector2(sx - 3, 2), htop + Vector2(sx * 1.2, -9), htop + Vector2(sx + 3, 2)]), hair)
+		"noble_part":
+			canvas.draw_colored_polygon(PackedVector2Array([head_c + Vector2(-10, -4), head_c + Vector2(-4, -11), head_c + Vector2(10, -5), head_c + Vector2(6, -1)]), hair)
+		_:
+			canvas.draw_rect(Rect2(head_c.x - 8.5, head_c.y - 9.5, 17.0, 5.0), hair)
+	canvas.draw_line(head_c + Vector2(-5, -8.5), head_c + Vector2(3, -8.5), hair_hi, 1.8)
+
+	# 10. Layered Head Accessories
+	var hy := -46.5 + oy
+	match acc_id:
 		"acc_straw_hat":
-			overlay_drawer.draw_rect(Rect2(-13, hy + 2, 26, 4), Color("#eab308"))
-			overlay_drawer.draw_rect(Rect2(-8, hy - 5, 16, 7), Color("#facc15"))
-			overlay_drawer.draw_rect(Rect2(-8, hy, 16, 2), Color("#dc2626"))
+			canvas.draw_rect(Rect2(-13, hy + 2, 26, 4), Color("#eab308"))
+			canvas.draw_rect(Rect2(-8, hy - 5, 16, 7), Color("#facc15"))
+			canvas.draw_rect(Rect2(-8, hy, 16, 2), Color("#dc2626"))
 		"acc_flower_crown":
-			overlay_drawer.draw_line(Vector2(-9, hy + 2), Vector2(9, hy + 2), Color("#16a34a"), 3.0)
-			overlay_drawer.draw_circle(Vector2(-6, hy + 1), 3.0, Color("#f472b6"))
-			overlay_drawer.draw_circle(Vector2(0, hy), 3.2, Color("#fde047"))
-			overlay_drawer.draw_circle(Vector2(6, hy + 1), 3.0, Color("#38bdf8"))
+			canvas.draw_line(Vector2(-9, hy + 2), Vector2(9, hy + 2), Color("#16a34a"), 3.0)
+			canvas.draw_circle(Vector2(-6, hy + 1), 3.0, Color("#f472b6"))
+			canvas.draw_circle(Vector2(0, hy), 3.2, Color("#fde047"))
+			canvas.draw_circle(Vector2(6, hy + 1), 3.0, Color("#38bdf8"))
 		"acc_witch_hat":
-			overlay_drawer.draw_rect(Rect2(-13, hy + 2, 26, 3), Color("#1e1b4b"))
-			overlay_drawer.draw_colored_polygon(PackedVector2Array([Vector2(-8, hy + 2), Vector2(8, hy + 2), Vector2(2, hy - 13)]), Color("#312e81"))
-			overlay_drawer.draw_circle(Vector2(0, hy - 1), 2.3, Color("#fde047"))
+			canvas.draw_rect(Rect2(-13, hy + 2, 26, 3), Color("#1e1b4b"))
+			canvas.draw_colored_polygon(PackedVector2Array([Vector2(-8, hy + 2), Vector2(8, hy + 2), Vector2(2, hy - 13)]), Color("#312e81"))
+			canvas.draw_circle(Vector2(0, hy - 1), 2.3, Color("#fde047"))
 		"acc_wedding_veil":
-			overlay_drawer.draw_colored_polygon(PackedVector2Array([Vector2(-9, hy + 1), Vector2(9, hy + 1), Vector2(13, hy + 18), Vector2(-13, hy + 18)]), Color(1.0, 1.0, 1.0, 0.55))
-			overlay_drawer.draw_line(Vector2(-8, hy + 1), Vector2(8, hy + 1), Color("#fef08a"), 2.5)
-			overlay_drawer.draw_circle(Vector2(0, hy), 2.8, Color("#f472b6"))
+			canvas.draw_colored_polygon(PackedVector2Array([Vector2(-9, hy + 1), Vector2(9, hy + 1), Vector2(13, hy + 18), Vector2(-13, hy + 18)]), Color(1.0, 1.0, 1.0, 0.55))
+			canvas.draw_line(Vector2(-8, hy + 1), Vector2(8, hy + 1), Color("#fef08a"), 2.5)
+			canvas.draw_circle(Vector2(0, hy), 2.8, Color("#f472b6"))
 		"acc_royal_crown":
-			overlay_drawer.draw_colored_polygon(PackedVector2Array([
+			canvas.draw_colored_polygon(PackedVector2Array([
 				Vector2(-9, hy + 3), Vector2(-9, hy - 5), Vector2(-4, hy - 1),
 				Vector2(0, hy - 7), Vector2(4, hy - 1), Vector2(9, hy - 5), Vector2(9, hy + 3)
 			]), Color("#facc15"))
-			overlay_drawer.draw_circle(Vector2(0, hy - 1), 2.2, Color("#ef4444"))
+			canvas.draw_circle(Vector2(0, hy - 1), 2.2, Color("#ef4444"))

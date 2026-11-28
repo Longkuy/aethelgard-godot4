@@ -55,6 +55,10 @@ var _wisp_cd: float = 0.0
 var _boss_wave_timer: float = 3.2
 var _boss_waves: Array = [] # {"origin": Vector2, "rad": float, "max_rad": float}
 var _particles: Array = []
+var _floating_texts: Array = [] # {"pos": Vector2, "text": String, "col": Color, "t": float}
+
+func spawn_floating_text(world_pos: Vector2, text: String, col: Color = Color("#fef08a")) -> void:
+	_floating_texts.append({"pos": world_pos + Vector2(randf_range(-10.0, 10.0), -36.0), "text": text, "col": col, "t": 1.35})
 
 var _ysort_props: Array[Node2D] = []
 var _world_tree_sprite: Sprite2D
@@ -281,6 +285,7 @@ func trigger_sacred_pulse() -> void:
 				purified_any = true
 				GameState.add_gold(20)
 				GameState.add_stat_xp({"courage": 4})
+				GameState.record_guild_action("purify_wisps", 1)
 		if purified_any:
 			GameState.toast_requested.emit("✨ ชำระล้างภูตหมอกเงามืดสำเร็จ! (+20G +ความกล้า)")
 		if sc == "ruins_b4" and not GameState.boss_purified:
@@ -515,6 +520,13 @@ func update_world(delta: float, cutscene_freeze: bool = false) -> void:
 	else:
 		_boss_waves.clear()
 
+	for fi in range(_floating_texts.size() - 1, -1, -1):
+		var ft: Dictionary = _floating_texts[fi]
+		ft["t"] = float(ft["t"]) - delta
+		ft["pos"] = Vector2(ft["pos"]) + Vector2(0.0, -24.0 * delta)
+		if float(ft["t"]) <= 0.0:
+			_floating_texts.remove_at(fi)
+
 	pet_actor.follow_target(player_actor.position, delta)
 	if child_actor:
 		child_actor.update_child(delta)
@@ -545,10 +557,14 @@ func is_point_blocked(pos: Vector2) -> bool:
 		return false
 	else:
 		var rm: Dictionary = INDOORS.get(sc, INDOORS["farmhouse"])
-		if tx < 1 or ty < 2 or tx >= int(rm["w"]) - 1 or ty >= int(rm["h"]) - 1:
+		var rw := int(rm["w"])
+		var rh := int(rm["h"])
+		if tx < 1 or ty < 2 or tx >= rw - 1 or ty >= rh - 1:
 			return true
 		if sc in ["farmhouse", "farmhouse_upstairs"]:
 			if tx >= 2 and tx < 4 and ty >= 3 and ty < 6:
+				return true
+			if sc == "farmhouse" and tx >= 5 and tx < 7 and ty >= 8 and ty < 10:
 				return true
 			for p in GameState.decor_placed:
 				if str(p["scene"]) != sc: continue
@@ -556,6 +572,21 @@ func is_point_blocked(pos: Vector2) -> bool:
 				if bool(d.get("passable", false)): continue
 				if tx >= int(p["x"]) and tx < int(p["x"]) + int(p["w"]) and ty >= int(p["y"]) and ty < int(p["y"]) + int(p["h"]):
 					return true
+		elif sc in ["shop", "bakery", "tavern", "smithy", "cottage"]:
+			# Solid Shop Counter at top-center (ty 2..3) + side shelves/ovens/forges/cauldron!
+			var mid_x := int(rw / 2)
+			if ty >= 2 and ty <= 3 and tx >= mid_x - 3 and tx <= mid_x + 2:
+				return true
+			if sc == "shop" and ty >= 3 and ty <= 6 and (tx in [2, 3, 10, 11]):
+				return true
+			elif sc == "bakery" and ((tx >= 1 and tx <= 3 and ty >= 2 and ty <= 4) or (tx >= 9 and tx <= 11 and ty >= 4 and ty <= 5)):
+				return true
+			elif sc == "tavern" and ((tx in [2, 11] and ty == 6) or (ty == 3 and tx in [1, 2, 3, 12])):
+				return true
+			elif sc == "smithy" and ((tx >= 1 and tx <= 3 and ty >= 2 and ty <= 4) or (tx >= 10 and tx <= 11 and ty >= 3 and ty <= 5)):
+				return true
+			elif sc == "cottage" and ((tx >= 2 and tx <= 3 and ty >= 4 and ty <= 5) or (tx >= 9 and tx <= 10 and ty >= 3 and ty <= 5)):
+				return true
 		return false
 
 func is_near_water(pos: Vector2) -> bool:
@@ -627,39 +658,26 @@ func _draw_ground_and_props() -> void:
 			if it_tex:
 				ground_drawer.draw_texture_rect(it_tex, Rect2(fp.x - 12, fp.y - 14 + sin(now_sec * 3.5) * 2.0, 24, 24), false)
 
-		# 18-Tile Mana Garden Farm Plots beside Farmhouse (x=21..26, y=11..13)!
-		ground_drawer.draw_rect(Rect2(21 * TILE - 4, 11 * TILE - 4, 6 * TILE + 8, 3 * TILE + 8), Color("#5c3312"), false, 3.0)
+		# Adventurer's Guild Outpost & Bounty Board beside Farmhouse (x=21..26, y=11..13)!
+		var g_rect := Rect2(21 * TILE, 11 * TILE, 6 * TILE, 3 * TILE)
+		ground_drawer.draw_rect(g_rect, Color("#475569"))
+		ground_drawer.draw_rect(g_rect, Color("#f59e0b"), false, 3.0)
+		# Large Wooden Guild Bounty Board
+		var brd := Rect2(22.5 * TILE, 11.2 * TILE, 3.0 * TILE, 1.3 * TILE)
+		ground_drawer.draw_rect(brd, Color("#78350f"))
+		ground_drawer.draw_rect(brd, Color("#fde047"), false, 2.0)
+		for ni in range(4):
+			ground_drawer.draw_rect(Rect2(brd.position.x + 8 + ni * 21, brd.position.y + 8, 15, 19), [Color("#fef3c7"), Color("#fde68a"), Color("#fecaca"), Color("#bae6fd")][ni])
+		# Guild Red-Gold Banner + Campfire Brazier + Sparring Dummy
+		ground_drawer.draw_rect(Rect2(21.4 * TILE, 11.3 * TILE, 20, 34), Color("#991b1b"))
+		ground_drawer.draw_rect(Rect2(21.4 * TILE, 11.3 * TILE, 20, 34), Color("#facc15"), false, 2.0)
+		ground_drawer.draw_circle(Vector2(21.4 * TILE + 10, 11.3 * TILE + 15), 5.0, Color("#fde047"))
+		var fpos := Vector2(26.2 * TILE, 12.6 * TILE)
+		ground_drawer.draw_circle(fpos, 18.0 + sin(now_sec * 6.0) * 3.0, Color(1.0, 0.55, 0.15, 0.28))
+		ground_drawer.draw_circle(fpos, 8.0, Color("#f97316"))
+		ground_drawer.draw_circle(fpos, 4.5, Color("#fef08a"))
 		if font:
-			ground_drawer.draw_string(font, Vector2(21 * TILE, 11 * TILE - 8), "🌱 สวนมานา [E] ทำสวน • [Q] สลับเมล็ด", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#fef08a"))
-		for fy in range(11, 14):
-			for fx in range(21, 27):
-				var fkey := "%d,%d" % [fx, fy]
-				var pl: Dictionary = GameState.farm_plots.get(fkey, {})
-				var fr := Rect2(fx * TILE + 2, fy * TILE + 2, TILE - 4, TILE - 4)
-				var soil_col := Color("#3b1e0a") if bool(pl.get("watered", false)) else (Color("#784421") if bool(pl.get("tilled", false)) else Color("#92623a"))
-				ground_drawer.draw_rect(fr, soil_col)
-				ground_drawer.draw_rect(fr, Color(0, 0, 0, 0.25), false, 1.0)
-				var cid := str(pl.get("crop_id", ""))
-				if cid != "":
-					var cdef := GameData.get_crop_def(cid)
-					var days := int(pl.get("days", 0))
-					var need := int(cdef["grow_days"])
-					var pc := fr.position + fr.size * 0.5
-					if days >= need:
-						ground_drawer.draw_circle(pc, 11.0 + sin(now_sec * 5.0) * 2.0, Color(1.0, 0.94, 0.4, 0.35))
-						var ctex := GameData.get_item_icon(str(cdef["harvest_item"]), false)
-						if ctex:
-							ground_drawer.draw_texture_rect(ctex, Rect2(pc.x - 10, pc.y - 12, 20, 20), false)
-					elif days >= 1:
-						ground_drawer.draw_circle(pc, 6.0, Color("#16a34a"))
-						ground_drawer.draw_circle(pc + Vector2(0, -3), 4.0, Color(str(cdef["color"])))
-					else:
-						ground_drawer.draw_circle(pc, 4.0, Color("#4ade80"))
-		if GameState.has_mana_sprinkler:
-			var spc := Vector2(24.0 * TILE, 12.5 * TILE)
-			ground_drawer.draw_arc(spc, 18.0 + sin(now_sec * 6.0) * 4.0, 0.0, TAU, 24, Color(0.22, 0.74, 0.97, 0.48), 2.5)
-			ground_drawer.draw_circle(spc, 8.0, Color("#0284c7"))
-			ground_drawer.draw_circle(spc, 4.5, Color("#bae6fd"))
+			ground_drawer.draw_string(font, Vector2(21 * TILE, 11 * TILE - 8), "⚔️ กิลด์นักผจญภัย [E] / [Q] รับภารกิจ & เลื่อนแรงก์", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#fef08a"))
 
 		# World Tree Aura + Ruins Portal Archway + Golden Eight-Tribes Monument!
 		var wtc := Vector2(42.0 * TILE, 27.5 * TILE)
@@ -985,6 +1003,15 @@ func _draw_atmosphere_and_fx() -> void:
 				var dist_m := int(diff.length() / TILE)
 				var loc_hint := ("%s (%dm)" % [t_name, dist_m]) if t_scene == sc else ("%s [ใน%s]" % [t_name, str(INDOORS.get(t_scene, {}).get("name_th", t_scene)).left(8)])
 				fx_drawer.draw_string(font, base_p + Vector2(-34, -10), "🧭 " + loc_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#fef08a"))
+
+	# Floating World Texts (+Gold, +XP, Guild Rank Up, Forage!)
+	if font:
+		for ft in _floating_texts:
+			var fcol: Color = ft["col"]
+			fcol.a = clampf(float(ft["t"]) / 0.45, 0.0, 1.0)
+			var fpos: Vector2 = ft["pos"]
+			fx_drawer.draw_string(font, fpos + Vector2(1, 1), str(ft["text"]), HORIZONTAL_ALIGNMENT_CENTER, 120, 12, Color(0, 0, 0, fcol.a * 0.8))
+			fx_drawer.draw_string(font, fpos, str(ft["text"]), HORIZONTAL_ALIGNMENT_CENTER, 120, 12, fcol)
 
 	if sc != "outdoor":
 		return

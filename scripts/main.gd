@@ -51,6 +51,10 @@ func _ready() -> void:
 
 	GameState.hud_updated.connect(_refresh_hud)
 	GameState.toast_requested.connect(show_toast)
+	GameState.floating_text_requested.connect(func(txt: String, col: Color):
+		if world and world.player_actor:
+			world.spawn_floating_text(world.player_actor.position, txt, col)
+	)
 	GameState.cutscene_requested.connect(func(cs_id: String):
 		if cutscene_dir and not cutscene_dir.is_playing:
 			cutscene_dir.play_cutscene_by_id(cs_id, world, true)
@@ -132,7 +136,7 @@ func _build_hud_and_modals() -> void:
 	hb_panel.add_child(hb_row)
 	var bar_defs := [
 		["1.งานเสริม", func(): uni_modal.open_jobs_modal()],
-		["2.ร้าน/ตลาดมืด", func(): uni_modal.open_shop_modal("decor" if GameState.current_scene.begins_with("farmhouse") else "bag")],
+		["2.กิลด์/ร้าน [Q]", func(): uni_modal.open_shop_modal("decor" if GameState.current_scene.begins_with("farmhouse") else "guild")],
 		["3.คราฟต์", func(): uni_modal.open_craft_modal()],
 		["4.ครอบครัว/คู่รัก", func(): uni_modal.open_relationships_modal()],
 		["5.เควสต์/เมือง", func(): uni_modal.open_quests_and_town_modal("quests")],
@@ -222,13 +226,13 @@ func _build_hud_and_modals() -> void:
 	t_card.add_child(t_vb)
 
 	var t_head := Label.new()
-	t_head.text = "AETHELGARD: ECHOES OF THE WORLD TREE\nGodot 4 Complete Edition (v9.0 — 284 Sprites • 26 Achievements • 75 Cutscenes)"
+	t_head.text = "AETHELGARD: ECHOES OF THE WORLD TREE\nGodot 4 Complete Edition (v10.0 — True Character Creator • Adventurer's Guild • 75 Cutscenes)"
 	t_head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	t_head.add_theme_font_size_override("font_size", 22)
+	t_head.add_theme_font_size_override("font_size", 21)
 	t_vb.add_child(t_head)
 
 	var t_sub := Label.new()
-	t_sub.text = "แต่งตัวเอก 8 เผ่า + หมวก/ปีก/ชุดพิเศษ • 6 มินิเกม • แต่งงาน & เลี้ยงลูก 3 วัย • แต่งบ้านตาราง & ชั้น 2 • ดันเจี้ยนเสาแสง & บอส B4 • เทศกาล & โรงละครคัตซีน 75 ฉาก!"
+	t_sub.text = "สร้างตัวละครของตัวเองเต็มรูปแบบ 8 เผ่า • กิลด์นักผจญภัย Rank F–S • 6 มินิเกม • แต่งงาน & เลี้ยงลูก 3 วัย • แต่งบ้านตาราง & ชั้น 2 • ดันเจี้ยนเสาแสง & บอส B4!"
 	t_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	t_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	t_vb.add_child(t_sub)
@@ -246,7 +250,7 @@ func _build_hud_and_modals() -> void:
 	t_vb.add_child(pet_hb)
 
 	var start_hb := HBoxContainer.new(); start_hb.alignment = BoxContainer.ALIGNMENT_CENTER; start_hb.add_theme_constant_override("separation", 12)
-	var b_cr := Button.new(); b_cr.text = "👒 แต่งตัวเอก 8 เผ่า & ตู้เสื้อผ้า"; b_cr.pressed.connect(func(): uni_modal.open_protagonist_creator("hero"))
+	var b_cr := Button.new(); b_cr.text = "🎨 สร้างตัวละครของตัวเอง (8 เผ่า & ทรงผม)"; b_cr.pressed.connect(func(): uni_modal.open_protagonist_creator("hero"))
 	var b_play := Button.new(); b_play.text = "🎬 เข้าสู่เอเธลการ์ด (เริ่มเล่น!)"
 	b_play.pressed.connect(func():
 		GameState.started = true
@@ -268,8 +272,8 @@ func _build_hud_and_modals() -> void:
 	uni_modal = UniversalModal.new()
 	uni_modal.position = Vector2(200, 70)
 	uni_modal.start_job_requested.connect(_start_job)
-	uni_modal.play_chapter_requested.connect(func(ch: Dictionary): cutscene_dir.play_cutscene_dict(ch, "chronicle", world, true))
-	uni_modal.replay_cutscene_requested.connect(func(cs_d: Dictionary, mode: String): cutscene_dir.play_cutscene_dict(cs_d, mode, world, true))
+	uni_modal.play_chapter_requested.connect(func(ch: Dictionary): cutscene_dir.play_cutscene_dict(ch, "chronicle", world, true, false))
+	uni_modal.replay_cutscene_requested.connect(func(cs_d: Dictionary, mode: String): cutscene_dir.play_cutscene_dict(cs_d, mode, world, true, true))
 	uni_modal.gift_chosen.connect(func(cid: String, iid: String): dlg_panel.show_gift_reaction(cid, iid))
 	uni_modal.hero_customized.connect(func():
 		world.player_actor.refresh_appearance()
@@ -372,8 +376,10 @@ func _refresh_hud() -> void:
 	var hh := int(GameState.time_min) / 60
 	var mm := int(GameState.time_min) % 60
 	var fest_tag := " 🎉เทศกาล!" if GameData.FESTIVALS.has(GameState.get_day_of_season()) else ""
+	var grank := str(GameData.get_guild_rank_info(GameState.guild_xp)["rank"])
+	var m_tag := " | 🦄[V]" if (GameState.mount_active and GameState.current_scene == "outdoor") else ""
 	clock_lbl.text = "%s วันที่ %d %s%s • %02d:%02d (%s)" % [GameState.get_weekday_name(), GameState.get_day_of_season(), GameState.get_season_name(), fest_tag, hh, mm, GameState.weather]
-	gold_lbl.text = "ทอง: %d G  |  พลังงาน: %d/%d  |  %s" % [GameState.gold, GameState.stamina, GameState.get_max_stamina(), GameState.player_name]
+	gold_lbl.text = "ทอง: %d G | ⚡%d/%d | ⚔️Rank %s%s" % [GameState.gold, GameState.stamina, GameState.get_max_stamina(), grank, m_tag]
 	stats_lbl.text = "เสน่ห์ Lv.%d | ฝีมือ Lv.%d | ปัญญา Lv.%d | ความกล้า Lv.%d" % [
 		GameState.get_stat_level("charm"), GameState.get_stat_level("craft"),
 		GameState.get_stat_level("wisdom"), GameState.get_stat_level("courage")
@@ -510,7 +516,9 @@ func _on_minigame_finished(ctx_mode: String, pl: Variant, sc: int, mx: int) -> v
 			var cid: String = catches[randi() % catches.size()]
 			GameState.add_item(cid, 1)
 			GameState.fish_caught += 1
+			GameState.record_guild_action("catch_fish", 1)
 			GameState.add_stat_xp({"craft": 5, "wisdom": 3})
+			world.spawn_floating_text(world.player_actor.position, "🐟 +" + str(GameData.item_by_id.get(cid, {}).get("name_th", cid)), Color("#38bdf8"))
 			AudioManager.play_sfx("sparkle")
 			show_toast("ตกปลาสำเร็จ! ได้รับ '%s'" % GameData.item_by_id.get(cid, {}).get("name_th", cid))
 		else:
@@ -544,6 +552,8 @@ func _find_interaction() -> Dictionary:
 			return {"kind": "enter_ruins", "label": "กด [E] ลงสู่โบราณสถานใต้รากไม้โลก (ชั้น B1–B4)"}
 		if p.distance_to(Vector2(20.5 * TILE, 15.5 * TILE)) < 42.0:
 			return {"kind": "mail", "label": "กด [E] เปิดตู้จดหมาย"}
+		if p.distance_to(Vector2(24.0 * TILE, 12.5 * TILE)) < 80.0:
+			return {"kind": "guild_board", "label": "กด [E] ⚔️ เปิดบอร์ดภารกิจกิลด์นักผจญภัย (Rank F–S)"}
 		if p.distance_to(Vector2(45.5 * TILE, 29.5 * TILE)) < 44.0:
 			return {"kind": "quests", "label": "กด [E] เปิดกระดานเควสต์"}
 		if p.distance_to(Vector2(42.5 * TILE, 28.5 * TILE)) < 54.0:
@@ -561,22 +571,6 @@ func _find_interaction() -> Dictionary:
 			var fp := Vector2((int(fs["tx"]) + 0.5) * TILE, (int(fs["ty"]) + 0.5) * TILE)
 			if p.distance_to(fp) < 38.0:
 				return {"kind": "forage", "spot": fs, "label": "กด [E] เก็บของป่าเรืองแสง"}
-		var pt := Vector2i(int(floor(p.x / TILE)), int(floor(p.y / TILE)))
-		if GameState.farm_plots.has("%d,%d" % [pt.x, pt.y]):
-			var fpl: Dictionary = GameState.farm_plots["%d,%d" % [pt.x, pt.y]]
-			var fcid := str(fpl.get("crop_id", ""))
-			var flbl := "กด [E] พรวนดินแปลงสวนมานา"
-			if fcid != "":
-				var crd := GameData.get_crop_def(fcid)
-				if int(fpl.get("days", 0)) >= int(crd["grow_days"]):
-					flbl = "กด [E] 🌾 เก็บเกี่ยว " + str(crd["name_th"])
-				elif not bool(fpl.get("watered", false)):
-					flbl = "กด [E] 💧 รดน้ำ " + str(crd["name_th"])
-				else:
-					flbl = "🌱 %s (รดน้ำแล้ว %d/%d วัน)" % [str(crd["name_th"]), int(fpl["days"]), int(crd["grow_days"])]
-			elif bool(fpl.get("tilled", false)):
-				flbl = "กด [E] 🌱 ปลูกเมล็ด " + str(GameData.get_crop_def(GameState.selected_seed_id)["name_th"])
-			return {"kind": "farm_plot", "tx": pt.x, "ty": pt.y, "label": flbl}
 		if world.is_near_water(p):
 			return {"kind": "fish", "label": "กด [E] เหวี่ยงเบ็ดตกปลา Stardew"}
 
@@ -640,9 +634,8 @@ func _execute_interaction() -> void:
 	match str(ctx["kind"]):
 		"shop_counter":
 			uni_modal.open_shop_modal(str(ctx["shop_id"]))
-		"farm_plot":
-			var fmsg := GameState.interact_farm_plot(int(ctx["tx"]), int(ctx["ty"]))
-			if fmsg != "": show_toast(fmsg)
+		"guild_board":
+			uni_modal.open_guild_modal()
 		"child":
 			var cmsg := GameState.interact_with_child()
 			if cmsg != "": show_toast(cmsg)
@@ -690,9 +683,11 @@ func _execute_interaction() -> void:
 			GameState.add_item(str(sp["item_id"]), qty)
 			GameState.foraged_count += qty
 			world.player_actor.interact_timer = 0.4
+			var fnm := str(GameData.item_by_id.get(str(sp["item_id"]), {}).get("name_th", ""))
+			world.spawn_floating_text(world.player_actor.position, "+%d %s" % [qty, fnm], Color("#4ade80"))
 			GameState.check_achievements()
 			AudioManager.play_sfx("sparkle")
-			show_toast("เก็บ '%s' x%d สำเร็จ!" % [GameData.item_by_id.get(str(sp["item_id"]), {}).get("name_th", ""), qty])
+			show_toast("เก็บ '%s' x%d สำเร็จ!" % [fnm, qty])
 		"fish":
 			mg_modal.start_minigame("stardew_fish", "fish", null)
 		"boss_purify":
@@ -730,6 +725,8 @@ func _execute_interaction() -> void:
 			rs2["mined_day"][str(ctx["idx"])] = GameState.day
 			var oqty := 2 if str(GameState.hero_custom.get("race_key", "")) == "dwarf" else 1
 			GameState.add_item(str(ctx["item_id"]), oqty)
+			GameState.record_guild_action("mine_ores", 1)
+			world.spawn_floating_text(world.player_actor.position, "⛏️ +%d แร่มานา" % oqty, Color("#38bdf8"))
 			AudioManager.play_sfx("anvil")
 			show_toast("สกัดแร่มานาสำเร็จ x%d!" % oqty)
 		"exit_indoor":
@@ -796,12 +793,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			world.trigger_sacred_pulse()
 		elif event.is_action_pressed("toggle_lantern"):
 			_toggle_lantern()
-		elif event.is_action_pressed("cycle_seed"):
-			var smsg := GameState.cycle_selected_seed()
-			if smsg != "": show_toast(smsg)
+		elif event.is_action_pressed("open_guild"):
+			uni_modal.open_guild_modal()
 		elif event.is_action_pressed("toggle_mount"):
 			if not GameState.has_starlight_mount:
-				show_toast("🦄 ซื้อ 'อาชาแสงดารา' ได้ที่เมนู [2.ร้านค้า -> ฟาร์ม & ไอเทมระดับตำนาน] (2,500 G)!")
+				show_toast("🦄 ซื้อ 'อาชาแสงดารา' ได้ที่เมนูกิลด์นักผจญภัย [Q] (2,500 G)!")
 			elif GameState.current_scene != "outdoor":
 				show_toast("🦄 ขี่อาชาแสงดาราได้เฉพาะพื้นที่กลางแจ้งเท่านั้นนะ!")
 			else:

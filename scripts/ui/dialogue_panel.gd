@@ -112,6 +112,7 @@ func open_npc_dialogue(cid: String) -> void:
 		GameState.relations[cid] = rel
 		GameState.add_friendship(cid, 18)
 		GameState.add_stat_xp({"charm": 2})
+		GameState.record_guild_action("talk_npcs", 1)
 	GameState.check_achievements()
 
 	visible = true
@@ -173,6 +174,13 @@ func _refresh_header_and_portrait(cid: String, emo: String) -> void:
 	var emo_map := {"neutral": "ปกติ", "happy": "ดีใจ", "blush": "เขินอาย", "sad": "เศร้า"}
 	emo_lbl.text = str(emo_map.get(emo, "ปกติ"))
 
+	var rel: Dictionary = GameState.relations.get(cid, {})
+	var gifted_now := bool(rel.get("gifted_today", false))
+	btn_gift.disabled = gifted_now
+	btn_gift.text = "ให้ของขวัญแล้ววันนี้" if gifted_now else "มอบของขวัญ"
+	var hung_now := GameState.hangout_today.has(cid)
+	btn_hangout.disabled = hung_now
+	btn_hangout.text = "ชวนเที่ยวแล้ววันนี้" if hung_now else "ชวน Hangout"
 	var rom := bool(c.get("romanceable", false))
 	btn_event.visible = not _find_unlocked_event(cid).is_empty()
 	btn_confess.visible = rom and (not GameState.partners.has(cid)) and GameState.spouse_id == "" and h >= 6
@@ -186,6 +194,9 @@ func show_gift_reaction(cid: String, item_id: String) -> void:
 	visible = true
 	hangout_row.visible = false
 	actions_row.visible = true
+	if bool(GameState.relations.get(cid, {}).get("gifted_today", false)) and item_id != "item_world_tree_ring":
+		GameState.toast_requested.emit("วันนี้มอบของขวัญให้คนนี้ไปแล้ว พรุ่งนี้ค่อยมามอบใหม่นะ!")
+		return
 	var it: Dictionary = GameData.item_by_id.get(item_id, {})
 	var c: Dictionary = GameData.char_by_id.get(cid, {})
 	if item_id == "item_world_tree_ring" and GameState.partners.has(cid) and GameState.spouse_id == "" and GameState.get_hearts(cid) >= 10:
@@ -225,6 +236,9 @@ func show_gift_reaction(cid: String, item_id: String) -> void:
 	GameState.save_slot(GameState.active_slot, true)
 
 func _on_hangout() -> void:
+	if GameState.hangout_today.has(active_npc_id):
+		GameState.toast_requested.emit("วันนี้ชวนคนนี้ไป Hangout แล้ว พรุ่งนี้ค่อยชวนใหม่นะ!")
+		return
 	var cost := GameState.get_stamina_cost(15)
 	if GameState.stamina < cost:
 		GameState.toast_requested.emit("พลังงานไม่พอสำหรับ Hangout! (ต้องการ %d⚡)" % cost)
@@ -245,8 +259,9 @@ func _on_hangout() -> void:
 		b.text = "📍 " + str(sp_dict.get("name_th", sp_dict.get("title_th", "จุดชมวิว")))
 		b.pressed.connect(func():
 			var cid := active_npc_id
+			GameState.hangout_today[cid] = true
 			GameState.stamina -= cost
-			GameState.time_min += 120.0
+			GameState.time_min = minf(23.75 * 60.0, GameState.time_min + 120.0)
 			GameState.add_friendship(cid, 45)
 			GameState.add_stat_xp({"charm": 10})
 			AudioManager.play_sfx("heart")
@@ -322,7 +337,7 @@ func _on_spouse_care() -> void:
 func _on_spouse_date() -> void:
 	GameState.spouse_dated_day = GameState.day
 	GameState.stamina = GameState.get_max_stamina()
-	GameState.time_min += 120.0
+	GameState.time_min = minf(23.75 * 60.0, GameState.time_min + 120.0)
 	GameState.add_friendship(active_npc_id, 50)
 	GameState.add_stat_xp({"charm": 12, "wisdom": 8})
 	AudioManager.play_sfx("wedding")

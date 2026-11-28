@@ -11,6 +11,7 @@ signal cutscene_finished(cs_id: String)
 const TILE := 32.0
 
 var is_playing: bool = false
+var is_replay: bool = false
 var current_cs: Dictionary = {}
 var current_mode: String = "cutscene" # cutscene, heart_event, chronicle
 var beat_idx: int = 0
@@ -148,10 +149,11 @@ func play_cutscene_by_id(cs_id: String, world: ValleyWorld, restore_scene: bool 
 	play_cutscene_dict(GameData.cutscenes_v7[cs_id], "cutscene", world, restore_scene)
 	return true
 
-func play_cutscene_dict(cs_dict: Dictionary, mode: String, world: ValleyWorld, restore_scene: bool = false) -> void:
+func play_cutscene_dict(cs_dict: Dictionary, mode: String, world: ValleyWorld, restore_scene: bool = false, replay_only: bool = false) -> void:
 	_world = world
 	current_cs = cs_dict.duplicate(true)
 	current_mode = mode
+	is_replay = replay_only
 	beat_idx = 0
 	in_choice_phase = false
 	in_reply_phase = false
@@ -286,6 +288,8 @@ func _select_choice(ch: Dictionary) -> void:
 		act.show_emote("💖", 2.5)
 
 func _apply_choice_rewards(ch: Dictionary) -> void:
+	if is_replay:
+		return
 	if ch.has("stat") and typeof(ch["stat"]) == TYPE_DICTIONARY:
 		GameState.add_stat_xp(ch["stat"])
 	if ch.has("stat_delta") and typeof(ch["stat_delta"]) == TYPE_DICTIONARY:
@@ -315,13 +319,13 @@ func skip_cutscene() -> void:
 		return
 	var chs: Array = current_cs.get("choices", [])
 	var cid := str(current_cs.get("id", ""))
-	if not chs.is_empty() and not in_reply_phase and not GameState.watched_cutscenes.has(cid):
+	if not is_replay and not chs.is_empty() and not in_reply_phase and not GameState.watched_cutscenes.has(cid):
 		_apply_choice_rewards(chs[0])
 	_finish_cutscene()
 
 func _finish_cutscene() -> void:
 	var cid := str(current_cs.get("id", ""))
-	if cid != "":
+	if cid != "" and not is_replay:
 		GameState.watched_cutscenes[cid] = true
 		if current_mode == "heart_event":
 			GameState.played_events[cid] = true

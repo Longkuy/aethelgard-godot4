@@ -21,8 +21,9 @@ var title_lbl: Label
 var tabs_flow: HFlowContainer
 var scroll: ScrollContainer
 var list_vb: VBoxContainer
-var _preview_sprite: Sprite2D
-var _preview_mat: ShaderMaterial
+var _preview_canvas: Control
+var _preview_dir: int = 2
+var _preview_walk: bool = true
 var _anim_t: float = 0.0
 
 func _ready() -> void:
@@ -58,12 +59,12 @@ func _ready() -> void:
 	scroll.add_child(list_vb)
 
 func _process(delta: float) -> void:
-	if visible and _preview_sprite and is_instance_valid(_preview_sprite):
-		_anim_t += delta * 8.0
-		_preview_sprite.frame_coords = Vector2i(int(_anim_t) % 9, 2)
+	if visible and _preview_canvas and is_instance_valid(_preview_canvas):
+		_anim_t += delta * (8.5 if _preview_walk else 4.0)
+		_preview_canvas.queue_redraw()
 
 func _clear() -> void:
-	_preview_sprite = null
+	_preview_canvas = null
 	for c in tabs_flow.get_children(): c.queue_free()
 	for c in list_vb.get_children(): c.queue_free()
 	visible = true
@@ -89,73 +90,74 @@ func _add_row(title: String, subtitle: String, btn_text: String = "", cb: Callab
 		hb.add_child(b)
 	list_vb.add_child(pc)
 
-# --- 1. 8-RACE PROTAGONIST CREATOR + LAYERED WARDROBE & ACCESSORIES ---
+func _add_section_label(txt: String) -> void:
+	var l := Label.new()
+	l.text = txt
+	l.add_theme_font_size_override("font_size", 14)
+	l.add_theme_color_override("font_color", Color("#7c2d12"))
+	list_vb.add_child(l)
+
+func _randomize_hero() -> void:
+	var opts: Dictionary = GameData.CREATOR_OPTIONS
+	var races: Array = GameData.RACE_PERKS.keys()
+	GameState.hero_custom["race_key"] = str(races[randi() % races.size()])
+	GameState.hero_custom["build"] = str(opts["builds"][randi() % opts["builds"].size()]["id"])
+	GameState.hero_custom["skin_hex"] = str(opts["skins"][randi() % opts["skins"].size()]["hex"])
+	GameState.hero_custom["hair_style"] = str(opts["hair_styles"][randi() % opts["hair_styles"].size()]["id"])
+	GameState.hero_custom["hair_hex"] = str(opts["hair_colors"][randi() % opts["hair_colors"].size()]["hex"])
+	GameState.hero_custom["eye_style"] = str(opts["eye_styles"][randi() % opts["eye_styles"].size()]["id"])
+	GameState.hero_custom["eye_hex"] = str(opts["eye_colors"][randi() % opts["eye_colors"].size()]["hex"])
+	GameState.hero_custom["outfit_style"] = str(opts["outfit_styles"][randi() % opts["outfit_styles"].size()]["id"])
+	GameState.hero_custom["shirt_hex"] = str(opts["shirt_colors"][randi() % opts["shirt_colors"].size()]["hex"])
+	GameState.hero_custom["pants_hex"] = str(opts["pants_colors"][randi() % opts["pants_colors"].size()]["hex"])
+	AudioManager.play_sfx("sparkle")
+	hero_customized.emit()
+	open_protagonist_creator("hero")
+
+# --- 1. TRUE MODULAR CHARACTER CREATOR + LAYERED WARDROBE & ACCESSORIES ---
 func open_protagonist_creator(subtab: String = "hero") -> void:
 	_clear()
-	title_lbl.text = "แต่งตัวเอก 8 เผ่า • ตู้เสื้อผ้าฤดูกาล & เครื่องประดับสวมใส่จริง (มี %d G)" % GameState.gold
-	for tb in [["hero", "🧬 รูปลักษณ์ 8 เผ่า & สีผิว"], ["wardrobe", "👒 หมวก/ปีก/ผ้าคลุม & ชุดพิเศษ"]]:
+	title_lbl.text = "🎨 สร้างตัวละครของตัวเอง (8 เผ่า • ทรงผม • ดวงตา • ชุด) & ตู้เสื้อผ้า (มี %d G)" % GameState.gold
+	for tb in [["hero", "🧬 สร้างรูปลักษณ์ตัวเอก"], ["wardrobe", "👒 หมวก/ปีก/ผ้าคลุม & ออร่าชุด"]]:
 		var b := Button.new(); b.text = tb[1]
 		b.pressed.connect(func(): open_protagonist_creator(tb[0]))
 		tabs_flow.add_child(b)
 
 	var hc: Dictionary = GameState.hero_custom
-	var rk := GameData.get_char_race_key(str(hc.get("base_id", "01_ren")))
-	hc["race_key"] = rk
+	var rk := str(hc.get("race_key", "human"))
 	var rinfo: Dictionary = GameData.RACE_PERKS.get(rk, GameData.RACE_PERKS["human"])
 
 	var top_hb := HBoxContainer.new()
 	top_hb.add_theme_constant_override("separation", 16)
 	list_vb.add_child(top_hb)
 
+	# Live Rotating Procedural Character Stage (2.7x zoom!)
+	var prev_vb := VBoxContainer.new()
 	var prev_box := PanelContainer.new()
-	prev_box.custom_minimum_size = Vector2(150, 150)
-	var stage := Control.new()
-	stage.custom_minimum_size = Vector2(128, 128)
-	prev_box.add_child(stage)
-	_preview_sprite = Sprite2D.new()
-	_preview_sprite.texture = GameData.get_walk_sheet(str(hc.get("base_id", "01_ren")), false)
-	_preview_sprite.hframes = 9; _preview_sprite.vframes = 4
-	_preview_sprite.position = Vector2(64, 68)
-	_preview_sprite.scale = Vector2(2.0, 2.0)
-	_preview_mat = ShaderMaterial.new()
-	_preview_mat.shader = load("res://shaders/protagonist_recolor.gdshader") as Shader
-	_preview_sprite.material = _preview_mat
-	stage.add_child(_preview_sprite)
-	var prev_acc := Node2D.new()
-	prev_acc.position = Vector2(64, 112)
-	prev_acc.scale = Vector2(2.0, 2.0)
-	prev_acc.draw.connect(func():
-		var acc := GameState.equipped_accessory
-		var hy := -46.0
-		if acc == "acc_fairy_wings":
-			prev_acc.draw_colored_polygon(PackedVector2Array([Vector2(-2, -24), Vector2(-20, -36), Vector2(-16, -14)]), Color(0.55, 0.92, 1.0, 0.78))
-			prev_acc.draw_colored_polygon(PackedVector2Array([Vector2(2, -24), Vector2(20, -36), Vector2(16, -14)]), Color(0.55, 0.92, 1.0, 0.78))
-		elif acc == "acc_crimson_cape":
-			prev_acc.draw_colored_polygon(PackedVector2Array([Vector2(-7, -28), Vector2(7, -28), Vector2(12, -6), Vector2(-12, -6)]), Color("#991b1b"))
-		elif acc == "acc_straw_hat":
-			prev_acc.draw_rect(Rect2(-13, hy + 2, 26, 4), Color("#eab308"))
-			prev_acc.draw_rect(Rect2(-8, hy - 5, 16, 7), Color("#facc15"))
-			prev_acc.draw_rect(Rect2(-8, hy, 16, 2), Color("#dc2626"))
-		elif acc == "acc_flower_crown":
-			prev_acc.draw_line(Vector2(-9, hy + 2), Vector2(9, hy + 2), Color("#16a34a"), 3.0)
-			prev_acc.draw_circle(Vector2(-6, hy + 1), 3.0, Color("#f472b6"))
-			prev_acc.draw_circle(Vector2(0, hy), 3.2, Color("#fde047"))
-			prev_acc.draw_circle(Vector2(6, hy + 1), 3.0, Color("#38bdf8"))
-		elif acc == "acc_witch_hat":
-			prev_acc.draw_rect(Rect2(-13, hy + 2, 26, 3), Color("#1e1b4b"))
-			prev_acc.draw_colored_polygon(PackedVector2Array([Vector2(-8, hy + 2), Vector2(8, hy + 2), Vector2(2, hy - 13)]), Color("#312e81"))
-			prev_acc.draw_circle(Vector2(0, hy - 1), 2.3, Color("#fde047"))
-		elif acc == "acc_wedding_veil":
-			prev_acc.draw_colored_polygon(PackedVector2Array([Vector2(-9, hy + 1), Vector2(9, hy + 1), Vector2(13, hy + 18), Vector2(-13, hy + 18)]), Color(1.0, 1.0, 1.0, 0.65))
-			prev_acc.draw_line(Vector2(-8, hy + 1), Vector2(8, hy + 1), Color("#fef08a"), 2.5)
-		elif acc == "acc_royal_crown":
-			prev_acc.draw_colored_polygon(PackedVector2Array([Vector2(-9, hy + 3), Vector2(-9, hy - 5), Vector2(-4, hy - 1), Vector2(0, hy - 7), Vector2(4, hy - 1), Vector2(9, hy - 5), Vector2(9, hy + 3)]), Color("#facc15"))
-			prev_acc.draw_circle(Vector2(0, hy - 1), 2.2, Color("#ef4444"))
+	prev_box.custom_minimum_size = Vector2(180, 178)
+	_preview_canvas = Control.new()
+	_preview_canvas.custom_minimum_size = Vector2(158, 156)
+	_preview_canvas.draw.connect(func():
+		_preview_canvas.draw_rect(Rect2(Vector2.ZERO, _preview_canvas.size), Color("#1e293b"))
+		_preview_canvas.draw_circle(Vector2(79, 134), 34.0, Color(0, 0, 0, 0.3))
+		_preview_canvas.draw_set_transform(Vector2(79, 134), 0.0, Vector2(2.6, 2.6))
+		CharacterActor.draw_custom_character(_preview_canvas, GameState.hero_custom, _preview_dir, "walk" if _preview_walk else "idle", _anim_t, 0.0, GameState.equipped_accessory, GameState.equipped_outfit)
+		_preview_canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	)
-	stage.add_child(prev_acc)
-	prev_acc.queue_redraw()
-	_sync_preview_shader()
-	top_hb.add_child(prev_box)
+	prev_box.add_child(_preview_canvas)
+	prev_vb.add_child(prev_box)
+
+	var p_ctrl := HBoxContainer.new()
+	p_ctrl.alignment = BoxContainer.ALIGNMENT_CENTER
+	var b_rot_l := Button.new(); b_rot_l.text = "◀ หมุน"
+	b_rot_l.pressed.connect(func(): _preview_dir = (_preview_dir + 1) % 4)
+	var b_walk := Button.new(); b_walk.text = "เดิน/ยืน"
+	b_walk.pressed.connect(func(): _preview_walk = not _preview_walk)
+	var b_rnd := Button.new(); b_rnd.text = "🎲 สุ่ม"
+	b_rnd.pressed.connect(_randomize_hero)
+	p_ctrl.add_child(b_rot_l); p_ctrl.add_child(b_walk); p_ctrl.add_child(b_rnd)
+	prev_vb.add_child(p_ctrl)
+	top_hb.add_child(prev_vb)
 
 	var form := VBoxContainer.new()
 	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -165,14 +167,14 @@ func open_protagonist_creator(subtab: String = "hero") -> void:
 	name_in.text_changed.connect(func(t: String): if t.strip_edges() != "": GameState.player_name = t.strip_edges())
 	form.add_child(name_in)
 
-	var farm_in := LineEdit.new(); farm_in.text = GameState.cottage_name; farm_in.placeholder_text = "ชื่อบ้านพัก/กระท่อม"
+	var farm_in := LineEdit.new(); farm_in.text = GameState.cottage_name; farm_in.placeholder_text = "ชื่อบ้านพัก/ฐานทัพนักผจญภัย"
 	farm_in.text_changed.connect(func(t: String): if t.strip_edges() != "": GameState.cottage_name = t.strip_edges())
 	form.add_child(farm_in)
 
 	var acc_def := GameData.get_accessory_def(GameState.equipped_accessory)
 	var out_def := GameData.get_outfit_def(GameState.equipped_outfit)
 	var perk_lbl := Label.new()
-	perk_lbl.text = "%s — %s\nสวมใส่อยู่: %s | %s" % [rinfo["name_th"], rinfo["perk_th"], acc_def["name_th"], out_def["name_th"]]
+	perk_lbl.text = "%s %s — %s\nสวมใส่อยู่: %s | %s" % [rinfo["icon"], rinfo["name_th"], rinfo["perk_th"], acc_def["name_th"], out_def["name_th"]]
 	perk_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	perk_lbl.add_theme_color_override("font_color", Color("#14532d"))
 	form.add_child(perk_lbl)
@@ -208,19 +210,18 @@ func open_protagonist_creator(subtab: String = "hero") -> void:
 			var eq2 := (GameState.equipped_outfit == oid)
 			var price2 := GameState.get_buy_price(int(o["price"]))
 			_add_row(
-				"👗 %s %s" % [o["name_th"], "[สวมใส่อยู่]" if eq2 else ("[มีแล้ว]" if owned2 else "")],
-				"ชุดธีมพร้อมออร่าประกายแสงพิเศษรอบตัวละคร",
+				"✨ %s %s" % [o["name_th"], "[สวมใส่อยู่]" if eq2 else ("[มีแล้ว]" if owned2 else "")],
+				"ออร่าประกายแสงพิเศษรอบตัวละคร",
 				"สวมใส่อยู่" if eq2 else ("สวมใส่" if owned2 else ("ซื้อ %dG" % price2)),
 				func():
 					if not owned2:
 						if GameState.gold < price2:
-							GameState.toast_requested.emit("เงินไม่พอซื้อชุดนี้!")
+							GameState.toast_requested.emit("เงินไม่พอซื้อออร่าชุดนี้!")
 							return
 						GameState.gold -= price2
 						GameState.owned_outfits[oid] = true
 						AudioManager.play_sfx("coin")
 					GameState.equipped_outfit = oid
-					_sync_preview_shader()
 					GameState.check_achievements()
 					GameState.save_slot(GameState.active_slot, true)
 					hero_customized.emit()
@@ -229,72 +230,110 @@ func open_protagonist_creator(subtab: String = "hero") -> void:
 			)
 		return
 
-	# Hue / Sat / Skin controls
-	var hue_sl := HSlider.new(); hue_sl.min_value = -180; hue_sl.max_value = 180; hue_sl.value = float(hc.get("hue", 0.0))
-	var hue_lbl := Label.new(); hue_lbl.text = "เฉดสีชุด/ทรงผม (Hue): %d°" % int(hue_sl.value)
-	hue_sl.value_changed.connect(func(v: float):
-		GameState.hero_custom["hue"] = v
-		hue_lbl.text = "เฉดสีชุด/ทรงผม (Hue): %d°" % int(v)
-		_sync_preview_shader()
-		hero_customized.emit()
-	)
-	list_vb.add_child(hue_lbl); list_vb.add_child(hue_sl)
+	var opts: Dictionary = GameData.CREATOR_OPTIONS
 
-	var sat_sl := HSlider.new(); sat_sl.min_value = 40; sat_sl.max_value = 170; sat_sl.value = float(hc.get("sat", 100.0))
-	var sat_lbl := Label.new(); sat_lbl.text = "ความสดสี (Saturation): %d%%" % int(sat_sl.value)
-	sat_sl.value_changed.connect(func(v: float):
-		GameState.hero_custom["sat"] = v
-		sat_lbl.text = "ความสดสี (Saturation): %d%%" % int(v)
-		_sync_preview_shader()
-		hero_customized.emit()
-	)
-	list_vb.add_child(sat_lbl); list_vb.add_child(sat_sl)
-
-	var skin_row := HFlowContainer.new()
-	var skins := ["none", "warm", "tan", "pale", "drow", "goblin", "aqua"]
-	var skin_names := {"none": "สีผิวเดิม", "warm": "ขาวอมชมพู", "tan": "ผิวแทน", "pale": "ขาวจันทรา", "drow": "ดาร์กเอลฟ์", "goblin": "ทองก็อบลิน", "aqua": "ฟ้าสมุทร"}
-	for sk in skins:
-		var sb := Button.new(); sb.text = skin_names[sk]
-		sb.pressed.connect(func():
-			GameState.hero_custom["skin"] = sk
-			_sync_preview_shader()
-			hero_customized.emit()
-		)
-		skin_row.add_child(sb)
-	list_vb.add_child(skin_row)
-
-	var race_grid := GridContainer.new()
-	race_grid.columns = 4
-	for c in GameData.characters:
-		var cid := str(c["id"])
-		var b := Button.new()
-		b.text = "%s (%s)" % [str(c["race_th"]), str(c["name_th"]).split(" ")[0]]
-		b.pressed.connect(func():
-			GameState.hero_custom["base_id"] = cid
-			GameState.hero_custom["race_key"] = GameData.get_char_race_key(cid)
+	# 1. Race (8 Races with Real Anatomy!)
+	_add_section_label("1. เผ่าพันธุ์ (8 เผ่า — เปลี่ยนหู/ปีก/หาง/เครา & ความสามารถพิเศษจริง!)")
+	var r_row := HFlowContainer.new()
+	for rkey in GameData.RACE_PERKS.keys():
+		var rd: Dictionary = GameData.RACE_PERKS[rkey]
+		var rb := Button.new()
+		rb.text = "%s %s%s" % [rd["icon"], str(rd["name_th"]).split(" ")[0], " ✓" if rk == rkey else ""]
+		rb.pressed.connect(func():
+			GameState.hero_custom["race_key"] = rkey
 			hero_customized.emit()
 			open_protagonist_creator("hero")
 		)
-		race_grid.add_child(b)
-	list_vb.add_child(race_grid)
+		r_row.add_child(rb)
+	list_vb.add_child(r_row)
 
-	var done_b := Button.new(); done_b.text = "บันทึกรูปลักษณ์ตัวเอก"
+	# 2. Body Build & Skin Tone
+	_add_section_label("2. รูปร่าง (Build) & สีผิว (8 โทนสี)")
+	var b_row := HFlowContainer.new()
+	for bd in opts["builds"]:
+		var bid := str(bd["id"])
+		var bb := Button.new(); bb.text = str(bd["name_th"]) + (" ✓" if str(hc.get("build", "normal")) == bid else "")
+		bb.pressed.connect(func(): GameState.hero_custom["build"] = bid; hero_customized.emit(); open_protagonist_creator("hero"))
+		b_row.add_child(bb)
+	list_vb.add_child(b_row)
+
+	var sk_row := HFlowContainer.new()
+	for sk in opts["skins"]:
+		var shex := str(sk["hex"])
+		var sb := Button.new(); sb.text = str(sk["name_th"]) + (" ✓" if str(hc.get("skin_hex", "")) == shex else "")
+		sb.pressed.connect(func(): GameState.hero_custom["skin_hex"] = shex; hero_customized.emit(); open_protagonist_creator("hero"))
+		sk_row.add_child(sb)
+	list_vb.add_child(sk_row)
+
+	# 3. Hair Style (8) & Hair Color (10)
+	_add_section_label("3. ทรงผม (8 ทรง) & สีผม (10 สี)")
+	var hs_row := HFlowContainer.new()
+	for hs in opts["hair_styles"]:
+		var hsid := str(hs["id"])
+		var hb := Button.new(); hb.text = str(hs["name_th"]) + (" ✓" if str(hc.get("hair_style", "")) == hsid else "")
+		hb.pressed.connect(func(): GameState.hero_custom["hair_style"] = hsid; hero_customized.emit(); open_protagonist_creator("hero"))
+		hs_row.add_child(hb)
+	list_vb.add_child(hs_row)
+
+	var hc_row := HFlowContainer.new()
+	for hcol in opts["hair_colors"]:
+		var hhex := str(hcol["hex"])
+		var cb := Button.new(); cb.text = str(hcol["name_th"]) + (" ✓" if str(hc.get("hair_hex", "")) == hhex else "")
+		cb.pressed.connect(func(): GameState.hero_custom["hair_hex"] = hhex; hero_customized.emit(); open_protagonist_creator("hero"))
+		hc_row.add_child(cb)
+	list_vb.add_child(hc_row)
+
+	# 4. Eye Style (4) & Eye Color (8)
+	_add_section_label("4. ทรงดวงตา (4 แบบ) & สีตา (8 สี)")
+	var es_row := HFlowContainer.new()
+	for es in opts["eye_styles"]:
+		var esid := str(es["id"])
+		var eb := Button.new(); eb.text = str(es["name_th"]) + (" ✓" if str(hc.get("eye_style", "")) == esid else "")
+		eb.pressed.connect(func(): GameState.hero_custom["eye_style"] = esid; hero_customized.emit(); open_protagonist_creator("hero"))
+		es_row.add_child(eb)
+	list_vb.add_child(es_row)
+
+	var ec_row := HFlowContainer.new()
+	for ecol in opts["eye_colors"]:
+		var ehex := str(ecol["hex"])
+		var ecb := Button.new(); ecb.text = str(ecol["name_th"]) + (" ✓" if str(hc.get("eye_hex", "")) == ehex else "")
+		ecb.pressed.connect(func(): GameState.hero_custom["eye_hex"] = ehex; hero_customized.emit(); open_protagonist_creator("hero"))
+		ec_row.add_child(ecb)
+	list_vb.add_child(ec_row)
+
+	# 5. Outfit Style (6), Shirt Color (8) & Pants Color (6)
+	_add_section_label("5. สไตล์ชุด (6 แบบ), สีเสื้อ (8 สี) & สีกางเกง (6 สี)")
+	var os_row := HFlowContainer.new()
+	for osd in opts["outfit_styles"]:
+		var osid := str(osd["id"])
+		var ob := Button.new(); ob.text = str(osd["name_th"]) + (" ✓" if str(hc.get("outfit_style", "")) == osid else "")
+		ob.pressed.connect(func(): GameState.hero_custom["outfit_style"] = osid; hero_customized.emit(); open_protagonist_creator("hero"))
+		os_row.add_child(ob)
+	list_vb.add_child(os_row)
+
+	var sc_row := HFlowContainer.new()
+	for scol in opts["shirt_colors"]:
+		var shx := str(scol["hex"])
+		var scb := Button.new(); scb.text = "เสื้อ:" + str(scol["name_th"]) + (" ✓" if str(hc.get("shirt_hex", "")) == shx else "")
+		scb.pressed.connect(func(): GameState.hero_custom["shirt_hex"] = shx; hero_customized.emit(); open_protagonist_creator("hero"))
+		sc_row.add_child(scb)
+	list_vb.add_child(sc_row)
+
+	var pc_row := HFlowContainer.new()
+	for pcol in opts["pants_colors"]:
+		var phx := str(pcol["hex"])
+		var pcb := Button.new(); pcb.text = "กางเกง:" + str(pcol["name_th"]) + (" ✓" if str(hc.get("pants_hex", "")) == phx else "")
+		pcb.pressed.connect(func(): GameState.hero_custom["pants_hex"] = phx; hero_customized.emit(); open_protagonist_creator("hero"))
+		pc_row.add_child(pcb)
+	list_vb.add_child(pc_row)
+
+	var done_b := Button.new(); done_b.text = "✅ บันทึกตัวละครและออกผจญภัย!"
 	done_b.pressed.connect(func():
 		GameState.save_slot(GameState.active_slot, true)
 		hero_customized.emit()
 		visible = false
 	)
 	list_vb.add_child(done_b)
-
-func _sync_preview_shader() -> void:
-	if not _preview_mat: return
-	var hc: Dictionary = GameState.hero_custom
-	var out_def := GameData.get_outfit_def(GameState.equipped_outfit)
-	var hue_off := float(out_def.get("hue", 0.0)) if GameState.equipped_outfit != "outfit_traveler" else 0.0
-	_preview_mat.set_shader_parameter("hue_shift_deg", float(hc.get("hue", 0.0)) + hue_off)
-	_preview_mat.set_shader_parameter("sat_mult", (float(hc.get("sat", 100.0)) / 100.0) * (float(out_def.get("sat", 100.0)) / 100.0))
-	_preview_mat.set_shader_parameter("val_mult", (float(hc.get("val", 100.0)) / 100.0) * (float(out_def.get("val", 100.0)) / 100.0))
-	_preview_mat.set_shader_parameter("skin_mode", int(GameState.SKIN_MODES.get(str(hc.get("skin", "none")), 0)))
 
 # --- 2. 3 SAVE SLOTS & AUDIO/HD SETTINGS ---
 func open_save_slots_modal() -> void:
@@ -352,50 +391,60 @@ func open_jobs_modal() -> void:
 			not done
 		)
 
-# --- 4. SHOPS, BAG, SEEDS, NIGHT MARKET, 12 GRID FURNITURE & 2ND FLOOR LOFT ---
+func open_guild_modal() -> void:
+	open_shop_modal("guild")
+
+# --- 4. SHOPS, BAG, ADVENTURER'S GUILD, NIGHT MARKET, 12 GRID FURNITURE & 2ND FLOOR LOFT ---
 func open_shop_modal(tab: String = "bag") -> void:
 	_clear()
-	title_lbl.text = "ร้านค้า กระเป๋า เมล็ดพันธุ์ ตลาดกลางคืน & แต่งบ้าน (มีเงิน %d G)" % GameState.gold
-	var tabs := [["bag", "กระเป๋า"], ["seeds", "🌱 ฟาร์ม & ไอเทมระดับตำนาน"], ["decor", "แต่งบ้าน & ชั้น 2"], ["nightmarket", "🏮 ตลาดกลางคืน"], ["shop", "ร้านชำ"], ["bakery", "ขนมปัง"], ["tavern", "โรงเตี๊ยม"], ["cottage", "สมุนไพร"], ["smithy", "ตีเหล็ก"]]
+	title_lbl.text = "กิลด์นักผจญภัย ร้านค้า กระเป๋า ตลาดกลางคืน & แต่งบ้าน (มีเงิน %d G)" % GameState.gold
+	var tabs := [["guild", "⚔️ กิลด์นักผจญภัย [Q]"], ["bag", "กระเป๋า"], ["decor", "แต่งบ้าน & ชั้น 2"], ["nightmarket", "🏮 ตลาดกลางคืน"], ["shop", "ร้านชำ"], ["bakery", "ขนมปัง"], ["tavern", "โรงเตี๊ยม"], ["cottage", "สมุนไพร"], ["smithy", "ตีเหล็ก"]]
 	for t in tabs:
 		var b := Button.new(); b.text = t[1]
 		b.pressed.connect(func(): open_shop_modal(t[0]))
 		tabs_flow.add_child(b)
 
-	if tab == "seeds":
+	if tab == "guild":
+		var rinfo := GameData.get_guild_rank_info(GameState.guild_xp)
+		var tot_bonus := int(rinfo["gold_bonus_pct"]) + (20 if GameState.has_guild_charm else 0)
 		_add_row(
-			"🌱 แปลงสวนมานาข้างบ้านพัก (18 แปลง) • กด [Q] สลับเมล็ดพันธุ์ด่วน!",
-			"เดินไปกด [E] ที่แปลงดินข้างบ้านเพื่อ พรวนดิน -> ปลูกเมล็ดที่เลือก -> รดน้ำ -> เก็บเกี่ยวผลผลิต!"
+			"⚔️ กิลด์นักผจญภัยเอเธลการ์ด — แรงก์ปัจจุบัน: Rank %s (%s)" % [str(rinfo["rank"]), str(rinfo["title_th"])],
+			"Guild XP: %d • พิชิตภารกิจแล้ว: %d ครั้ง • โบนัสทองภารกิจกิลด์: +%d%% (รีเฟรชภารกิจใหม่ทุกเช้า!)" % [GameState.guild_xp, GameState.guild_completed, tot_bonus]
 		)
+		for gb in GameData.GUILD_BOUNTIES:
+			var bid := str(gb["id"])
+			var st := str(GameState.guild_bounties_state.get(bid, "open"))
+			var prog := GameState.get_guild_bounty_progress(gb)
+			var can_claim := bool(prog["done"])
+			var pay_est := int(round(float(gb["gold"]) * (1.0 + float(tot_bonus) / 100.0)))
+			var st_tag := " [สำเร็จแล้ว]" if st == "completed" else (" [กำลังทำ — %s]" % str(prog["text"]) if st == "accepted" else "")
+			_add_row(
+				"[Rank %s] ⚔️ %s%s" % [str(gb["rank"]), str(gb["title_th"]), st_tag],
+				"%s • รางวัล: %d G + %d Guild XP" % [str(gb["desc_th"]), pay_est, int(gb["guild_xp"])],
+				"สำเร็จแล้ว" if st == "completed" else ("ส่งรับรางวัล!" if st == "accepted" else "รับภารกิจ"),
+				func():
+					if st == "open":
+						GameState.accept_guild_bounty(bid)
+					elif st == "accepted":
+						GameState.claim_guild_bounty(bid)
+					open_shop_modal("guild"),
+				st == "open" or (st == "accepted" and can_claim)
+			)
+		_add_section_label("🏆 คลังอุปกรณ์นักผจญภัย & สมบัติระดับตำนาน (Endgame Armory)")
 		_add_row(
-			"🚿 บัวรดน้ำทองคำ Lv.2 (รดน้ำกว้าง 3×3 ช่อง!) %s" % ("[มีแล้ว!]" if GameState.water_can_level >= 2 else ""),
-			"อัปเกรดบัวรดน้ำให้รดน้ำพืชได้พร้อมกัน 3×3 แปลงในครั้งเดียว!",
-			"ใช้งานอยู่" if GameState.water_can_level >= 2 else "ซื้อ 350G",
+			"🎖️ เครื่องรางกิลด์ทองคำ (โบนัสทองภารกิจกิลด์ +20% ถาวร!) %s" % ("[สวมใส่อยู่!]" if GameState.has_guild_charm else ""),
+			"ตราเกียรติยศของกิลด์นักผจญภัย เพิ่มเงินรางวัลจากทุกภารกิจกิลด์ +20% ถาวร!",
+			"มีแล้ว" if GameState.has_guild_charm else "ซื้อ 400G",
 			func():
-				if GameState.gold < 350:
-					GameState.toast_requested.emit("เงินไม่พอซื้อบัวรดน้ำทองคำ (350 G)!")
+				if GameState.gold < 400:
+					GameState.toast_requested.emit("เงินไม่พอซื้อเครื่องรางกิลด์ (400 G)!")
 					return
-				GameState.gold -= 350
-				GameState.water_can_level = 2
+				GameState.gold -= 400
+				GameState.has_guild_charm = true
 				AudioManager.play_sfx("quest")
 				GameState.save_slot(GameState.active_slot, true)
-				open_shop_modal("seeds"),
-			GameState.water_can_level < 2
-		)
-		_add_row(
-			"💎 คริสตัลสปริงเกลอร์มานา (รดน้ำอัตโนมัติทั้ง 18 แปลงทุกเช้า!) %s" % ("[ติดตั้งแล้ว!]" if GameState.has_mana_sprinkler else ""),
-			"ติดตั้งคริสตัลเวทมนตร์กลางสวนมานา รดน้ำให้ทุกแปลงอัตโนมัติทุกเช้าทันที!",
-			"ติดตั้งแล้ว" if GameState.has_mana_sprinkler else "ซื้อ 450G",
-			func():
-				if GameState.gold < 450:
-					GameState.toast_requested.emit("เงินไม่พอซื้อคริสตัลสปริงเกลอร์ (450 G)!")
-					return
-				GameState.gold -= 450
-				GameState.has_mana_sprinkler = true
-				AudioManager.play_sfx("quest")
-				GameState.save_slot(GameState.active_slot, true)
-				open_shop_modal("seeds"),
-			not GameState.has_mana_sprinkler
+				open_shop_modal("guild"),
+			not GameState.has_guild_charm
 		)
 		_add_row(
 			"🦄 อาชาแสงดารา (Starlight Mount — กด [V] ขี่กลางแจ้งเร็วขึ้น +45%!) %s" % ("[เป็นเจ้าของแล้ว!]" if GameState.has_starlight_mount else ""),
@@ -412,7 +461,7 @@ func open_shop_modal(tab: String = "bag") -> void:
 				GameState.check_achievements()
 				GameState.save_slot(GameState.active_slot, true)
 				hero_customized.emit()
-				open_shop_modal("seeds"),
+				open_shop_modal("guild"),
 			not GameState.has_starlight_mount
 		)
 		_add_row(
@@ -428,28 +477,9 @@ func open_shop_modal(tab: String = "bag") -> void:
 				AudioManager.play_sfx("quest")
 				GameState.check_achievements()
 				GameState.save_slot(GameState.active_slot, true)
-				open_shop_modal("seeds"),
+				open_shop_modal("guild"),
 			not GameState.monument_built
 		)
-		for cr in GameData.CROPS:
-			var cid := str(cr["id"])
-			var owned_s := int(GameState.seeds.get(cid, 0))
-			var sp_buy := GameState.get_buy_price(int(cr["seed_price"]))
-			var sel_tag := " [กำลังถือเมล็ดนี้]" if GameState.selected_seed_id == cid else ""
-			_add_row(
-				"🌱 เมล็ด%s (มี %d เมล็ด • โต %d วัน)%s" % [str(cr["name_th"]), owned_s, int(cr["grow_days"]), sel_tag],
-				str(cr["desc_th"]),
-				"ซื้อ %dG & ถือปลูก" % sp_buy,
-				func():
-					if GameState.gold < sp_buy:
-						GameState.toast_requested.emit("เงินไม่พอซื้อเมล็ดพันธุ์!")
-						return
-					GameState.gold -= sp_buy
-					GameState.seeds[cid] = int(GameState.seeds.get(cid, 0)) + 1
-					GameState.selected_seed_id = cid
-					AudioManager.play_sfx("coin")
-					open_shop_modal("seeds")
-			)
 	elif tab == "bag":
 		if GameState.sell_bonus_pct > 0:
 			_add_row("🏛️ พรพิพิธภัณฑ์ทำงานอยู่!", "ขายไอเทมทุกชิ้นได้ราคาเพิ่มขึ้น +%d%% ถาวร!" % GameState.sell_bonus_pct)
@@ -790,44 +820,49 @@ func open_quests_and_town_modal(tab: String = "quests") -> void:
 	elif tab == "achieve":
 		_add_row("🏆 ความสำเร็จที่ปลดล็อกแล้ว: %d / %d รายการ" % [GameState.achievements_unlocked.size(), GameData.ACHIEVEMENTS.size()], "ทำกิจกรรมในหุบเขาเพื่อสะสมถ้วยรางวัลเกียรติยศให้ครบ 100%!")
 		for a in GameData.ACHIEVEMENTS:
-			var unl := GameState.achievements_unlocked.has(str(a["id"]))
+			var aid := str(a["id"])
+			var unl := GameState.achievements_unlocked.has(aid)
+			var prog_txt := GameState.get_achievement_progress(aid)
 			_add_row(
-				"%s %s" % ["🏆" if unl else "⬜", str(a["title_th"])],
+				"%s %s %s" % ["🏆" if unl else "⬜", str(a["title_th"]), prog_txt],
 				str(a["desc_th"])
 			)
 	elif tab == "theater":
 		var total_cs := GameData.cutscenes_v7.size() + GameData.heart_events.size() + GameData.chapters.size()
 		_add_row(
-			"🎬 โรงละครคัตซีนเอเธลการ์ด (รวมทั้งหมด %d ฉาก — รับชมแล้ว %d ฉาก)" % [total_cs, GameState.watched_cutscenes.size()],
-			"เลือกกด 'เล่นฉากคัตซีน' เพื่อรับชมคัตซีนกำกับมุมกล้องพร้อมตัวละครแสดงจริงได้ทุกฉาก ทุกอีเวนต์!"
+			"🎬 โรงละครคัตซีนเอเธลการ์ด (ปลดล็อกแล้ว %d / %d ฉาก)" % [GameState.watched_cutscenes.size(), total_cs],
+			"เฉพาะฉากที่เล่นผ่านและปลดล็อกแล้วเท่านั้นจึงจะรับชมซ้ำ (Replay Mode) ได้ — ป้องกันสปอยล์เนื้อเรื่อง!"
 		)
 		for csid in GameData.cutscenes_v7.keys():
 			var cs: Dictionary = GameData.cutscenes_v7[csid]
 			var seen := GameState.watched_cutscenes.has(str(csid))
 			_add_row(
-				"🎬 [ฉากเมือง/เหตุการณ์] %s %s" % [GameState.format_text(str(cs["title_th"])), "✓" if seen else ""],
-				GameState.format_text(str(cs.get("subtitle_th", ""))),
-				"ชมคัตซีน",
-				func(): visible = false; replay_cutscene_requested.emit(cs, "cutscene")
+				"🎬 [ฉากเมือง/เหตุการณ์] %s %s" % [GameState.format_text(str(cs["title_th"])), "✓" if seen else "🔒"],
+				GameState.format_text(str(cs.get("subtitle_th", ""))) if seen else "เล่นเนื้อเรื่องหรือเข้าฉากนี้ในเกมเพื่อปลดล็อกคัตซีน!",
+				"ชมซ้ำ" if seen else "ยังไม่ปลดล็อก",
+				func(): visible = false; replay_cutscene_requested.emit(cs, "cutscene"),
+				seen
 			)
 		for hev in GameData.heart_events:
 			var hid := str(hev["id"])
 			var seen2 := GameState.played_events.has(hid) or GameState.watched_cutscenes.has(hid)
 			var npc_n := str(GameData.char_by_id.get(str(hev["character_id"]), {}).get("name_th", ""))
 			_add_row(
-				"💖 [อีเวนต์หัวใจ %d❤️ %s] %s %s" % [int(hev["hearts_required"]), npc_n, str(hev["title_th"]), "✓" if seen2 else ""],
-				str(hev.get("subtitle_th", "")),
-				"ชมคัตซีน",
-				func(): visible = false; replay_cutscene_requested.emit(hev, "heart_event")
+				"💖 [อีเวนต์หัวใจ %d❤️ %s] %s %s" % [int(hev["hearts_required"]), npc_n, str(hev["title_th"]) if seen2 else "???", "✓" if seen2 else "🔒"],
+				str(hev.get("subtitle_th", "")) if seen2 else "สานสัมพันธ์กับ %s ให้ถึง %d หัวใจเพื่อปลดล็อก!" % [npc_n, int(hev["hearts_required"])],
+				"ชมซ้ำ" if seen2 else "ยังไม่ปลดล็อก",
+				func(): visible = false; replay_cutscene_requested.emit(hev, "heart_event"),
+				seen2
 			)
 		for ch2 in GameData.chapters:
 			var chid2 := str(ch2["id"])
 			var seen3 := GameState.chronicles_done.has(chid2) or GameState.watched_cutscenes.has(chid2)
 			_add_row(
-				"📜 [พงศาวดาร] %s %s" % [str(ch2["title_th"]), "✓" if seen3 else ""],
-				str(ch2.get("subtitle_th", "")),
-				"ชมคัตซีน",
-				func(): visible = false; replay_cutscene_requested.emit(ch2, "chronicle")
+				"📜 [พงศาวดาร] %s %s" % [str(ch2["title_th"]), "✓" if seen3 else "🔒"],
+				str(ch2.get("subtitle_th", "")) if seen3 else str(ch2.get("unlock_hint_th", "ผ่านเงื่อนไขพงศาวดารเพื่อปลดล็อก")),
+				"ชมซ้ำ" if seen3 else "ยังไม่ปลดล็อก",
+				func(): visible = false; replay_cutscene_requested.emit(ch2, "chronicle"),
+				seen3
 			)
 
 func open_mailbox_modal() -> void:

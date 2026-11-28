@@ -93,17 +93,116 @@ const ACHIEVEMENTS := [
 	{"id": "ach_ruins_b3", "title_th": "ผู้ค้นพบแหวนบรรพกาล", "desc_th": "ปลดผนึกชั้น B3 โถงหัวใจบรรพกาลสำเร็จ"},
 	{"id": "ach_boss_b4", "title_th": "ผู้ชำระล้างรากไม้ต้องสาป", "desc_th": "ปราบหมอกมืดและชำระล้างบอสผู้พิทักษ์ชั้น B4 สำเร็จ!"},
 	{"id": "ach_chronicle", "title_th": "ผู้จารึกพงศาวดาร", "desc_th": "เล่นเนื้อเรื่องพงศาวดารต้นไม้โลกผ่าน 5 บท"},
-	{"id": "ach_farmer", "title_th": "เกษตรกรสวนมานา", "desc_th": "ปลูกและเก็บเกี่ยวพืชมานาข้างบ้านครบ 6 ต้น"},
+	{"id": "ach_guild_master", "title_th": "นักผจญภัยกิลด์ระดับแนวหน้า", "desc_th": "พิชิตภารกิจจากกิลด์นักผจญภัยสำเร็จครบ 5 ภารกิจ"},
 	{"id": "ach_endgame", "title_th": "ตำนานนิรันดร์แห่งเอเธลการ์ด", "desc_th": "ปลดล็อกพาหนะแสงดาว [V] หรือสร้างอนุสาวรีย์ทองคำ 8 เผ่า!"}
 ]
 
-const CROPS := [
-	{"id": "crop_sunwheat", "name_th": "ข้าวสาลีสุริยัน", "seed_price": 25, "grow_days": 2, "harvest_item": "item_sunfruit", "color": "#facc15", "desc_th": "โตไวใน 2 วัน เก็บเกี่ยวได้ผลไม้สุริยันหอมหวาน"},
-	{"id": "crop_rootdew", "name_th": "ดอกน้ำค้างรากไม้", "seed_price": 35, "grow_days": 2, "harvest_item": "item_rootdew_flower", "color": "#38bdf8", "desc_th": "โตใน 2 วัน ใช้ปรุงยาสมุนไพรและจัดช่อดอกไม้"},
-	{"id": "crop_moonbloom", "name_th": "ดอกไม้จันทร์เรืองแสง", "seed_price": 45, "grow_days": 3, "harvest_item": "item_moonbloom", "color": "#c084fc", "desc_th": "โตใน 3 วัน เปล่งแสงสีม่วงเงินยามค่ำคืน"},
-	{"id": "crop_waterlily", "name_th": "บัวมรกตสายน้ำ", "seed_price": 40, "grow_days": 3, "harvest_item": "item_water_lily", "color": "#34d399", "desc_th": "โตใน 3 วัน ของโปรดของเผ่าเงือกและเอลฟ์"},
-	{"id": "crop_starflower", "name_th": "บุปผาผลึกดาวตก", "seed_price": 90, "grow_days": 4, "harvest_item": "item_starfall_crystal", "color": "#fde047", "desc_th": "โตใน 4 วัน เก็บเกี่ยวเป็นผลึกดาวตกล้ำค่า!"}
+const GUILD_RANKS := [
+	{"rank": "F", "title_th": "นักผจญภัยฝึกหัด", "xp_req": 0, "gold_bonus_pct": 0},
+	{"rank": "E", "title_th": "นักสำรวจแนวหน้า", "xp_req": 60, "gold_bonus_pct": 5},
+	{"rank": "D", "title_th": "นักล่าหมอกเงา", "xp_req": 150, "gold_bonus_pct": 10},
+	{"rank": "C", "title_th": "ผู้พิทักษ์หุบเขา", "xp_req": 280, "gold_bonus_pct": 15},
+	{"rank": "B", "title_th": "อัศวินรากไม้โลก", "xp_req": 450, "gold_bonus_pct": 20},
+	{"rank": "A", "title_th": "จอมยุทธ์แปดเผ่าพันธุ์", "xp_req": 680, "gold_bonus_pct": 25},
+	{"rank": "S", "title_th": "ตำนานแห่งเอเธลการ์ด", "xp_req": 950, "gold_bonus_pct": 35}
 ]
+
+const GUILD_BOUNTIES := [
+	{"id": "gb_forage_herb", "rank": "F", "title_th": "เก็บดอกน้ำค้างรากไม้ส่งกิลด์", "desc_th": "เก็บดอกน้ำค้างรากไม้จากป่ารอบเมืองมาส่ง 2 ดอก", "type": "deliver_item", "item_id": "item_rootdew_flower", "target": 2, "gold": 140, "guild_xp": 35, "stat": {"wisdom": 8}},
+	{"id": "gb_patrol_town", "rank": "F", "title_th": "ลาดตระเวนตรวจความสงบหุบเขา", "desc_th": "พูดคุยทักทายสอบถามความสงบจากชาวเมือง 4 คน", "type": "talk_npcs", "target": 4, "gold": 130, "guild_xp": 35, "stat": {"charm": 10}},
+	{"id": "gb_honey_supply", "rank": "F", "title_th": "เสบียงน้ำผึ้งป่าประจำกิลด์", "desc_th": "นำน้ำผึ้งป่า 2 ขวดมาส่งให้โรงครัวกิลด์นักผจญภัย", "type": "deliver_item", "item_id": "item_wild_honey", "target": 2, "gold": 150, "guild_xp": 40, "stat": {"craft": 8}},
+	{"id": "gb_wisp_b1", "rank": "E", "title_th": "กวาดล้างภูตหมอกเงาชั้น B1", "desc_th": "ใช้คลื่นแสง [F] ชำระล้างภูตหมอกเงาในโบราณสถาน 2 ตน", "type": "purify_wisps", "target": 2, "gold": 220, "guild_xp": 60, "stat": {"courage": 14}},
+	{"id": "gb_mine_ore", "rank": "E", "title_th": "สกัดแร่มานาใต้รากไม้โลก", "desc_th": "ขุดสกัดแร่มานาภายในโบราณสถานใต้รากไม้ 2 ก้อน", "type": "mine_ores", "target": 2, "gold": 240, "guild_xp": 65, "stat": {"craft": 12, "courage": 8}},
+	{"id": "gb_fish_pearl", "rank": "E", "title_th": "ล่าปลาและวัตถุดิบทะเลสาบมุก", "desc_th": "ตกปลาที่ริมทะเลสาบมุกให้สำเร็จ 2 ตัว", "type": "catch_fish", "target": 2, "gold": 230, "guild_xp": 60, "stat": {"wisdom": 10, "craft": 8}},
+	{"id": "gb_oak_timber", "rank": "D", "title_th": "ซ่อมแซมสะพานด้วยไม้โอ๊กเนื้อแข็ง", "desc_th": "นำไม้โอ๊กเนื้อแข็ง 2 ท่อนมาส่งที่เคาน์เตอร์กิลด์", "type": "deliver_item", "item_id": "item_hard_oak", "target": 2, "gold": 280, "guild_xp": 80, "stat": {"craft": 15}},
+	{"id": "gb_ruins_b1", "rank": "D", "title_th": "สำรวจและปลดผนึกเสาแสงชั้น B1", "desc_th": "ไขปริศนาเสาปริซึมปลดผนึกโบราณสถานชั้น B1 ให้สำเร็จ", "type": "clear_floor", "floor_id": "ruins_b1", "target": 1, "gold": 320, "guild_xp": 95, "stat": {"wisdom": 16, "courage": 12}},
+	{"id": "gb_wisp_sweep", "rank": "C", "title_th": "ปฏิบัติการชำระล้างหมอกเงาเชิงลึก", "desc_th": "ชำระล้างภูตหมอกเงาด้วยคลื่นแสง [F] รวม 4 ตน", "type": "purify_wisps", "target": 4, "gold": 420, "guild_xp": 120, "stat": {"courage": 22}},
+	{"id": "gb_ruins_b2", "rank": "C", "title_th": "พิชิตโถงกระจกวารีชั้น B2", "desc_th": "ไขปริศนาเสาแสงคู่ในโบราณสถานชั้น B2 ให้สำเร็จ", "type": "clear_floor", "floor_id": "ruins_b2", "target": 1, "gold": 460, "guild_xp": 135, "stat": {"wisdom": 22, "courage": 16}},
+	{"id": "gb_starfall", "rank": "B", "title_th": "ตามหาผลึกดาวตกแห่งวิหารโบราณ", "desc_th": "รวบรวมผลึกดาวตก 1 ชิ้นส่งให้นักวิจัยกิลด์", "type": "deliver_item", "item_id": "item_starfall_crystal", "target": 1, "gold": 560, "guild_xp": 160, "stat": {"wisdom": 25}},
+	{"id": "gb_boss_b4", "rank": "S", "title_th": "ภารกิจระดับ S: ปราบบอสผู้พิทักษ์ชั้น B4!", "desc_th": "ทลายเกราะเสาแสงและใช้ [F] ชำระล้างบอสผู้พิทักษ์รากไม้ต้องสาป!", "type": "purify_boss", "target": 1, "gold": 1200, "guild_xp": 320, "stat": {"courage": 40, "wisdom": 30, "charm": 20}}
+]
+
+const CREATOR_OPTIONS := {
+	"builds": [
+		{"id": "slim", "name_th": "เพรียวบาง"},
+		{"id": "normal", "name_th": "สมส่วน"},
+		{"id": "sturdy", "name_th": "กำยำ"}
+	],
+	"skins": [
+		{"id": "fair", "name_th": "ขาวอมชมพู", "hex": "#fde2cf"},
+		{"id": "cream", "name_th": "ผิวครีม", "hex": "#f5cfa6"},
+		{"id": "honey", "name_th": "ผิวแทนน้ำผึ้ง", "hex": "#d99b66"},
+		{"id": "bronze", "name_th": "สีน้ำตาลเข้ม", "hex": "#9a633b"},
+		{"id": "pale", "name_th": "ขาวจันทรา", "hex": "#eef2ff"},
+		{"id": "drow", "name_th": "ดาร์กเอลฟ์", "hex": "#8b7da8"},
+		{"id": "goblin", "name_th": "เขียวมรกต", "hex": "#86b86b"},
+		{"id": "aqua", "name_th": "ฟ้าสมุทร", "hex": "#7dd3fc"}
+	],
+	"hair_styles": [
+		{"id": "short_spiky", "name_th": "ผมสั้นตั้ง"},
+		{"id": "long_flow", "name_th": "ผมยาวสลวย"},
+		{"id": "ponytail", "name_th": "มัดหางม้า"},
+		{"id": "twin_tails", "name_th": "ทวินเทล"},
+		{"id": "bob_cut", "name_th": "ผมบ็อบ"},
+		{"id": "braid", "name_th": "ถักเปียข้าง"},
+		{"id": "wild_mane", "name_th": "ผมฟูนักผจญภัย"},
+		{"id": "noble_part", "name_th": "แสกข้างคุณชาย/คุณหนู"}
+	],
+	"hair_colors": [
+		{"name_th": "ดำรัตติกาล", "hex": "#1e293b"},
+		{"name_th": "น้ำตาลเกาลัด", "hex": "#6b3e26"},
+		{"name_th": "ทองอรุณ", "hex": "#eab308"},
+		{"name_th": "แดงเพลิง", "hex": "#dc2626"},
+		{"name_th": "เงินจันทรา", "hex": "#cbd5e1"},
+		{"name_th": "ชมพูซากุระ", "hex": "#f472b6"},
+		{"name_th": "ฟ้าคราม", "hex": "#2563eb"},
+		{"name_th": "เขียวมรกต", "hex": "#16a34a"},
+		{"name_th": "ม่วงอเมทิสต์", "hex": "#7c3aed"},
+		{"name_th": "ขาวหิมะ", "hex": "#f8fafc"}
+	],
+	"eye_styles": [
+		{"id": "round", "name_th": "ตากลมโต"},
+		{"id": "sharp", "name_th": "ตาคมเฉี่ยว"},
+		{"id": "gentle", "name_th": "ตาอบอุ่น"},
+		{"id": "mystic", "name_th": "ตาลึกลับ"}
+	],
+	"eye_colors": [
+		{"name_th": "น้ำตาล", "hex": "#5c3312"},
+		{"name_th": "ฟ้าคราม", "hex": "#0284c7"},
+		{"name_th": "มรกต", "hex": "#15803d"},
+		{"name_th": "ทองอำพัน", "hex": "#d97706"},
+		{"name_th": "แดงทับทิม", "hex": "#dc2626"},
+		{"name_th": "ม่วงเวท", "hex": "#7e22ce"},
+		{"name_th": "ชมพู", "hex": "#db2777"},
+		{"name_th": "เงิน", "hex": "#64748b"}
+	],
+	"outfit_styles": [
+		{"id": "adventurer", "name_th": "ชุดนักผจญภัย"},
+		{"id": "knight", "name_th": "เกราะเบาอัศวิน"},
+		{"id": "mage", "name_th": "เสื้อคลุมจอมเวท"},
+		{"id": "tunic", "name_th": "เสื้อกั๊กชาวเมือง"},
+		{"id": "bard", "name_th": "ชุดนักดนตรี"},
+		{"id": "royal", "name_th": "ชุดราชวงศ์"}
+	],
+	"shirt_colors": [
+		{"name_th": "เขียวพงไพร", "hex": "#15803d"},
+		{"name_th": "น้ำเงินอัศวิน", "hex": "#1d4ed8"},
+		{"name_th": "แดงชาด", "hex": "#b91c1c"},
+		{"name_th": "ม่วงจอมเวท", "hex": "#6d28d9"},
+		{"name_th": "ครีมอบอุ่น", "hex": "#d97706"},
+		{"name_th": "ดำเงา", "hex": "#334155"},
+		{"name_th": "ชมพูกุหลาบ", "hex": "#be185d"},
+		{"name_th": "ขาวบริสุทธิ์", "hex": "#e2e8f0"}
+	],
+	"pants_colors": [
+		{"name_th": "น้ำตาลหนัง", "hex": "#5c3312"},
+		{"name_th": "กรมท่า", "hex": "#1e3a5f"},
+		{"name_th": "เทาเข้ม", "hex": "#334155"},
+		{"name_th": "ดำสนิท", "hex": "#111827"},
+		{"name_th": "เขียวเข้ม", "hex": "#14532d"},
+		{"name_th": "ขาวครีม", "hex": "#cbd5e1"}
+	]
+}
 
 const RACE_PERKS := {
 	"human": {"icon": "🧑", "name_th": "มนุษย์ (Human)", "perk_th": "XP สเตตัสทั้ง 4 แกน +10% ทุกกิจกรรม"},
@@ -246,7 +345,7 @@ func _setup_input_actions() -> void:
 		"sacred_pulse": [KEY_F],
 		"toggle_lantern": [KEY_9],
 		"skip_cutscene": [KEY_TAB],
-		"cycle_seed": [KEY_Q],
+		"open_guild": [KEY_Q],
 		"toggle_mount": [KEY_V]
 	}
 	for action in bindings.keys():
@@ -382,11 +481,18 @@ func get_outfit_def(out_id: String) -> Dictionary:
 			return o
 	return OUTFIT_THEMES[0]
 
-func get_crop_def(crop_id: String) -> Dictionary:
-	for cr in CROPS:
-		if str(cr["id"]) == crop_id:
-			return cr
-	return CROPS[0]
+func get_guild_rank_info(gxp: int) -> Dictionary:
+	var best: Dictionary = GUILD_RANKS[0]
+	for r in GUILD_RANKS:
+		if gxp >= int(r["xp_req"]):
+			best = r
+	return best
+
+func get_guild_bounty_def(bid: String) -> Dictionary:
+	for gb in GUILD_BOUNTIES:
+		if str(gb["id"]) == bid:
+			return gb
+	return {}
 
 func is_npc_birthday(cid: String, season_idx: int, day_of_season: int) -> bool:
 	if not NPC_BIRTHDAYS.has(cid):

@@ -393,12 +393,10 @@ func _draw_arena() -> void:
 					arena.draw_string(font, r.position + Vector2(16, 42), "%d. %s" % [i + 1, state_data["names"][i]], HORIZONTAL_ALIGNMENT_LEFT, 96, 14, Color("#0f172a") if lit_rune == i else Color.WHITE)
 		"sky_dash":
 			arena.draw_rect(Rect2(0, 182, sz.x, 28), Color("#14532d"))
-			var ptex2 := GameData.get_walk_sheet(str(GameState.hero_custom.get("base_id", "01_ren")), false)
 			var px := float(state_data["px"])
-			if ptex2:
-				arena.draw_texture_rect_region(ptex2, Rect2(px - 22, 144, 44, 44), Rect2(0, 128, 64, 64))
-			else:
-				arena.draw_circle(Vector2(px, 172), 14.0, Color("#fde047"))
+			arena.draw_set_transform(Vector2(px, 184.0), 0.0, Vector2(0.95, 0.95))
+			CharacterActor.draw_custom_character(arena, GameState.hero_custom, 2, "walk", Time.get_ticks_msec() / 120.0, 0.0, GameState.equipped_accessory, GameState.equipped_outfit)
+			arena.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 			var good_tex := GameData.get_item_icon("item_starfall_crystal", false)
 			for o in state_data["objs"]:
 				var op := Vector2(float(o["x"]), float(o["y"]))
